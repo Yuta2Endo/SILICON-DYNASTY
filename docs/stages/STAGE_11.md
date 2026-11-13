@@ -1,7 +1,7 @@
 # STAGE 11 — AI Training & Deployment
 
 **Project:** SILICON DYNASTY  
-**Status:** NOT STARTED  
+**Status:** COMPLETED
 **Execution rule:** complete this stage only, then stop for approval.
 
 ## Objective
@@ -19,10 +19,10 @@ Implement simulated training, progress, loss/validation, hardware utilization, c
 9. Stop. Do not begin the next stage without separate authorization.
 
 ## Acceptance criteria
-- [ ] Training is reproducible for same seed and inputs.
-- [ ] Costs and hardware constraints are applied.
-- [ ] Optimization changes model metrics through documented rules.
-- [ ] Metrics are labeled as simulated game values.
+- [x] Training is reproducible for same seed and inputs.
+- [x] Costs and hardware constraints are applied.
+- [x] Optimization changes model metrics through documented rules.
+- [x] Metrics are labeled as simulated game values.
 
 ## Engineering constraints
 - React + TypeScript strict + Vite + Capacitor.

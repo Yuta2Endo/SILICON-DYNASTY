@@ -15,7 +15,7 @@ describe("game state validation", () => {
     const state = createInitialGameState();
 
     expect(() => parseGameState({ ...state, gameDate: "1995-02-30" })).toThrow(InvalidGameStateError);
-    expect(() => parseGameState({ ...state, schemaVersion: 10 })).toThrow(InvalidGameStateError);
+    expect(() => parseGameState({ ...state, schemaVersion: 11 })).toThrow(InvalidGameStateError);
   });
 
   it("migrates a Stage 1 save without losing company, date, or settings", () => {
@@ -29,7 +29,7 @@ describe("game state validation", () => {
 
     const migrated = parseGameState(legacyStageOneSave);
 
-    expect(migrated.schemaVersion).toBe(9);
+    expect(migrated.schemaVersion).toBe(10);
     expect(migrated.gameDate).toBe(current.gameDate);
     expect(migrated.company).toEqual(current.company);
     expect(migrated.settings).toEqual(current.settings);
@@ -58,7 +58,7 @@ describe("game state validation", () => {
       settings: current.settings,
     });
 
-    expect(migrated.schemaVersion).toBe(9);
+    expect(migrated.schemaVersion).toBe(10);
     expect(migrated.cpuProjects).toEqual([cpuProject]);
     expect(migrated.componentProjects).toEqual([]);
     expect(migrated.osProjects).toEqual([]);
@@ -83,7 +83,7 @@ describe("game state validation", () => {
 
     const migrated = parseGameState(legacySave);
 
-    expect(migrated.schemaVersion).toBe(9);
+    expect(migrated.schemaVersion).toBe(10);
     expect(migrated.gameDate).toBe("1998-06-15");
     expect(migrated.osProjects).toEqual([]);
     expect(migrated.finance).toEqual(current.finance);
@@ -122,7 +122,7 @@ describe("game state validation", () => {
 
     const migrated = parseGameState(legacySave);
 
-    expect(migrated.schemaVersion).toBe(9);
+    expect(migrated.schemaVersion).toBe(10);
     expect(migrated.company.balance).toBe(123_456);
     expect(migrated.componentProjects).toEqual([]);
     expect(migrated.osProjects).toEqual([]);
@@ -152,7 +152,7 @@ describe("game state validation", () => {
     };
     const migrated = parseGameState(stageFiveState);
 
-    expect(migrated.schemaVersion).toBe(9);
+    expect(migrated.schemaVersion).toBe(10);
     expect(migrated.osProjects).toEqual([]);
     expect(migrated.componentProjects).toEqual(state.componentProjects);
   });
@@ -187,7 +187,7 @@ describe("game state validation", () => {
       osProjects: [project],
     });
 
-    expect(migrated.schemaVersion).toBe(9);
+    expect(migrated.schemaVersion).toBe(10);
     expect(migrated.osProjects[0]?.configuration).toEqual(
       expect.objectContaining({
         filesystem: "fat",
@@ -238,7 +238,7 @@ describe("game state validation", () => {
       osProjects: [project],
     });
 
-    expect(migrated.schemaVersion).toBe(9);
+    expect(migrated.schemaVersion).toBe(10);
     expect(migrated.osProjects[0]?.configuration).toEqual(expect.objectContaining({
       gui: "cli",
       sdk: "basic",
@@ -257,9 +257,31 @@ describe("game state validation", () => {
       aiProjects: undefined,
     });
 
-    expect(migrated.schemaVersion).toBe(9);
+    expect(migrated.schemaVersion).toBe(10);
     expect(migrated.aiProjects).toEqual([]);
     expect(migrated.osProjects).toEqual(state.osProjects);
+  });
+
+  it("migrates schema-9 AI projects by initializing training and deployments", () => {
+    const state = createInitialGameState();
+    const project = createAiProject(
+      "ai-1",
+      "Legacy Vision",
+      createDefaultAiConfiguration(),
+      state.gameDate,
+    );
+    const { trainingJobs, deployments, ...legacyProject } = project;
+    expect([trainingJobs, deployments]).toEqual([[], []]);
+
+    const migrated = parseGameState({
+      ...state,
+      schemaVersion: 9,
+      aiProjects: [legacyProject],
+    });
+
+    expect(migrated.schemaVersion).toBe(10);
+    expect(migrated.aiProjects[0]?.trainingJobs).toEqual([]);
+    expect(migrated.aiProjects[0]?.deployments).toEqual([]);
   });
 
   it("preserves valid AI projects in current saves", () => {

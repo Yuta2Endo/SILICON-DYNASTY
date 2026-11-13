@@ -34,6 +34,7 @@ import {
   saveAiVersion as buildAiVersion,
   type AiConfiguration,
   type AiDataset,
+  type AiOptimizationType,
   type AiProject,
 } from "../models/ai";
 import { startResearchProject } from "../engine/research";
@@ -53,6 +54,12 @@ import {
   type ReleaseComponentProductInput,
 } from "../engine/component-market";
 import { advanceOsRelease, startOsRelease } from "../engine/os-release";
+import {
+  applyAiOptimization,
+  deployAiModel,
+  startAiTraining,
+  type StartAiTrainingInput,
+} from "../engine/ai-training";
 import { advanceGameDay } from "../engine/time";
 import type { GameStateRepository } from "../../storage/repositories/GameStateRepository";
 
@@ -85,6 +92,13 @@ export interface GameApplication {
     configuration: AiConfiguration,
     datasets: readonly AiDataset[],
   ): Promise<GameState>;
+  startAiTraining(projectId: string, input: StartAiTrainingInput): Promise<GameState>;
+  applyAiOptimization(
+    projectId: string,
+    trainingJobId: string,
+    type: AiOptimizationType,
+  ): Promise<GameState>;
+  deployAiModel(projectId: string, trainingJobId: string): Promise<GameState>;
   releaseProduct(input: ReleaseProductInput): Promise<GameState>;
   releaseComponentProduct(input: ReleaseComponentProductInput): Promise<GameState>;
   updateComponentProductPrice(productId: string, priceUsd: number): Promise<GameState>;
@@ -305,6 +319,18 @@ export function createGameApplication(repository: GameStateRepository): GameAppl
       );
 
       return commit({ ...state, aiProjects });
+    },
+
+    async startAiTraining(projectId, input) {
+      return commit(startAiTraining(await ensureLoaded(), projectId, input));
+    },
+
+    async applyAiOptimization(projectId, trainingJobId, type) {
+      return commit(applyAiOptimization(await ensureLoaded(), projectId, trainingJobId, type));
+    },
+
+    async deployAiModel(projectId, trainingJobId) {
+      return commit(deployAiModel(await ensureLoaded(), projectId, trainingJobId));
     },
 
     async updateProductPrice(productId, priceUsd) {

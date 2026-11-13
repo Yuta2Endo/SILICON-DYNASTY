@@ -75,7 +75,68 @@ export interface AiProject {
   configuration: AiConfiguration;
   datasets: AiDataset[];
   versions: AiDesignVersion[];
+  trainingJobs: AiTrainingJob[];
+  deployments: AiDeployment[];
 }
+
+export const AI_OPTIMIZATION_OPTIONS = [
+  "quantization",
+  "pruning",
+  "distillation",
+  "fine-tuning",
+] as const;
+
+export type AiOptimizationType = (typeof AI_OPTIMIZATION_OPTIONS)[number];
+
+export type AiTrainingStage = "training" | "completed";
+
+export interface AiOptimization {
+  type: AiOptimizationType;
+  appliedOn: string;
+  costUsd: number;
+}
+
+export interface AiTrainingJob {
+  id: string;
+  version: number;
+  seed: number;
+  hardwareProjectId: string | null;
+  hardwareName: string;
+  hardwareTflops: number;
+  hardwareVramGb: number;
+  totalDays: number;
+  progressDays: number;
+  costPerDayUsd: number;
+  totalCostUsd: number;
+  stage: AiTrainingStage;
+  loss: number;
+  validationScore: number;
+  startedOn: string;
+  completedOn: string | null;
+  configuration: AiConfiguration;
+  datasets: AiDataset[];
+  optimizations: AiOptimization[];
+}
+
+export interface AiDeployment {
+  id: string;
+  trainingJobId: string;
+  version: number;
+  deployedOn: string;
+  qualityScore: number;
+  appealScore: number;
+  costUsd: number;
+  optimizationTypes: AiOptimizationType[];
+}
+
+export const AI_OPTIMIZATION_COSTS_USD: Record<AiOptimizationType, number> = {
+  quantization: 12_000,
+  pruning: 18_000,
+  distillation: 30_000,
+  "fine-tuning": 22_000,
+};
+
+export const AI_DEPLOYMENT_COST_USD = 15_000;
 
 export const AI_LIMITS = {
   projectName: { min: 2, max: 40 },
@@ -92,6 +153,9 @@ export const AI_LIMITS = {
   datasetDiversityScore: { min: 0, max: 100 },
   datasetProcessingCostUsd: { min: 0, max: 1_000_000_000 },
   maxDatasets: 20,
+  trainingSeed: { min: 0, max: 2_147_483_647 },
+  maxTrainingJobs: 20,
+  maxDeployments: 20,
 } as const;
 
 export const AI_MINIMUM_YEARS = {
@@ -192,6 +256,14 @@ export function isAiDatasetModality(value: unknown): value is AiDatasetModality 
 
 export function isAiDatasetLicense(value: unknown): value is AiDatasetLicense {
   return typeof value === "string" && (AI_DATASET_LICENSE_OPTIONS as readonly string[]).includes(value);
+}
+
+export function isAiOptimizationType(value: unknown): value is AiOptimizationType {
+  return typeof value === "string" && (AI_OPTIMIZATION_OPTIONS as readonly string[]).includes(value);
+}
+
+export function isAiTrainingStage(value: unknown): value is AiTrainingStage {
+  return value === "training" || value === "completed";
 }
 
 export function createDefaultAiConfiguration(): AiConfiguration {
@@ -485,6 +557,8 @@ export function createAiProject(
       configuration: cloneAiConfiguration(configuration),
       datasets: [],
     }],
+    trainingJobs: [],
+    deployments: [],
   };
 }
 
@@ -592,7 +666,154 @@ function parseAiDatasetsValue(value: unknown): AiDataset[] {
   return datasets;
 }
 
-export function parseAiProject(value: unknown, currentDate: string): AiProject {
+function parseAiOptimizationValue(value: unknown): AiOptimization {
+  if (!isRecord(value) || !isAiOptimizationType(value.type)) {
+    throw new InvalidAiDataError("AI optimization is invalid.");
+  }
+  const appliedOn = requireString(value.appliedOn, "AI optimization date is invalid.");
+  assertDate(appliedOn);
+  const costUsd = requireNumber(value.costUsd, "AI optimization cost is invalid.");
+  if (costUsd < 0) {
+    throw new InvalidAiDataError("AI optimization cost is invalid.");
+  }
+  return { type: value.type, appliedOn, costUsd };
+}
+
+function parseAiTrainingJobValue(value: unknown, currentYear: number): AiTrainingJob {
+  if (!isRecord(value)) {
+    throw new InvalidAiDataError("AI training job is invalid.");
+  }
+  const id = requireString(value.id, "AI training job ID is invalid.");
+  const version = requireNumber(value.version, "AI training job version is invalid.");
+  if (!Number.isInteger(version) || version < 1) {
+    throw new InvalidAiDataError("AI training job version is invalid.");
+  }
+  const seed = requireNumber(value.seed, "AI training seed is invalid.");
+  if (!Number.isInteger(seed) || seed < AI_LIMITS.trainingSeed.min || seed > AI_LIMITS.trainingSeed.max) {
+    throw new InvalidAiDataError("AI training seed is invalid.");
+  }
+  const hardwareProjectId = value.hardwareProjectId === null
+    ? null
+    : requireString(value.hardwareProjectId, "AI training hardware ID is invalid.");
+  const hardwareName = requireString(value.hardwareName, "AI training hardware name is invalid.");
+  const hardwareTflops = requireNumber(value.hardwareTflops, "AI training hardware compute is invalid.");
+  const hardwareVramGb = requireNumber(value.hardwareVramGb, "AI training hardware memory is invalid.");
+  if (hardwareTflops <= 0 || hardwareVramGb <= 0) {
+    throw new InvalidAiDataError("AI training hardware specifications are invalid.");
+  }
+  const totalDays = requireNumber(value.totalDays, "AI training duration is invalid.");
+  const progressDays = requireNumber(value.progressDays, "AI training progress is invalid.");
+  if (!Number.isInteger(totalDays) || totalDays < 1 || totalDays > 60) {
+    throw new InvalidAiDataError("AI training duration is invalid.");
+  }
+  if (!Number.isInteger(progressDays) || progressDays < 0 || progressDays > totalDays) {
+    throw new InvalidAiDataError("AI training progress is invalid.");
+  }
+  const costPerDayUsd = requireNumber(value.costPerDayUsd, "AI training daily cost is invalid.");
+  const totalCostUsd = requireNumber(value.totalCostUsd, "AI training total cost is invalid.");
+  if (costPerDayUsd < 0 || totalCostUsd < 0) {
+    throw new InvalidAiDataError("AI training cost is invalid.");
+  }
+  if (!isAiTrainingStage(value.stage)) {
+    throw new InvalidAiDataError("AI training stage is invalid.");
+  }
+  const loss = requireNumber(value.loss, "AI training loss is invalid.");
+  const validationScore = requireNumber(value.validationScore, "AI validation score is invalid.");
+  if (loss < 0 || loss > 100 || validationScore < 0 || validationScore > 100) {
+    throw new InvalidAiDataError("AI training metrics are invalid.");
+  }
+  const startedOn = requireString(value.startedOn, "AI training start date is invalid.");
+  assertDate(startedOn);
+  const completedOn = value.completedOn === null
+    ? null
+    : requireString(value.completedOn, "AI training completion date is invalid.");
+  if (completedOn !== null) {
+    assertDate(completedOn);
+  }
+  if (value.stage === "completed") {
+    if (completedOn === null || progressDays !== totalDays) {
+      throw new InvalidAiDataError("Completed AI training job is inconsistent.");
+    }
+  } else if (completedOn !== null || progressDays >= totalDays) {
+    throw new InvalidAiDataError("Active AI training job is inconsistent.");
+  }
+
+  const configuration = parseAiConfigurationValue(value.configuration);
+  assertConfiguration(configuration, currentYear);
+  const datasets = parseAiDatasetsValue(value.datasets);
+  assertDatasets(datasets, currentYear);
+
+  if (!Array.isArray(value.optimizations)) {
+    throw new InvalidAiDataError("AI training optimizations are invalid.");
+  }
+  const optimizations = value.optimizations.map(parseAiOptimizationValue);
+  if (new Set(optimizations.map((optimization) => optimization.type)).size !== optimizations.length) {
+    throw new InvalidAiDataError("AI training optimizations must be unique.");
+  }
+
+  return {
+    id,
+    version,
+    seed,
+    hardwareProjectId,
+    hardwareName,
+    hardwareTflops,
+    hardwareVramGb,
+    totalDays,
+    progressDays,
+    costPerDayUsd,
+    totalCostUsd,
+    stage: value.stage,
+    loss,
+    validationScore,
+    startedOn,
+    completedOn,
+    configuration,
+    datasets,
+    optimizations,
+  };
+}
+
+function parseAiDeploymentValue(value: unknown): AiDeployment {
+  if (!isRecord(value)) {
+    throw new InvalidAiDataError("AI deployment is invalid.");
+  }
+  const id = requireString(value.id, "AI deployment ID is invalid.");
+  const trainingJobId = requireString(value.trainingJobId, "AI deployment training job is invalid.");
+  const version = requireNumber(value.version, "AI deployment version is invalid.");
+  if (!Number.isInteger(version) || version < 1) {
+    throw new InvalidAiDataError("AI deployment version is invalid.");
+  }
+  const deployedOn = requireString(value.deployedOn, "AI deployment date is invalid.");
+  assertDate(deployedOn);
+  const qualityScore = requireNumber(value.qualityScore, "AI deployment quality is invalid.");
+  const appealScore = requireNumber(value.appealScore, "AI deployment appeal is invalid.");
+  if (qualityScore < 0 || qualityScore > 100 || appealScore < 0 || appealScore > 100) {
+    throw new InvalidAiDataError("AI deployment metrics are invalid.");
+  }
+  const costUsd = requireNumber(value.costUsd, "AI deployment cost is invalid.");
+  if (costUsd < 0) {
+    throw new InvalidAiDataError("AI deployment cost is invalid.");
+  }
+  if (!Array.isArray(value.optimizationTypes) || !value.optimizationTypes.every(isAiOptimizationType)) {
+    throw new InvalidAiDataError("AI deployment optimizations are invalid.");
+  }
+  const optimizationTypes = value.optimizationTypes as AiOptimizationType[];
+  if (new Set(optimizationTypes).size !== optimizationTypes.length) {
+    throw new InvalidAiDataError("AI deployment optimizations must be unique.");
+  }
+  return { id, trainingJobId, version, deployedOn, qualityScore, appealScore, costUsd, optimizationTypes };
+}
+
+export interface AiProjectParseOptions {
+  allowMissingTraining?: boolean;
+}
+
+export function parseAiProject(
+  value: unknown,
+  currentDate: string,
+  options: AiProjectParseOptions = {},
+): AiProject {
   if (!isRecord(value)) {
     throw new InvalidAiDataError("AI project is invalid.");
   }
@@ -653,11 +874,50 @@ export function parseAiProject(value: unknown, currentDate: string): AiProject {
     throw new InvalidAiDataError("AI project latest version must match the project.");
   }
 
+  const trainingJobs = value.trainingJobs === undefined && options.allowMissingTraining === true
+    ? []
+    : Array.isArray(value.trainingJobs)
+      ? value.trainingJobs.map((job) => parseAiTrainingJobValue(job, year))
+      : (() => { throw new InvalidAiDataError("AI training jobs are invalid."); })();
+  if (trainingJobs.length > AI_LIMITS.maxTrainingJobs) {
+    throw new InvalidAiDataError("Too many AI training jobs.");
+  }
+  if (new Set(trainingJobs.map((job) => job.id)).size !== trainingJobs.length) {
+    throw new InvalidAiDataError("AI training job IDs must be unique.");
+  }
+  if (trainingJobs.filter((job) => job.stage === "training").length > 1) {
+    throw new InvalidAiDataError("Only one AI training job can be active.");
+  }
+
+  const deployments = value.deployments === undefined && options.allowMissingTraining === true
+    ? []
+    : Array.isArray(value.deployments)
+      ? value.deployments.map(parseAiDeploymentValue)
+      : (() => { throw new InvalidAiDataError("AI deployments are invalid."); })();
+  if (deployments.length > AI_LIMITS.maxDeployments) {
+    throw new InvalidAiDataError("Too many AI deployments.");
+  }
+  if (new Set(deployments.map((deployment) => deployment.id)).size !== deployments.length) {
+    throw new InvalidAiDataError("AI deployment IDs must be unique.");
+  }
+  for (const deployment of deployments) {
+    const job = trainingJobs.find((candidate) => candidate.id === deployment.trainingJobId);
+    if (job === undefined || job.stage !== "completed" || job.version !== deployment.version) {
+      throw new InvalidAiDataError("AI deployment must reference a completed training job.");
+    }
+    const jobOptimizations = new Set(job.optimizations.map((optimization) => optimization.type));
+    if (deployment.optimizationTypes.some((type) => !jobOptimizations.has(type))) {
+      throw new InvalidAiDataError("AI deployment optimizations must match its training job.");
+    }
+  }
+
   return {
     id,
     name: name.trim(),
     configuration: cloneAiConfiguration(configuration),
     datasets: cloneAiDatasets(datasets),
     versions,
+    trainingJobs,
+    deployments,
   };
 }

@@ -9,7 +9,7 @@ import { MarketPage } from "../features/market/MarketPage";
 import { ResearchPage } from "../features/research/ResearchPage";
 import { createGameApplication, type GameApplication } from "../game/application/game-application";
 import type { CpuConfiguration } from "../game/models/cpu";
-import type { AiConfiguration, AiDataset } from "../game/models/ai";
+import type { AiConfiguration, AiDataset, AiOptimizationType } from "../game/models/ai";
 import type { GameSettings, GameState } from "../game/models/game-state";
 import { createBrowserGameStateRepository } from "../storage/repositories/BrowserGameStateRepository";
 import { translations } from "../localization/messages";
@@ -233,6 +233,21 @@ export function App({ application }: AppProps = {}) {
           onOpenComponents={() => requestNavigation("components")}
           onOpenCpu={() => requestNavigation("cpu")}
           onOpenOs={() => requestNavigation("os")}
+          onStartTraining={async (projectId, input) =>
+            (await runCommand(() => gameApplication.startAiTraining(projectId, input))) !== null
+          }
+          onApplyOptimization={async (
+            projectId: string,
+            trainingJobId: string,
+            type: AiOptimizationType,
+          ) =>
+            (await runCommand(
+              () => gameApplication.applyAiOptimization(projectId, trainingJobId, type),
+            )) !== null
+          }
+          onDeployModel={async (projectId, trainingJobId) =>
+            (await runCommand(() => gameApplication.deployAiModel(projectId, trainingJobId))) !== null
+          }
           onSaveVersion={async (projectId, name, configuration: AiConfiguration, datasets: AiDataset[]) =>
             (await runCommand(
               () => gameApplication.saveAiVersion(projectId, name, configuration, datasets),

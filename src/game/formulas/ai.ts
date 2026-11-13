@@ -4,7 +4,10 @@ import type {
   AiDataset,
   AiDatasetLicense,
   AiDatasetModality,
+  AiOptimizationType,
 } from "../models/ai";
+import type { ComponentProject } from "../models/components";
+import { calculateComponentPerformanceScore } from "./components";
 
 export interface AiArchitectureProfile {
   quality: number;
@@ -47,6 +50,32 @@ export interface AiHardwareRequirements {
   systemRamGb: number;
   storageGb: number;
   recommendedGpuVramGb: number;
+}
+
+export interface AiTrainingHardware {
+  id: string | null;
+  name: string;
+  kind: "reference" | "gpu" | "ai-accelerator";
+  tflops: number;
+  vramGb: number;
+}
+
+export interface AiTrainingPlan {
+  hardware: AiTrainingHardware;
+  minimumTflops: number;
+  requiredVramGb: number;
+  totalDays: number;
+  costPerDayUsd: number;
+  totalCostUsd: number;
+  compatible: boolean;
+  issues: Array<"insufficient-compute" | "insufficient-vram">;
+}
+
+export interface AiTrainingProgress {
+  loss: number;
+  validationScore: number;
+  progressRatio: number;
+  completed: boolean;
 }
 
 const AI_ARCHITECTURE_PROFILES: Record<AiArchitecture, AiArchitectureProfile> = {
@@ -184,6 +213,7 @@ function summarizeDatasets(datasets: readonly AiDataset[]): DatasetSummary {
 export function calculateAiModelMetrics(
   configuration: AiConfiguration,
   datasets: readonly AiDataset[],
+  optimizations: readonly AiOptimizationType[] = [],
 ): AiModelMetrics {
   const architecture = getAiArchitectureProfile(configuration.architecture);
   const inferenceBytes = getInferenceBytes(configuration);
@@ -203,7 +233,7 @@ export function calculateAiModelMetrics(
     0.9,
     1.1,
   );
-  const qualityScore = clamp(
+  const baseQuality = clamp(
     architecture.quality *
       scaleFactor *
       dataFactor *
@@ -226,7 +256,9 @@ export function calculateAiModelMetrics(
     100,
   );
 
-  const inferenceEfficiencyScore = clamp(
+  let optimizedModelSizeGb = modelSizeGb;
+  let qualityScore = baseQuality;
+  let inferenceEfficiencyScore = clamp(
     96 -
       modelSizeGb * 0.45 +
       QUANTIZATION_EFFICIENCY_BONUS[configuration.quantization] -
@@ -234,12 +266,39 @@ export function calculateAiModelMetrics(
     10,
     99,
   );
-
-  const commercialReadinessScore = clamp(
-    qualityScore * 0.6 + dataset.licenseCompliance * 100 * 0.25 + dataset.diversity * 0.15,
+  let commercialReadinessScore = clamp(
+    baseQuality * 0.6 + dataset.licenseCompliance * 100 * 0.25 + dataset.diversity * 0.15,
     0,
     100,
   );
+
+  for (const optimization of new Set(optimizations)) {
+    switch (optimization) {
+      case "quantization":
+        optimizedModelSizeGb *= 0.55;
+        inferenceEfficiencyScore += 8;
+        qualityScore -= 1.5;
+        break;
+      case "pruning":
+        optimizedModelSizeGb *= 0.75;
+        inferenceEfficiencyScore += 5;
+        qualityScore -= 2.5;
+        break;
+      case "distillation":
+        optimizedModelSizeGb *= 0.7;
+        inferenceEfficiencyScore += 10;
+        qualityScore -= 3.5;
+        break;
+      case "fine-tuning":
+        qualityScore += 4;
+        commercialReadinessScore += 3;
+        break;
+    }
+  }
+
+  qualityScore = clamp(qualityScore, 0, 100);
+  inferenceEfficiencyScore = clamp(inferenceEfficiencyScore, 10, 99);
+  commercialReadinessScore = clamp(commercialReadinessScore, 0, 100);
   const appealScore = clamp(
     qualityScore * 0.55 + commercialReadinessScore * 0.25 + inferenceEfficiencyScore * 0.2,
     0,
@@ -263,7 +322,7 @@ export function calculateAiModelMetrics(
       2 *
       inferenceBytes) /
     1e9;
-  const inferenceVramGb = modelSizeGb + kvCacheGb + 1.5;
+  const inferenceVramGb = optimizedModelSizeGb + kvCacheGb + 1.5;
   const systemRamGb = 16 + dataset.sizeGb * 0.2 + weightsTrainingGb * 0.5;
   const storageGb = 20 + dataset.sizeGb * 1.2 + weightsTrainingGb * 4;
   const recommendedGpuVramGb = trainingVramGb * 1.25;
@@ -274,7 +333,7 @@ export function calculateAiModelMetrics(
   );
 
   return {
-    modelSizeGb: round(modelSizeGb, 3),
+    modelSizeGb: round(optimizedModelSizeGb, 3),
     datasetSizeGb: round(dataset.sizeGb, 1),
     datasetQualityScore: round(dataset.quality, 1),
     datasetDiversityScore: round(dataset.diversity, 1),
@@ -291,6 +350,117 @@ export function calculateAiModelMetrics(
     storageGb: round(storageGb, 1),
     recommendedGpuVramGb: round(recommendedGpuVramGb, 1),
   };
+}
+
+export function getAiTrainingHardwareOptions(
+  projects: readonly ComponentProject[],
+): AiTrainingHardware[] {
+  const reference: AiTrainingHardware = {
+    id: null,
+    name: "Reference training cluster",
+    kind: "reference",
+    tflops: 20,
+    vramGb: 16,
+  };
+  const hardware = projects
+    .filter((project) => project.configuration.type === "gpu" || project.configuration.type === "ai-accelerator")
+    .map((project) => {
+      const configuration = project.configuration;
+      const performanceScore = calculateComponentPerformanceScore(configuration);
+      const vramGb = configuration.type === "gpu" || configuration.type === "ai-accelerator"
+        ? configuration.memoryCapacityGb
+        : 0;
+      return {
+        id: project.id,
+        name: project.name,
+        kind: configuration.type as "gpu" | "ai-accelerator",
+        tflops: round(5 + performanceScore * 15, 1),
+        vramGb: round(vramGb, 1),
+      } satisfies AiTrainingHardware;
+    });
+  return [reference, ...hardware];
+}
+
+export function calculateAiTrainingPlan(
+  configuration: AiConfiguration,
+  datasets: readonly AiDataset[],
+  hardware: AiTrainingHardware,
+): AiTrainingPlan {
+  const metrics = calculateAiModelMetrics(configuration, datasets);
+  const issues: AiTrainingPlan["issues"] = [];
+  if (hardware.tflops < metrics.minimumGpuTflops) {
+    issues.push("insufficient-compute");
+  }
+  if (hardware.vramGb < metrics.trainingVramGb) {
+    issues.push("insufficient-vram");
+  }
+  const totalDays = Math.max(1, Math.min(60, Math.ceil(
+    2 +
+    configuration.parameterCountM / 1000 +
+    metrics.trainingVramGb / 8 +
+    metrics.datasetSizeGb / 100,
+  )));
+  const costPerDayUsd = Math.round(120 + hardware.tflops * 6 + hardware.vramGb * 9);
+  return {
+    hardware,
+    minimumTflops: metrics.minimumGpuTflops,
+    requiredVramGb: metrics.trainingVramGb,
+    totalDays,
+    costPerDayUsd,
+    totalCostUsd: totalDays * costPerDayUsd,
+    compatible: issues.length === 0,
+    issues,
+  };
+}
+
+function seededUnit(seed: number, day: number, salt: number): number {
+  let value = (seed ^ Math.imul(day + 1, 374_761_393) ^ salt) >>> 0;
+  value = Math.imul(value ^ (value >>> 15), 2_246_822_519);
+  value = Math.imul(value ^ (value >>> 13), 3_266_489_917);
+  return ((value ^ (value >>> 16)) >>> 0) / 4_294_967_295;
+}
+
+export function simulateAiTrainingProgress(
+  configuration: AiConfiguration,
+  datasets: readonly AiDataset[],
+  seed: number,
+  totalDays: number,
+  progressDays: number,
+  optimizations: readonly AiOptimizationType[] = [],
+): AiTrainingProgress {
+  const safeTotalDays = Math.max(1, Math.round(totalDays));
+  const safeProgress = Math.max(0, Math.min(safeTotalDays, Math.round(progressDays)));
+  const progressRatio = safeProgress / safeTotalDays;
+  const noise = seededUnit(seed, safeProgress, 0x9e3779b9);
+  const loss = Math.max(0.05, 4.8 * Math.exp(-3.4 * progressRatio) + noise * 0.18);
+  const metrics = calculateAiModelMetrics(configuration, datasets, optimizations);
+  const validationScore = clamp(
+    metrics.qualityScore * (0.55 + 0.45 * progressRatio) + (100 - loss * 20) * 0.25,
+    0,
+    100,
+  );
+  return {
+    loss: round(loss, 3),
+    validationScore: round(validationScore, 1),
+    progressRatio: round(progressRatio, 3),
+    completed: safeProgress >= safeTotalDays,
+  };
+}
+
+export function calculateAiDeploymentMetrics(job: {
+  configuration: AiConfiguration;
+  datasets: readonly AiDataset[];
+  optimizations: readonly { type: AiOptimizationType }[];
+  validationScore: number;
+}): { qualityScore: number; appealScore: number } {
+  const metrics = calculateAiModelMetrics(
+    job.configuration,
+    job.datasets,
+    job.optimizations.map((optimization) => optimization.type),
+  );
+  const qualityScore = clamp(metrics.qualityScore * 0.65 + job.validationScore * 0.35, 0, 100);
+  const appealScore = clamp(metrics.appealScore * 0.7 + qualityScore * 0.3, 0, 100);
+  return { qualityScore: round(qualityScore, 1), appealScore: round(appealScore, 1) };
 }
 
 export function evaluateAiHardwareRequirements(

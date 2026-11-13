@@ -189,3 +189,31 @@ formulas are in [`AI_LAB.md`](AI_LAB.md).
 - AI projects persist in save schema v9 with configuration and dataset snapshots
   per version. They do not enter the daily market, finance or reputation pipeline.
   Training and deployment are reserved for Stage 11.
+
+## AI training and deployment (Stage 11)
+
+Stage 11 adds deterministic training runs, simulated loss/validation progress,
+hardware plans, post-training optimization and model deployment. Full rules,
+costs and formulas are in [`AI_TRAINING.md`](AI_TRAINING.md).
+
+- Training hardware is either the reference cluster (20 TFLOPS, 16 GB) or a saved
+  GPU/AI-accelerator component. Component TFLOPS are derived from its calculated
+  performance score; VRAM is its memory capacity.
+- A training plan requires the calculated minimum GPU TFLOPS and training VRAM.
+  Incompatible hardware is rejected before any cost is charged.
+- Duration is `clamp(ceil(2 + parametersM/1000 + trainingVRAM/8 + datasetGB/100), 1, 60)`
+  days. Daily cost is `$120 + TFLOPS*6 + VRAM*9`; the full cost is charged upfront
+  through the finance ledger under research.
+- Loss and validation are deterministic functions of the seed, day, model,
+  datasets and optimizations. The same seed and inputs always produce the same
+  result; loss falls with progress while validation rises.
+- Optimization costs: quantization $12k, pruning $18k, distillation $30k and
+  fine-tuning $22k. Quantization/pruning/distillation reduce model size and raise
+  inference efficiency at a quality cost; fine-tuning raises quality and
+  commercial readiness. Each type can be applied once to a completed run.
+- Deployment costs $15k, requires a completed run, and creates an immutable
+  deployment snapshot with version, quality, appeal and applied optimizations.
+  A training run can be deployed once.
+- Training/deployment persist in save schema v10. Active jobs advance once per
+  game day after component sales and before finance settlement. Deployment does
+  not yet affect the market or reputation pipeline.

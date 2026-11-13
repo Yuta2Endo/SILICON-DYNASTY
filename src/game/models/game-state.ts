@@ -21,9 +21,9 @@ import {
   type ResearchState,
 } from "./research";
 
-export const SAVE_SCHEMA_VERSION = 9 as const;
+export const SAVE_SCHEMA_VERSION = 10 as const;
 
-const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, SAVE_SCHEMA_VERSION] as const;
+const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, SAVE_SCHEMA_VERSION] as const;
 
 export type Locale = "ru" | "en";
 export type Theme = "light" | "dark";
@@ -212,7 +212,9 @@ export function parseGameState(value: unknown): GameState {
     }
 
     try {
-      aiProjects = value.aiProjects.map((project) => parseAiProject(project, value.gameDate as string));
+      aiProjects = value.aiProjects.map((project) => parseAiProject(project, value.gameDate as string, {
+        allowMissingTraining: sourceSchemaVersion < 10,
+      }));
     } catch {
       throw new InvalidGameStateError("Save data contains an invalid AI project.");
     }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  AI_DEPLOYMENT_COST_USD,
   createAiProject,
   createDefaultAiConfiguration,
   createDefaultAiDataset,
@@ -10,7 +11,48 @@ import {
   validateAiDataset,
   validateAiDatasets,
   type AiDataset,
+  type AiDeployment,
+  type AiTrainingJob,
 } from "./ai";
+
+function trainingJob(overrides: Partial<AiTrainingJob> = {}): AiTrainingJob {
+  return {
+    id: "ai-training-1",
+    version: 1,
+    seed: 42,
+    hardwareProjectId: null,
+    hardwareName: "Reference training cluster",
+    hardwareTflops: 20,
+    hardwareVramGb: 16,
+    totalDays: 3,
+    progressDays: 1,
+    costPerDayUsd: 300,
+    totalCostUsd: 900,
+    stage: "training",
+    loss: 2.5,
+    validationScore: 40,
+    startedOn: "1995-01-01",
+    completedOn: null,
+    configuration: createDefaultAiConfiguration(),
+    datasets: [],
+    optimizations: [],
+    ...overrides,
+  };
+}
+
+function deployment(trainingJobId: string, overrides: Partial<AiDeployment> = {}): AiDeployment {
+  return {
+    id: "ai-deployment-1",
+    trainingJobId,
+    version: 1,
+    deployedOn: "1995-01-04",
+    qualityScore: 45,
+    appealScore: 40,
+    costUsd: AI_DEPLOYMENT_COST_USD,
+    optimizationTypes: [],
+    ...overrides,
+  };
+}
 
 describe("AI domain", () => {
   it("creates a valid default project and round-trips it", () => {
@@ -96,5 +138,61 @@ describe("AI domain", () => {
     const updated = saveAiVersion(project, "Dynasty Vision", configuration, [dataset], "1995-01-02");
 
     expect(() => parseAiProject({ ...updated, datasets: [] }, "1995-01-02")).toThrow(InvalidAiDataError);
+  });
+
+  it("parses completed training jobs and deployment snapshots", () => {
+    const project = createAiProject("ai-1", "Dynasty Vision", createDefaultAiConfiguration(), "1995-01-01");
+    const job = trainingJob({
+      stage: "completed",
+      progressDays: 3,
+      completedOn: "1995-01-03",
+      optimizations: [{ type: "quantization", appliedOn: "1995-01-03", costUsd: 12_000 }],
+    });
+    const snapshot = {
+      ...project,
+      trainingJobs: [job],
+      deployments: [deployment(job.id, { optimizationTypes: ["quantization"] })],
+    };
+
+    expect(parseAiProject(snapshot, "1995-01-04")).toEqual(snapshot);
+  });
+
+  it("requires training arrays in strict saves and fills them for legacy saves", () => {
+    const project = createAiProject("ai-1", "Dynasty Vision", createDefaultAiConfiguration(), "1995-01-01");
+    const { trainingJobs, deployments, ...legacy } = project;
+
+    expect(trainingJobs).toEqual([]);
+    expect(deployments).toEqual([]);
+    expect(() => parseAiProject(legacy, "1995-01-01")).toThrow(InvalidAiDataError);
+    expect(parseAiProject(legacy, "1995-01-01", { allowMissingTraining: true })).toMatchObject({
+      trainingJobs: [],
+      deployments: [],
+    });
+  });
+
+  it("rejects inconsistent training jobs and deployment references", () => {
+    const project = createAiProject("ai-1", "Dynasty Vision", createDefaultAiConfiguration(), "1995-01-01");
+    const active = trainingJob();
+
+    expect(() => parseAiProject({ ...project, trainingJobs: [trainingJob({ progressDays: 3 })] }, "1995-01-04"))
+      .toThrow(InvalidAiDataError);
+    expect(() => parseAiProject({
+      ...project,
+      trainingJobs: [trainingJob({ stage: "completed", progressDays: 3 })],
+    }, "1995-01-04")).toThrow(InvalidAiDataError);
+    expect(() => parseAiProject({
+      ...project,
+      trainingJobs: [active, trainingJob({ id: "ai-training-2" })],
+    }, "1995-01-04")).toThrow(InvalidAiDataError);
+    expect(() => parseAiProject({
+      ...project,
+      trainingJobs: [trainingJob({ stage: "completed", progressDays: 3, completedOn: "1995-01-03" })],
+      deployments: [deployment("missing-job")],
+    }, "1995-01-04")).toThrow(InvalidAiDataError);
+    expect(() => parseAiProject({
+      ...project,
+      trainingJobs: [trainingJob({ stage: "completed", progressDays: 3, completedOn: "1995-01-03" })],
+      deployments: [deployment(active.id, { optimizationTypes: ["quantization"] })],
+    }, "1995-01-04")).toThrow(InvalidAiDataError);
   });
 });

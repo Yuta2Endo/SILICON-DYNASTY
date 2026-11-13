@@ -2,7 +2,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createInitialGameState } from "../../game/models/game-state";
-import { createAiProject, createDefaultAiConfiguration } from "../../game/models/ai";
+import { createAiProject, createDefaultAiConfiguration, type AiTrainingJob } from "../../game/models/ai";
 import { translations } from "../../localization/messages";
 import { AiDesignerPage } from "./AiDesignerPage";
 
@@ -17,6 +17,38 @@ const aiProject = createAiProject(
   baseState.gameDate,
 );
 const stateWithProject = { ...baseState, aiProjects: [aiProject] };
+
+function trainingJob(overrides: Partial<AiTrainingJob> = {}): AiTrainingJob {
+  return {
+    id: "ai-training-1",
+    version: 1,
+    seed: 42,
+    hardwareProjectId: null,
+    hardwareName: "Reference training cluster",
+    hardwareTflops: 20,
+    hardwareVramGb: 16,
+    totalDays: 3,
+    progressDays: 1,
+    costPerDayUsd: 300,
+    totalCostUsd: 900,
+    stage: "training",
+    loss: 2.5,
+    validationScore: 40,
+    startedOn: "1995-01-01",
+    completedOn: null,
+    configuration: createDefaultAiConfiguration(),
+    datasets: [],
+    optimizations: [],
+    ...overrides,
+  };
+}
+
+function withTrainingJobs(jobs: AiTrainingJob[]) {
+  return {
+    ...stateWithProject,
+    aiProjects: stateWithProject.aiProjects.map((project) => ({ ...project, trainingJobs: jobs })),
+  };
+}
 
 function renderDesigner(overrides: Partial<Parameters<typeof AiDesignerPage>[0]> = {}) {
   return render(
@@ -104,5 +136,58 @@ describe("AI designer", () => {
 
     await user.click(screen.getByRole("button", { name: ru.productWorkspace.cpu }));
     expect(onOpenCpu).toHaveBeenCalledTimes(1);
+  });
+
+  it("starts training with the selected seed and reference hardware", async () => {
+    const user = userEvent.setup();
+    const onStartTraining = vi.fn(async () => true);
+    renderDesigner({ onStartTraining });
+
+    expect(screen.getByText(ru.ai.training.simulationNote)).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: ru.ai.training.start }));
+
+    await waitFor(() => expect(onStartTraining).toHaveBeenCalledWith("ai-1", {
+      seed: 42,
+      hardwareProjectId: null,
+    }));
+  });
+
+  it("shows an active training job with progress and no start action", () => {
+    renderDesigner({ state: withTrainingJobs([trainingJob()]) });
+
+    expect(screen.getByText(ru.ai.training.active)).toBeTruthy();
+    expect(screen.getByRole("progressbar", { name: ru.ai.training.progress }).getAttribute("aria-valuenow"))
+      .toBe("1");
+    expect(screen.queryByRole("button", { name: ru.ai.training.start })).toBeNull();
+  });
+
+  it("applies an optimization and deploys a completed training job", async () => {
+    const user = userEvent.setup();
+    const onApplyOptimization = vi.fn(async () => true);
+    const onDeployModel = vi.fn(async () => true);
+    const completed = trainingJob({
+      stage: "completed",
+      progressDays: 3,
+      completedOn: "1995-01-03",
+      loss: 0.5,
+      validationScore: 70,
+    });
+    renderDesigner({
+      state: withTrainingJobs([completed]),
+      onApplyOptimization,
+      onDeployModel,
+    });
+
+    await user.click(screen.getAllByRole("button", {
+      name: new RegExp(ru.ai.training.applyOptimization),
+    })[0] as HTMLElement);
+    await waitFor(() => expect(onApplyOptimization).toHaveBeenCalledWith(
+      "ai-1",
+      "ai-training-1",
+      "quantization",
+    ));
+
+    await user.click(screen.getByRole("button", { name: new RegExp(ru.ai.training.deploy) }));
+    await waitFor(() => expect(onDeployModel).toHaveBeenCalledWith("ai-1", "ai-training-1"));
   });
 });

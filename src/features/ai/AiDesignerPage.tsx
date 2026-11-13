@@ -6,7 +6,10 @@ import {
   Database,
   Gauge,
   HardDrive,
+  Play,
+  Rocket,
   Save,
+  Sparkles,
   Trash2,
   TriangleAlert,
 } from "lucide-react";
@@ -17,7 +20,10 @@ import {
   AI_ARCHITECTURE_OPTIONS,
   AI_DATASET_LICENSE_OPTIONS,
   AI_DATASET_MODALITY_OPTIONS,
+  AI_DEPLOYMENT_COST_USD,
   AI_LIMITS,
+  AI_OPTIMIZATION_COSTS_USD,
+  AI_OPTIMIZATION_OPTIONS,
   AI_PRECISION_OPTIONS,
   AI_QUANTIZATION_OPTIONS,
   aiConfigurationsEqual,
@@ -33,13 +39,18 @@ import {
   type AiDataset,
   type AiDatasetLicense,
   type AiDatasetModality,
+  type AiOptimizationType,
   type AiPrecision,
   type AiQuantization,
   type AiValidationIssue,
 } from "../../game/models/ai";
-import { calculateAiModelMetrics } from "../../game/formulas/ai";
+import {
+  calculateAiModelMetrics,
+  calculateAiTrainingPlan,
+  getAiTrainingHardwareOptions,
+} from "../../game/formulas/ai";
 import type { GameState } from "../../game/models/game-state";
-import { formatDecimal, formatNumber, formatShortGameDate } from "../../localization/formatters";
+import { formatCurrency, formatDecimal, formatNumber, formatShortGameDate } from "../../localization/formatters";
 import { translations } from "../../localization/messages";
 
 interface AiDesignerPageProps {
@@ -56,6 +67,16 @@ interface AiDesignerPageProps {
   onOpenCpu: () => void;
   onOpenComponents: () => void;
   onOpenOs: () => void;
+  onStartTraining?: (
+    projectId: string,
+    input: { seed: number; hardwareProjectId: string | null },
+  ) => Promise<boolean>;
+  onApplyOptimization?: (
+    projectId: string,
+    trainingJobId: string,
+    type: AiOptimizationType,
+  ) => Promise<boolean>;
+  onDeployModel?: (projectId: string, trainingJobId: string) => Promise<boolean>;
 }
 
 type PendingAction =
@@ -103,6 +124,9 @@ export function AiDesignerPage({
   onOpenCpu,
   onOpenComponents,
   onOpenOs,
+  onStartTraining,
+  onApplyOptimization,
+  onDeployModel,
 }: AiDesignerPageProps) {
   const locale = state.settings.locale;
   const t = translations[locale];
@@ -132,6 +156,9 @@ export function AiDesignerPage({
     processingCostUsd: "250",
   });
   const [showDatasetValidation, setShowDatasetValidation] = useState(false);
+  const [trainingHardwareId, setTrainingHardwareId] = useState("reference");
+  const [trainingSeed, setTrainingSeed] = useState("42");
+  const [trainingError, setTrainingError] = useState<string | null>(null);
 
   const draftIsDirty = Boolean(
     selectedProject
@@ -150,6 +177,46 @@ export function AiDesignerPage({
       return null;
     }
   })();
+
+  const trainingHardwareOptions = getAiTrainingHardwareOptions(state.componentProjects);
+  const selectedTrainingHardware = trainingHardwareOptions.find(
+    (hardware) => (hardware.id ?? "reference") === trainingHardwareId,
+  ) ?? trainingHardwareOptions[0];
+  const trainingPlan = (() => {
+    if (!selectedProject || !selectedTrainingHardware) {
+      return null;
+    }
+    try {
+      return calculateAiTrainingPlan(
+        selectedProject.configuration,
+        selectedProject.datasets,
+        selectedTrainingHardware,
+      );
+    } catch {
+      return null;
+    }
+  })();
+  const activeTrainingJob = selectedProject?.trainingJobs.find((job) => job.stage === "training") ?? null;
+  const completedTrainingJobs = selectedProject
+    ? selectedProject.trainingJobs.filter((job) => job.stage === "completed").reverse()
+    : [];
+  const deployedJobIds = new Set(selectedProject?.deployments.map((deployment) => deployment.trainingJobId) ?? []);
+  const seedValue = Number(trainingSeed);
+  const seedIsValid = trainingSeed.trim() !== ""
+    && Number.isInteger(seedValue)
+    && seedValue >= AI_LIMITS.trainingSeed.min
+    && seedValue <= AI_LIMITS.trainingSeed.max;
+  const trainingBlockedReason = !selectedProject
+    ? copy.training.noProject
+    : draftIsDirty
+      ? copy.training.saveFirst
+      : activeTrainingJob
+        ? copy.training.alreadyActive
+        : !trainingPlan?.compatible
+          ? copy.training.incompatible
+          : !seedIsValid
+            ? copy.training.seedInvalid
+            : null;
 
   const candidateDataset: AiDataset = {
     id: nextDatasetId(draftDatasets),
@@ -211,6 +278,7 @@ export function AiDesignerPage({
     setDraftConfiguration(cloneAiConfiguration(project.configuration));
     setDraftDatasets(cloneAiDatasets(project.datasets));
     setShowEditorValidation(false);
+    setTrainingError(null);
     setPendingAction(null);
   }
 
@@ -244,6 +312,7 @@ export function AiDesignerPage({
     setDraftConfiguration(cloneAiConfiguration(version.configuration));
     setDraftDatasets(cloneAiDatasets(version.datasets));
     setShowEditorValidation(false);
+    setTrainingError(null);
     setPendingAction(null);
   }
 
@@ -265,6 +334,44 @@ export function AiDesignerPage({
       return;
     }
     await onSaveVersion(selectedProject.id, draftName.trim(), draftConfiguration, draftDatasets);
+  }
+
+  async function handleStartTraining(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setTrainingError(null);
+    if (!selectedProject || !trainingPlan || trainingBlockedReason) {
+      setTrainingError(trainingBlockedReason ?? copy.training.incompatible);
+      return;
+    }
+    const started = await onStartTraining?.(selectedProject.id, {
+      seed: seedValue,
+      hardwareProjectId: selectedTrainingHardware?.id ?? null,
+    });
+    if (started === false) {
+      setTrainingError(copy.training.error);
+    }
+  }
+
+  async function handleApplyOptimization(jobId: string, type: AiOptimizationType) {
+    if (!selectedProject) {
+      return;
+    }
+    setTrainingError(null);
+    const applied = await onApplyOptimization?.(selectedProject.id, jobId, type);
+    if (applied === false) {
+      setTrainingError(copy.training.error);
+    }
+  }
+
+  async function handleDeployModel(jobId: string) {
+    if (!selectedProject) {
+      return;
+    }
+    setTrainingError(null);
+    const deployed = await onDeployModel?.(selectedProject.id, jobId);
+    if (deployed === false) {
+      setTrainingError(copy.training.error);
+    }
   }
 
   function handleAddDataset(event: FormEvent<HTMLFormElement>) {
@@ -804,6 +911,245 @@ export function AiDesignerPage({
                   </div>
                 </div>
                 <p className="ai-hardware-note">{copy.hardware.note}</p>
+              </section>
+
+              <section className="ai-training-section">
+                <div className="section-heading">
+                  <span className="section-heading__icon" aria-hidden="true"><Play size={20} /></span>
+                  <div>
+                    <h2>{copy.training.title}</h2>
+                    <p>{copy.training.hint}</p>
+                  </div>
+                </div>
+                <p className="ai-training-note">{copy.training.simulationNote}</p>
+
+                {activeTrainingJob ? (
+                  <div className="ai-training-active">
+                    <div className="ai-training-active__header">
+                      <div>
+                        <strong>{copy.training.active}</strong>
+                        <span>{activeTrainingJob.hardwareName}</span>
+                      </div>
+                      <span className="status-pill status-pill--info">{copy.training.stages.training}</span>
+                    </div>
+                    <div
+                      aria-label={copy.training.progress}
+                      aria-valuemax={activeTrainingJob.totalDays}
+                      aria-valuemin={0}
+                      aria-valuenow={activeTrainingJob.progressDays}
+                      className="ai-training-progress"
+                      role="progressbar"
+                    >
+                      <span
+                        style={{ width: `${(activeTrainingJob.progressDays / activeTrainingJob.totalDays) * 100}%` }}
+                      />
+                    </div>
+                    <dl className="ai-training-stats">
+                      <div>
+                        <dt>{copy.training.progress}</dt>
+                        <dd>
+                          {copy.training.dayProgress
+                            .replace("{current}", String(activeTrainingJob.progressDays))
+                            .replace("{total}", String(activeTrainingJob.totalDays))}
+                        </dd>
+                      </div>
+                      <div><dt>{copy.training.loss}</dt><dd>{formatDecimal(activeTrainingJob.loss, locale)}</dd></div>
+                      <div>
+                        <dt>{copy.training.validation}</dt>
+                        <dd>{formatDecimal(activeTrainingJob.validationScore, locale)}</dd>
+                      </div>
+                      <div>
+                        <dt>{copy.training.totalCost}</dt>
+                        <dd>{formatCurrency(activeTrainingJob.totalCostUsd, locale)}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                ) : (
+                  <form className="ai-training-form" noValidate onSubmit={handleStartTraining}>
+                    <div className="ai-training-controls">
+                      <label className="field-group">
+                        <span>{copy.training.hardware}</span>
+                        <select
+                          onChange={(event) => {
+                            setTrainingHardwareId(event.target.value);
+                            setTrainingError(null);
+                          }}
+                          value={selectedTrainingHardware?.id ?? "reference"}
+                        >
+                          {trainingHardwareOptions.map((hardware) => (
+                            <option key={hardware.id ?? "reference"} value={hardware.id ?? "reference"}>
+                              {hardware.name}
+                              {" · "}
+                              {formatDecimal(hardware.tflops, locale)} {copy.units.tflops}
+                              {" · "}
+                              {formatDecimal(hardware.vramGb, locale)} {copy.units.gb}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="field-group">
+                        <span>{copy.training.seed}</span>
+                        <input
+                          inputMode="numeric"
+                          min={AI_LIMITS.trainingSeed.min}
+                          onChange={(event) => {
+                            setTrainingSeed(event.target.value);
+                            setTrainingError(null);
+                          }}
+                          step={1}
+                          type="number"
+                          value={trainingSeed}
+                        />
+                        <small className="field-hint">{copy.training.seedHint}</small>
+                      </label>
+                    </div>
+
+                    {trainingPlan && (
+                      <>
+                        <dl className="ai-training-stats">
+                          <div><dt>{copy.training.days}</dt><dd>{trainingPlan.totalDays}</dd></div>
+                          <div>
+                            <dt>{copy.training.costPerDay}</dt>
+                            <dd>{formatCurrency(trainingPlan.costPerDayUsd, locale)}</dd>
+                          </div>
+                          <div>
+                            <dt>{copy.training.totalCost}</dt>
+                            <dd>{formatCurrency(trainingPlan.totalCostUsd, locale)}</dd>
+                          </div>
+                          <div>
+                            <dt>{copy.training.requiredCompute}</dt>
+                            <dd>{formatDecimal(trainingPlan.minimumTflops, locale)} {copy.units.tflops}</dd>
+                          </div>
+                          <div>
+                            <dt>{copy.training.requiredVram}</dt>
+                            <dd>{formatDecimal(trainingPlan.requiredVramGb, locale)} {copy.units.gb}</dd>
+                          </div>
+                        </dl>
+                        {trainingPlan.issues.length > 0 && (
+                          <ul className="ai-training-issues">
+                            {trainingPlan.issues.map((issue) => (
+                              <li key={issue}>
+                                <TriangleAlert aria-hidden="true" size={16} />
+                                {copy.training.issues[issue]}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </>
+                    )}
+
+                    <div className="ai-training-actions">
+                      <button
+                        className="button button--primary"
+                        disabled={isSaving || Boolean(trainingBlockedReason)}
+                        type="submit"
+                      >
+                        <Play aria-hidden="true" size={16} />
+                        {copy.training.start}
+                      </button>
+                      {trainingBlockedReason && <p className="field-hint">{trainingBlockedReason}</p>}
+                    </div>
+                  </form>
+                )}
+
+                {trainingError && (
+                  <p className="inline-feedback inline-feedback--error" role="alert">{trainingError}</p>
+                )}
+
+                {completedTrainingJobs.length > 0 && (
+                  <div className="ai-training-completed">
+                    <h3>{copy.training.completed}</h3>
+                    <ul className="ai-training-job-list">
+                      {completedTrainingJobs.map((job) => (
+                        <li className="ai-training-job-card" key={job.id}>
+                          <div className="ai-training-job-card__header">
+                            <div>
+                              <strong>
+                                {copy.training.jobVersion.replace("{version}", String(job.version))}
+                              </strong>
+                              <span>{job.completedOn ? formatShortGameDate(job.completedOn, locale) : ""}</span>
+                            </div>
+                            <span className="status-pill status-pill--success">
+                              {copy.training.stages.completed}
+                            </span>
+                          </div>
+                          <dl className="ai-training-stats">
+                            <div><dt>{copy.training.hardware}</dt><dd>{job.hardwareName}</dd></div>
+                            <div><dt>{copy.training.loss}</dt><dd>{formatDecimal(job.loss, locale)}</dd></div>
+                            <div>
+                              <dt>{copy.training.validation}</dt>
+                              <dd>{formatDecimal(job.validationScore, locale)}</dd>
+                            </div>
+                            <div>
+                              <dt>{copy.training.totalCost}</dt>
+                              <dd>{formatCurrency(job.totalCostUsd, locale)}</dd>
+                            </div>
+                          </dl>
+                          <div className="ai-training-optimizations">
+                            {AI_OPTIMIZATION_OPTIONS.map((type) => {
+                              const applied = job.optimizations.some((optimization) => optimization.type === type);
+                              return (
+                                <button
+                                  className="button button--secondary button--compact"
+                                  disabled={isSaving || applied}
+                                  key={type}
+                                  onClick={() => handleApplyOptimization(job.id, type)}
+                                  title={copy.training.optimizationEffects[type]}
+                                  type="button"
+                                >
+                                  <Sparkles aria-hidden="true" size={14} />
+                                  {applied ? copy.training.applied : copy.training.applyOptimization}
+                                  {" · "}
+                                  {formatCurrency(AI_OPTIMIZATION_COSTS_USD[type], locale)}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <div className="ai-training-deploy">
+                            <button
+                              className="button button--primary button--compact"
+                              disabled={isSaving || deployedJobIds.has(job.id)}
+                              onClick={() => handleDeployModel(job.id)}
+                              type="button"
+                            >
+                              <Rocket aria-hidden="true" size={14} />
+                              {deployedJobIds.has(job.id) ? copy.training.deployed : copy.training.deploy}
+                              {" · "}
+                              {formatCurrency(AI_DEPLOYMENT_COST_USD, locale)}
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {selectedProject.deployments.length > 0 && (
+                  <div className="ai-training-deployments">
+                    <h3>{copy.training.deploymentHistory}</h3>
+                    <ul className="ai-training-deployment-list">
+                      {[...selectedProject.deployments].reverse().map((deployment) => (
+                        <li key={deployment.id}>
+                          <strong>
+                            {copy.training.deployedVersion.replace("{version}", String(deployment.version))}
+                          </strong>
+                          <span>{formatShortGameDate(deployment.deployedOn, locale)}</span>
+                          <span>
+                            {copy.training.quality}
+                            {" "}
+                            {formatDecimal(deployment.qualityScore, locale)}
+                          </span>
+                          <span>
+                            {copy.training.appeal}
+                            {" "}
+                            {formatDecimal(deployment.appealScore, locale)}
+                          </span>
+                          <span>{formatCurrency(deployment.costUsd, locale)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </section>
             </>
           )}

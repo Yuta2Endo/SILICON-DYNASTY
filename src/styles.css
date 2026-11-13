@@ -4649,3 +4649,229 @@ input:focus-visible {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }
+
+.ai-training-section {
+  display: grid;
+  gap: 12px;
+}
+
+.ai-training-note {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px dashed color-mix(in srgb, var(--accent-violet) 32%, var(--border));
+  border-radius: 12px;
+  color: var(--text-subtle);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.ai-training-form {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.ai-training-controls {
+  display: grid;
+  gap: 12px;
+}
+
+.ai-training-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.ai-training-stats div {
+  display: grid;
+  gap: 2px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-raised, var(--surface));
+}
+
+.ai-training-stats dt {
+  color: var(--text-subtle);
+  font-size: 0.68rem;
+}
+
+.ai-training-stats dd {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.ai-training-issues {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent-danger) 35%, var(--border));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent-danger) 7%, var(--surface));
+  color: var(--accent-danger);
+  font-size: 0.76rem;
+  list-style: none;
+}
+
+.ai-training-issues li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.ai-training-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.ai-training-actions .field-hint {
+  margin: 0;
+}
+
+.ai-training-active {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent-blue) 32%, var(--border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent-blue) 6%, var(--surface));
+}
+
+.ai-training-active__header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ai-training-active__header > div {
+  display: grid;
+  gap: 2px;
+}
+
+.ai-training-active__header span {
+  color: var(--text-subtle);
+  font-size: 0.74rem;
+}
+
+.ai-training-progress {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-blue) 14%, var(--border));
+}
+
+.ai-training-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent-blue);
+  transition: width 180ms ease;
+}
+
+.ai-training-completed,
+.ai-training-deployments {
+  display: grid;
+  gap: 10px;
+}
+
+.ai-training-completed h3,
+.ai-training-deployments h3 {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+}
+
+.ai-training-job-list,
+.ai-training-deployment-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ai-training-job-card {
+  display: grid;
+  gap: 10px;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.ai-training-job-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ai-training-job-card__header > div {
+  display: grid;
+  gap: 2px;
+}
+
+.ai-training-job-card__header span {
+  color: var(--text-subtle);
+  font-size: 0.72rem;
+}
+
+.ai-training-optimizations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ai-training-optimizations .button,
+.ai-training-deploy .button {
+  min-height: 40px;
+}
+
+.ai-training-deploy {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ai-training-deployment-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 0.76rem;
+}
+
+.ai-training-deployment-list span {
+  color: var(--text-subtle);
+}
+
+@media (min-width: 640px) {
+  .ai-training-controls,
+  .ai-training-job-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ai-training-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .ai-training-stats {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}

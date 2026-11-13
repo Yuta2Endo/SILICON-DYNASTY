@@ -240,6 +240,36 @@ describe("game application commands", () => {
     expect(reloaded.aiProjects[0]?.datasets).toEqual([dataset]);
   });
 
+  it("persists AI training, optimization and deployment", async () => {
+    const repository = new MemoryGameStateRepository();
+    const application = createGameApplication(repository);
+
+    await application.load();
+    await application.createAiProject("Dynasty Vision", createDefaultAiConfiguration());
+    const started = await application.startAiTraining("ai-1", { seed: 7, hardwareProjectId: null });
+    const job = started.aiProjects[0]?.trainingJobs[0];
+
+    expect(job?.stage).toBe("training");
+    for (let day = 0; day < (job?.totalDays ?? 0); day += 1) {
+      await application.advanceDay();
+    }
+
+    const optimized = await application.applyAiOptimization("ai-1", job?.id ?? "", "quantization");
+    const deployed = await application.deployAiModel("ai-1", job?.id ?? "");
+    const reloaded = await createGameApplication(repository).load();
+
+    expect(optimized.aiProjects[0]?.trainingJobs[0]).toMatchObject({
+      stage: "completed",
+      optimizations: [expect.objectContaining({ type: "quantization" })],
+    });
+    expect(deployed.aiProjects[0]?.deployments[0]).toMatchObject({
+      trainingJobId: job?.id,
+      optimizationTypes: ["quantization"],
+    });
+    expect(reloaded.aiProjects[0]?.deployments[0]?.id).toBe("ai-deployment-1");
+    expect(reloaded.company.balance).toBe(deployed.company.balance);
+  });
+
   it("posts research spending to the finance ledger", async () => {
     const repository = new MemoryGameStateRepository();
     const application = createGameApplication(repository);
