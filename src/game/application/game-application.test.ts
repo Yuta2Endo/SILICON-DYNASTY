@@ -409,6 +409,34 @@ describe("game application commands", () => {
     expect(reloaded.company.balance).toBe(withLoan.company.balance);
   });
 
+  it("persists an accepted OEM contract and its upfront payment", async () => {
+    const repository = new MemoryGameStateRepository();
+    const application = createGameApplication(repository);
+
+    await application.createCpuProject("Dynasty Core", createDefaultCpuConfiguration());
+    await application.releaseProduct({
+      projectId: "cpu-1",
+      projectVersion: 1,
+      name: "Dynasty One",
+      segmentId: "mainstream",
+      priceUsd: 600,
+    });
+    const advanced = await application.advanceDay();
+    const offer = advanced.oemContracts.offers[0];
+    expect(offer).toBeTruthy();
+    if (!offer) {
+      return;
+    }
+
+    const accepted = await application.acceptOemContract(offer.id);
+    const reloaded = await createGameApplication(repository).load();
+
+    expect(accepted.oemContracts.offers).toEqual([]);
+    expect(accepted.oemContracts.active[0]?.customerId).toBe(offer.customerId);
+    expect(accepted.company.balance).toBe(advanced.company.balance + offer.upfrontUsd);
+    expect(reloaded.oemContracts.active[0]?.id).toBe(accepted.oemContracts.active[0]?.id);
+  });
+
   it("starts a new game while preserving interface settings", async () => {
     const repository = new MemoryGameStateRepository();
     const application = createGameApplication(repository);

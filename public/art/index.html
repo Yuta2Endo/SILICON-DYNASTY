@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Silicon Dynasty — Art Pack</title>
+<style>
+  :root {
+    --bg:#f4f7fb; --surface:#ffffff; --ink:#152338; --muted:#52627a; --line:#e5eaf1;
+    --accent:#2563eb; --navy:#0c1728;
+    font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); }
+  header { padding:72px 32px 40px; text-align:center; background:
+    radial-gradient(900px 420px at 50% -20%, #dbe8ff 0%, transparent 70%), var(--bg); }
+  .brand { width:96px; height:96px; border-radius:24px; box-shadow:0 24px 60px rgb(12 23 40 / 22%); }
+  h1 { margin:24px 0 8px; font-size:clamp(30px,5vw,46px); letter-spacing:-0.02em; }
+  header p { margin:0 auto; max-width:640px; color:var(--muted); font-size:16px; line-height:1.6; }
+  .wrap { max-width:1180px; margin:0 auto; padding:0 24px 80px; }
+  h2 { font-size:20px; margin:56px 0 6px; letter-spacing:-0.01em; }
+  .hint { color:var(--muted); font-size:14px; margin:0 0 22px; }
+  .grid { display:grid; gap:18px; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); }
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:14px;
+    box-shadow:0 14px 40px rgb(23 43 77 / 5%); }
+  .art { border-radius:14px; overflow:hidden; background:var(--navy); }
+  .art img { display:block; width:100%; height:auto; }
+  .meta { padding:12px 4px 2px; display:flex; flex-direction:column; gap:2px; }
+  .meta strong { font-size:14px; }
+  .meta span { font-size:12px; color:var(--muted); }
+  .meta code { margin-top:6px; font-size:10px; color:#8794a8; word-break:break-all; }
+  .sizes { display:flex; align-items:center; gap:24px; background:var(--surface); border:1px solid var(--line);
+    border-radius:20px; padding:24px; margin-top:18px; flex-wrap:wrap; }
+  .sizes img { border-radius:22%; box-shadow:0 10px 26px rgb(12 23 40 / 18%); }
+  .sizes .big { margin-left:auto; color:var(--muted); font-size:13px; max-width:360px; line-height:1.6; }
+  .dark { background:var(--navy); border-radius:24px; padding:26px; margin-top:18px; }
+  .dark h2 { color:#eaf2ff; margin-top:0; }
+  .dark .hint { color:#8ba2c1; }
+  .dark .card { background:#122036; border-color:#22344f; box-shadow:none; }
+  .dark .meta strong { color:#eff4fc; }
+  .dark .meta span { color:#93a7c2; }
+  .dark .meta code { color:#5d7c9c; }
+  .palette { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+  .swatch { border-radius:12px; padding:14px 16px; min-width:130px; color:#fff; font-size:12px; font-weight:600; }
+  footer { text-align:center; color:var(--muted); font-size:13px; padding:0 24px 60px; }
+  @keyframes rise { from { opacity:0; transform:translateY(10px); } }
+  @media (prefers-reduced-motion: reduce) { .card { animation:none; } }
+</style>
+</head>
+<body>
+<header>
+  <img class="brand" src="brand/app-icon.svg" alt="Silicon Dynasty"/>
+  <h1>Silicon Dynasty — Art Pack</h1>
+  <p>Единая система эмблем: глубокий нави, стекло, титан и электрический синий. 18 разделов, 8 ресурсов, бренд-иконка и сплэш. Вектор, 512×512, прозрачность не требуется.</p>
+</header>
+<div class="wrap">
+  <div class="sizes">
+    <img src="brand/app-icon.svg" width="88" height="88" alt=""/>
+    <img src="brand/app-icon.svg" width="56" height="56" alt=""/>
+    <img src="brand/app-icon.svg" width="36" height="36" alt=""/>
+    <div class="big">Иконки читаются и в 36 px: силуэт, контраст и свечение сохраняются. Для UI используйте Lucide по спецификации, эмблемы — для карточек, меню и витрин.</div>
+  </div>
+
+  <h2>Разделы</h2>
+  <p class="hint">18 эмблем для экранов и карточек навигации.</p>
+  <div class="grid">
+    
+    <article class="card" style="--d:0ms">
+      <div class="art"><img src="sections/dashboard.svg" alt="Дашборд" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Дашборд</strong>
+        <span>Dashboard</span>
+        <code>sections/dashboard.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:18ms">
+      <div class="art"><img src="sections/company.svg" alt="Компания" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Компания</strong>
+        <span>Company</span>
+        <code>sections/company.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:36ms">
+      <div class="art"><img src="sections/research.svg" alt="Исследования" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Исследования</strong>
+        <span>Research</span>
+        <code>sections/research.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:54ms">
+      <div class="art"><img src="sections/hardware.svg" alt="Оборудование" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Оборудование</strong>
+        <span>Hardware</span>
+        <code>sections/hardware.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:72ms">
+      <div class="art"><img src="sections/cpu.svg" alt="Процессоры" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Процессоры</strong>
+        <span>CPU Designer</span>
+        <code>sections/cpu.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:90ms">
+      <div class="art"><img src="sections/gpu.svg" alt="Графика" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Графика</strong>
+        <span>GPU Designer</span>
+        <code>sections/gpu.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:108ms">
+      <div class="art"><img src="sections/components.svg" alt="Компоненты" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Компоненты</strong>
+        <span>Components</span>
+        <code>sections/components.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:126ms">
+      <div class="art"><img src="sections/os.svg" alt="Операционные системы" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Операционные системы</strong>
+        <span>OS Lab</span>
+        <code>sections/os.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:144ms">
+      <div class="art"><img src="sections/ai.svg" alt="Искусственный интеллект" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Искусственный интеллект</strong>
+        <span>AI Lab</span>
+        <code>sections/ai.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:162ms">
+      <div class="art"><img src="sections/software.svg" alt="Софт" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Софт</strong>
+        <span>Software Studio</span>
+        <code>sections/software.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:180ms">
+      <div class="art"><img src="sections/devices.svg" alt="Устройства" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Устройства</strong>
+        <span>Devices</span>
+        <code>sections/devices.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:198ms">
+      <div class="art"><img src="sections/cloud.svg" alt="Облако" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Облако</strong>
+        <span>Cloud</span>
+        <code>sections/cloud.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:216ms">
+      <div class="art"><img src="sections/manufacturing.svg" alt="Производство" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Производство</strong>
+        <span>Manufacturing</span>
+        <code>sections/manufacturing.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:234ms">
+      <div class="art"><img src="sections/market.svg" alt="Рынок" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Рынок</strong>
+        <span>Market</span>
+        <code>sections/market.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:252ms">
+      <div class="art"><img src="sections/finance.svg" alt="Финансы" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Финансы</strong>
+        <span>Finance</span>
+        <code>sections/finance.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:270ms">
+      <div class="art"><img src="sections/analytics.svg" alt="Аналитика" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Аналитика</strong>
+        <span>Analytics</span>
+        <code>sections/analytics.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:288ms">
+      <div class="art"><img src="sections/ecosystem.svg" alt="Экосистема" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Экосистема</strong>
+        <span>Ecosystem</span>
+        <code>sections/ecosystem.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:306ms">
+      <div class="art"><img src="sections/settings.svg" alt="Настройки" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Настройки</strong>
+        <span>Settings</span>
+        <code>sections/settings.svg</code>
+      </div>
+    </article>
+  </div>
+
+  <h2>Ресурсы и товары</h2>
+  <p class="hint">8 иконок производственной цепочки: от поликремния до сервера.</p>
+  <div class="grid">
+    
+    <article class="card" style="--d:324ms">
+      <div class="art"><img src="resources/silicon.svg" alt="Поликремний" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Поликремний</strong>
+        <span>Silicon</span>
+        <code>resources/silicon.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:342ms">
+      <div class="art"><img src="resources/ingot.svg" alt="Монокристалл" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Монокристалл</strong>
+        <span>Ingot</span>
+        <code>resources/ingot.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:360ms">
+      <div class="art"><img src="resources/wafer.svg" alt="Кремниевая пластина" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Кремниевая пластина</strong>
+        <span>Wafer</span>
+        <code>resources/wafer.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:378ms">
+      <div class="art"><img src="resources/cpu-die.svg" alt="Кристалл CPU" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Кристалл CPU</strong>
+        <span>CPU Die</span>
+        <code>resources/cpu-die.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:396ms">
+      <div class="art"><img src="resources/gpu-die.svg" alt="Кристалл GPU" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Кристалл GPU</strong>
+        <span>GPU Die</span>
+        <code>resources/gpu-die.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:414ms">
+      <div class="art"><img src="resources/dram.svg" alt="Память" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Память</strong>
+        <span>DRAM</span>
+        <code>resources/dram.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:432ms">
+      <div class="art"><img src="resources/motherboard.svg" alt="Материнская плата" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Материнская плата</strong>
+        <span>Motherboard</span>
+        <code>resources/motherboard.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:450ms">
+      <div class="art"><img src="resources/server.svg" alt="Сервер" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Сервер</strong>
+        <span>Server</span>
+        <code>resources/server.svg</code>
+      </div>
+    </article>
+  </div>
+
+  <div class="dark">
+    <h2>Тёмная тема</h2>
+    <p class="hint">Эмблемы самодостаточны и не зависят от темы интерфейса.</p>
+    <div class="grid">
+      
+    <article class="card" style="--d:0ms">
+      <div class="art"><img src="sections/dashboard.svg" alt="Дашборд" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Дашборд</strong>
+        <span>Dashboard</span>
+        <code>sections/dashboard.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:18ms">
+      <div class="art"><img src="sections/company.svg" alt="Компания" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Компания</strong>
+        <span>Company</span>
+        <code>sections/company.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:36ms">
+      <div class="art"><img src="sections/research.svg" alt="Исследования" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Исследования</strong>
+        <span>Research</span>
+        <code>sections/research.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:54ms">
+      <div class="art"><img src="sections/hardware.svg" alt="Оборудование" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Оборудование</strong>
+        <span>Hardware</span>
+        <code>sections/hardware.svg</code>
+      </div>
+    </article>
+      
+    <article class="card" style="--d:36ms">
+      <div class="art"><img src="resources/silicon.svg" alt="Поликремний" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Поликремний</strong>
+        <span>Silicon</span>
+        <code>resources/silicon.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:54ms">
+      <div class="art"><img src="resources/ingot.svg" alt="Монокристалл" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Монокристалл</strong>
+        <span>Ingot</span>
+        <code>resources/ingot.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:72ms">
+      <div class="art"><img src="resources/wafer.svg" alt="Кремниевая пластина" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Кремниевая пластина</strong>
+        <span>Wafer</span>
+        <code>resources/wafer.svg</code>
+      </div>
+    </article>
+    <article class="card" style="--d:90ms">
+      <div class="art"><img src="resources/cpu-die.svg" alt="Кристалл CPU" width="160" height="160"/></div>
+      <div class="meta">
+        <strong>Кристалл CPU</strong>
+        <span>CPU Die</span>
+        <code>resources/cpu-die.svg</code>
+      </div>
+    </article>
+    </div>
+  </div>
+
+  <h2>Палитра</h2>
+  <div class="palette">
+    <div class="swatch" style="background:#0c1728">#0C1728 · база</div>
+    <div class="swatch" style="background:#1b3050">#1B3050 · нави</div>
+    <div class="swatch" style="background:#2563eb">#2563EB · акцент</div>
+    <div class="swatch" style="background:#57a8ff">#57A8FF · свет</div>
+    <div class="swatch" style="background:#9be7ff;color:#0c1728">#9BE7FF · блик</div>
+    <div class="swatch" style="background:#e39a52">#E39A52 · медь</div>
+    <div class="swatch" style="background:#7df0c0;color:#0c1728">#7DF0C0 · сигнал</div>
+  </div>
+</div>
+<footer>Silicon Dynasty · art pack · SVG 512×512 · сгенерировано локально</footer>
+</body>
+</html>

@@ -70,6 +70,7 @@ import {
   type ReleaseComponentProductInput,
 } from "../engine/component-market";
 import { advanceOsRelease, startOsRelease } from "../engine/os-release";
+import { acceptOemContract, declineOemContract } from "../engine/oem-contracts";
 import {
   applyAiOptimization,
   deployAiModel,
@@ -142,6 +143,8 @@ export interface GameApplication {
   orderProduction(productId: string, quantity: number): Promise<GameState>;
   discontinueProduct(productId: string): Promise<GameState>;
   updateMarketingBudget(amountUsd: number): Promise<GameState>;
+  acceptOemContract(offerId: string): Promise<GameState>;
+  declineOemContract(offerId: string): Promise<GameState>;
   takeLoan(amountUsd: number): Promise<GameState>;
   repayLoan(amountUsd: number): Promise<GameState>;
 }
@@ -508,6 +511,14 @@ export function createGameApplication(repository: GameStateRepository): GameAppl
 
     async updateMarketingBudget(amountUsd) {
       return commit(updateMarketingBudget(await ensureLoaded(), amountUsd));
+    },
+
+    async acceptOemContract(offerId) {
+      return commit(acceptOemContract(await ensureLoaded(), offerId));
+    },
+
+    async declineOemContract(offerId) {
+      return commit(declineOemContract(await ensureLoaded(), offerId));
     },
 
     async takeLoan(amountUsd) {

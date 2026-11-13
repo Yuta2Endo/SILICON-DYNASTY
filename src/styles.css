@@ -8579,3 +8579,105 @@ textarea {
   gap: 0;
   padding: 9px 11px;
 }
+
+.oem-contracts__summary {
+  margin: -2px 0 14px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.oem-contracts__columns {
+  display: grid;
+  gap: 18px;
+}
+
+.oem-contracts__group h3 {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+}
+
+.oem-offer-list,
+.oem-contract-list {
+  display: grid;
+  gap: 12px;
+}
+
+.oem-offer,
+.oem-contract {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  padding: 14px;
+}
+
+.oem-offer__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.oem-offer__header h4 {
+  margin: 2px 0 0;
+  font-size: 0.95rem;
+}
+
+.oem-offer__customer {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.oem-offer__terms {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0 0;
+}
+
+.oem-offer__terms div {
+  border-radius: 12px;
+  background: var(--surface-muted);
+  padding: 9px 10px;
+}
+
+.oem-offer__terms dt {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+
+.oem-offer__terms dd {
+  margin: 3px 0 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.oem-offer__requirement {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.oem-offer__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.oem-offer__actions .button {
+  flex: 1 1 0;
+}
+
+.oem-contracts .status-pill--ok {
+  color: var(--green);
+}
+
+@media (min-width: 760px) {
+  .oem-contracts__columns {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}

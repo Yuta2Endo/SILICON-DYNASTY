@@ -293,3 +293,13 @@ save management and a derived experience layer; full details are in
   decline ×0.90, legacy ×0.70. Products auto-retire after 3,650 days unless an
   in-production order is still open.
 - No save-schema or dependency change. Full details: `SIMULATION_DEPTH.md`.
+
+## OEM design-win contracts (UI improvement)
+
+- Device makers can offer a released CPU product a design-win contract. Offers are deterministic and limited to five pending offers and eight active contracts.
+- Each offer has a 21-day validity, a 120-300 day term, an upfront payment of at least $5,000 and a 5-35% demand bonus.
+- Accepting pays the upfront amount as sales revenue and adds the contract to active state. The product's segment appeal is multiplied by `1 + bonus / 100` while the contract is active.
+- Contracts and offers expire on the daily tick. No contract can be cancelled early.
+- Contract generation depends on company reputation, product segment, product performance, price and active product status.
+- Schema v12 adds `oemContracts`; v1-v11 saves migrate with empty offers/active lists.
+- No new dependency or second market engine. Full details: `OEM_CONTRACTS.md`.

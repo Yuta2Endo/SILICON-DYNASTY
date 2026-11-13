@@ -4,12 +4,12 @@
 CPU/GPU formulas, benchmark, power/thermal, economy, research dependencies, market, OS quality, AI training simulation, compatibility and save migrations.
 
 ## Integration tests
-Hardware + benchmark; hardware + manufacturing; research + unlocks; OS + devices; AI + GPU; cloud + AI; ecosystem + market; finance + manufacturing.
+Hardware + benchmark; hardware + manufacturing; research + unlocks; OS + devices; AI + GPU; cloud + AI; ecosystem + market; finance + manufacturing; OEM contracts + market demand and finance.
 
 ## End-to-end scenario
 New game → create company → research technology → design CPU → benchmark → manufacture → release → sales → create OS → create AI project → assemble device → save → restart → load → continue.
 
-Current Playwright coverage: `e2e/core-loop.spec.ts` verifies analytics CSV and settings JSON export flows; `e2e/ui-regression.spec.ts` verifies mobile navigation/More sheet, horizontally scrollable product tabs, market tabs and 14-day pulse, OS editor sections, and saved-version comparison. Both run in desktop Chromium only.
+Current Playwright coverage: `e2e/core-loop.spec.ts` verifies analytics CSV and settings JSON export flows; `e2e/ui-regression.spec.ts` verifies mobile navigation/More sheet, horizontally scrollable product tabs, market tabs and 14-day pulse, OS editor sections, saved-version comparison, and accepting an OEM design-win offer. Both run in desktop Chromium only.
 
 ## Save QA
 Test each data type, corrupted data, interrupted writes, autosave restart, migrations, invalid imports and backup recovery.

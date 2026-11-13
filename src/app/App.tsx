@@ -396,6 +396,12 @@ export function App({ application, initialMenuOpen }: AppProps = {}) {
           onUpdateMarketingBudget={async (amountUsd) =>
             (await runCommand(() => gameApplication.updateMarketingBudget(amountUsd))) !== null
           }
+          onAcceptOemContract={async (offerId) =>
+            (await runCommand(() => gameApplication.acceptOemContract(offerId))) !== null
+          }
+          onDeclineOemContract={async (offerId) =>
+            (await runCommand(() => gameApplication.declineOemContract(offerId))) !== null
+          }
           onTakeLoan={async (amountUsd) =>
             (await runCommand(() => gameApplication.takeLoan(amountUsd))) !== null
           }

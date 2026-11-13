@@ -10,6 +10,7 @@ Version 2.0 | Android | React + TypeScript + Vite + Capacitor | RU/EN
 - docs/ROADMAP.md — 14 development stages
 - docs/UI_UX_SPECIFICATION.md — interface specification
 - docs/GAME_BALANCE.md — simulation and balance rules
+- docs/OEM_CONTRACTS.md — OEM design-win contracts and demand bonuses
 - docs/CPU_DESIGN.md — CPU project model and validation limits
 - docs/QA_STRATEGY.md — testing strategy
 - docs/SAVE_SYSTEM.md — persistence and migrations
@@ -43,7 +44,7 @@ npm run build
 Stages 1-14 are implemented. Stage 14 provides the Android release candidate;
 the debug APK passed real-device install, launch and save-lifecycle QA, while
 signed release artifacts and Android profiling remain release-gate tasks. The game includes the company
-dashboard, research, finance and CPU market; CPU and component designers; OS
+dashboard, research, finance, CPU market and OEM design-win contracts; CPU and component designers; OS
 architecture, system services, drivers, security, updates and Alpha/Beta/RC/Stable
 releases; software ecosystem and app compatibility; AI model/data lab with
 deterministic training and deployment; device and cloud configurators; save slots,
@@ -51,7 +52,7 @@ backup, import/export and recovery; tutorial, achievements and RU/EN localizatio
 
 Save data is validated when read and written. IndexedDB is the primary browser
 store; localStorage is used only where IndexedDB is unavailable. The current
-save schema is 11 and older saves migrate without discarding existing data.
+save schema is 12 and older saves migrate without discarding existing data.
 
 Game-domain code is kept outside React:
 

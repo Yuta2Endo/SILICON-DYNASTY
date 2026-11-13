@@ -33,7 +33,7 @@ UI action → application command → domain validation → domain system → up
 
 ## Simulation order
 
-The implemented daily pipeline is fixed and tested: advance research; deliver due CPU production orders; apply due competitor actions; simulate CPU sales and market share; simulate component sales against component demand, price, performance, reputation, marketing and available cash; advance active AI training jobs deterministically; settle finance (operating costs, loan interest, emergency funding and profit tax); update reputation; advance the game date. Changing the order may alter balance and requires tests for the affected stage. Stage 05 economy details are in [`ECONOMY_MARKET.md`](ECONOMY_MARKET.md); Stage 06 components and compatibility are in [`COMPONENTS.md`](COMPONENTS.md).
+The implemented daily pipeline is fixed and tested: advance research; deliver due CPU production orders; expire and generate OEM design-win offers; apply due competitor actions; simulate CPU sales and market share; simulate component sales against component demand, price, performance, reputation, marketing and available cash; advance active AI training jobs deterministically; settle finance (operating costs, loan interest, emergency funding and profit tax); update reputation; advance the game date. Changing the order may alter balance and requires tests for the affected stage. Stage 05 economy details are in [`ECONOMY_MARKET.md`](ECONOMY_MARKET.md); Stage 06 components and compatibility are in [`COMPONENTS.md`](COMPONENTS.md).
 
 The OS Lab does not run in the daily pipeline yet. `src/game/models/os.ts` owns OS configuration types, project/version/release rules, historical gates, system-service validation, hardware-driver compatibility and strict parsing; `src/game/models/os-applications.ts` owns the application catalog and requirement checks; `src/game/formulas/os.ts` owns deterministic kernel, system, ecosystem and release calculations; `src/game/engine/os-release.ts` charges staged release costs through the finance ledger. `OsDesignerPage` is a third tab in the product-development workspace and calls application commands; it is explicitly presented as a game simulation. Stage 07 details are in [`OS_LAB.md`](OS_LAB.md); Stage 08 system services and hardware-driver checks are in [`OS_SYSTEMS.md`](OS_SYSTEMS.md); Stage 09 ecosystem, application and release rules are in [`OS_ECOSYSTEM.md`](OS_ECOSYSTEM.md).
 
@@ -56,6 +56,10 @@ Devices and cloud are the fifth product-development tab. `src/game/models/device
 ## Simulation depth
 
 `src/game/formulas/economy.ts` owns the deterministic eight-year economic cycle. Its demand multiplier is applied in `getSegmentDailyDemand`, its cost multiplier to daily payroll and overhead in `settleDailyFinance`, and its competitor-aggression multiplier to market competitor actions. `src/game/formulas/market.ts` owns product lifecycle stages and appeal factors; `src/game/engine/market.ts` retires legacy products only when they have no open production orders. The Market screen shows the current cycle as a read-only indicator. Stage 04 details are in [`SIMULATION_DEPTH.md`](SIMULATION_DEPTH.md).
+
+## OEM contracts
+
+`src/game/models/oem-contracts.ts` owns deterministic customer offers, contract terms, expiry and strict parsing. `src/game/engine/oem-contracts.ts` runs expiry/offer generation on the daily tick, accepts or declines offers and posts upfront payments through the finance ledger. `src/game/engine/market.ts` applies the active demand bonus to CPU appeal; the Market screen renders offers and active contracts. No separate market engine or persisted report is created. Schema v12 adds `oemContracts`; details are in [`OEM_CONTRACTS.md`](OEM_CONTRACTS.md).
 
 ## Worker boundary
 Workers receive serializable snapshots and explicit commands. They must not access React state or mutate the database outside a documented protocol.

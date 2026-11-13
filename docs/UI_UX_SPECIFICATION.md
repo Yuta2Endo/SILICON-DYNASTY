@@ -202,7 +202,7 @@ Show:
 - Market value and share.
 - Sales.
 - Active products.
-- A command center with quick actions and actionable signals.
+- A command center with quick actions and actionable signals, including pending OEM design-win offers.
 - A company pulse with 14-day trends for revenue, net profit and market share, derived from real finance and market records.
 - First-run quick start guidance until the tutorial is complete or the player dismisses it.
 - Research.
@@ -383,6 +383,8 @@ Use dedicated visualizations for:
 Use charts, comparison panels and compact financial cards.
 
 The Market overview must include a 14-day market pulse with accessible sparklines for market share, player revenue and units sold, derived from real daily summaries. Show an empty state until the first simulated market day.
+
+The Market overview must include OEM design-win contracts. Pending offers must show the customer, product, segment, upfront payment, demand bonus, term and expiry, with accept and decline actions. Active contracts must show remaining days, bonus, payment and expiry. Use an empty state when no offers or contracts exist. Contract income and demand effects must come from real game state, not a separate preview state.
 
 All monetary values must use consistent formatting.
 

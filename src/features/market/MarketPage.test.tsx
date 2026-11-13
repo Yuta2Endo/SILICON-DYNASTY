@@ -43,6 +43,8 @@ function renderMarket(overrides: Partial<Parameters<typeof MarketPage>[0]> = {})
       onReleaseComponentProduct={noop}
       onRepayLoan={noop}
       onTakeLoan={noop}
+      onAcceptOemContract={noop}
+      onDeclineOemContract={noop}
       onUpdateMarketingBudget={noop}
       onUpdateComponentPrice={noop}
       onUpdatePrice={noop}
@@ -152,6 +154,41 @@ describe("Market screen", () => {
     expect(screen.getAllByText(ru.market.pulse.window).length).toBe(3);
   });
 
+  it("shows an OEM offer and forwards the accept action", async () => {
+    const user = userEvent.setup();
+    const onAcceptOemContract = vi.fn(async () => true);
+    renderMarket({
+      onAcceptOemContract,
+      state: {
+        ...stateWithProject,
+        oemContracts: {
+          offers: [{
+            id: "oem-offer-1",
+            customerId: "orbit",
+            customerName: "Orbit Devices",
+            productId: "product-1",
+            productName: "Dynasty One",
+            segmentId: "budget",
+            createdOn: "1995-01-01",
+            expiresOn: "1995-01-22",
+            durationDays: 180,
+            upfrontUsd: 12_500,
+            demandBonusPercent: 15,
+            minimumReputation: 0,
+          }],
+          active: [],
+          lastOfferOn: "1995-01-01",
+        },
+      },
+    });
+
+    expect(screen.getByRole("heading", { name: ru.market.contracts.title })).toBeTruthy();
+    expect(screen.getByText("Orbit Devices")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: ru.market.contracts.accept }));
+
+    expect(onAcceptOemContract).toHaveBeenCalledWith("oem-offer-1");
+  });
+
   it("switches to the analytics tab", async () => {
     const user = userEvent.setup();
     const onViewChange = vi.fn();
@@ -180,7 +217,9 @@ describe("Market screen", () => {
         onReleaseComponentProduct={noop}
         onRepayLoan={noop}
         onTakeLoan={noop}
-        onUpdateMarketingBudget={noop}
+        onAcceptOemContract={noop}
+      onDeclineOemContract={noop}
+      onUpdateMarketingBudget={noop}
         onUpdateComponentPrice={noop}
         onUpdatePrice={noop}
         onViewChange={onViewChange}

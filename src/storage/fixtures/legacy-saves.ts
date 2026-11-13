@@ -113,6 +113,16 @@ export function createSchema11Fixture(): unknown {
   const current = createInitialGameState();
   return {
     ...current,
+    schemaVersion: 11,
+    oemContracts: undefined,
+    company: { ...current.company, name: "Pre-OEM Co" },
+  };
+}
+
+export function createSchema12Fixture(): unknown {
+  const current = createInitialGameState();
+  return {
+    ...current,
     company: { ...current.company, name: "Current Save Co" },
   };
 }

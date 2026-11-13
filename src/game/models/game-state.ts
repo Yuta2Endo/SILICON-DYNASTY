@@ -22,10 +22,15 @@ import {
   parseResearchState,
   type ResearchState,
 } from "./research";
+import {
+  createInitialOemContractState,
+  parseOemContractState,
+  type OemContractState,
+} from "./oem-contracts";
 
-export const SAVE_SCHEMA_VERSION = 11 as const;
+export const SAVE_SCHEMA_VERSION = 12 as const;
 
-const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, SAVE_SCHEMA_VERSION] as const;
+const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, SAVE_SCHEMA_VERSION] as const;
 
 export type Locale = "ru" | "en";
 export type Theme = "light" | "dark";
@@ -48,6 +53,7 @@ export interface GameState {
   research: ResearchState;
   finance: FinanceState;
   market: MarketState;
+  oemContracts: OemContractState;
   settings: GameSettings;
 }
 
@@ -73,6 +79,7 @@ export function createInitialGameState(): GameState {
     research: createInitialResearchState(),
     finance: createInitialFinanceState(),
     market: createInitialMarketState(gameDate),
+    oemContracts: createInitialOemContractState(),
     company: {
       id: "player-company",
       name: "Silicon Dynasty",
@@ -267,6 +274,17 @@ export function parseGameState(value: unknown): GameState {
     }
   }
 
+  let oemContracts: OemContractState;
+  if (sourceSchemaVersion >= 12) {
+    try {
+      oemContracts = parseOemContractState(value.oemContracts);
+    } catch {
+      throw new InvalidGameStateError("Save data contains invalid OEM contract data.");
+    }
+  } else {
+    oemContracts = createInitialOemContractState();
+  }
+
   let research: ResearchState;
   if (sourceSchemaVersion >= 3) {
     try {
@@ -312,6 +330,7 @@ export function parseGameState(value: unknown): GameState {
     research,
     finance,
     market,
+    oemContracts,
     settings: { locale, theme },
   };
 }

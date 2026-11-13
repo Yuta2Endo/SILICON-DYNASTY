@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Монокристалл — Ingot">
+  <title>Монокристалл — Ingot — Silicon Dynasty</title>
+  <defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#0B1626"/>
+  <stop offset="0.52" stop-color="#132745"/>
+  <stop offset="1" stop-color="#091528"/>
+</linearGradient>
+<radialGradient id="halo" cx="50%" cy="42%" r="58%">
+  <stop offset="0" stop-color="#3F8DFF" stop-opacity="0.34"/>
+  <stop offset="0.55" stop-color="#2E6BFF" stop-opacity="0.10"/>
+  <stop offset="1" stop-color="#2E6BFF" stop-opacity="0"/>
+</radialGradient>
+<linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.26"/>
+  <stop offset="0.45" stop-color="#BFD9FF" stop-opacity="0.11"/>
+  <stop offset="1" stop-color="#2E6BFF" stop-opacity="0.10"/>
+</linearGradient>
+<linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#F4F8FF"/>
+  <stop offset="0.35" stop-color="#A9BDD9"/>
+  <stop offset="0.62" stop-color="#DCE8F8"/>
+  <stop offset="1" stop-color="#7C93B4"/>
+</linearGradient>
+<linearGradient id="blue" x1="0" y1="1" x2="1" y2="0">
+  <stop offset="0" stop-color="#2E6BFF"/>
+  <stop offset="0.55" stop-color="#57A8FF"/>
+  <stop offset="1" stop-color="#9BE7FF"/>
+</linearGradient>
+<linearGradient id="violet" x1="0" y1="1" x2="1" y2="0">
+  <stop offset="0" stop-color="#6D5BE8"/>
+  <stop offset="1" stop-color="#C4B5FD"/>
+</linearGradient>
+<linearGradient id="copper" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#FFD9A8"/>
+  <stop offset="0.5" stop-color="#E39A52"/>
+  <stop offset="1" stop-color="#B8682B"/>
+</linearGradient>
+<linearGradient id="green" x1="0" y1="1" x2="1" y2="0">
+  <stop offset="0" stop-color="#1FA97A"/>
+  <stop offset="1" stop-color="#7DF0C0"/>
+</linearGradient>
+<linearGradient id="edge" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.55"/>
+  <stop offset="0.5" stop-color="#9CC4FF" stop-opacity="0.18"/>
+  <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.32"/>
+</linearGradient>
+<linearGradient id="screen" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#0E2B4E"/>
+  <stop offset="1" stop-color="#123B67"/>
+</linearGradient>
+<linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.10"/>
+  <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0"/>
+</linearGradient>
+<radialGradient id="iridescent" cx="35%" cy="28%" r="80%">
+  <stop offset="0" stop-color="#BFE3FF" stop-opacity="0.85"/>
+  <stop offset="0.35" stop-color="#6E9BE0" stop-opacity="0.55"/>
+  <stop offset="0.62" stop-color="#9C86F0" stop-opacity="0.42"/>
+  <stop offset="0.82" stop-color="#6FD9D2" stop-opacity="0.30"/>
+  <stop offset="1" stop-color="#2E6BFF" stop-opacity="0.22"/>
+</radialGradient>
+<linearGradient id="waferBase" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#2A5A8F"/>
+  <stop offset="0.45" stop-color="#1B3E66"/>
+  <stop offset="1" stop-color="#122C4C"/>
+</linearGradient>
+<radialGradient id="waferLight" cx="32%" cy="24%" r="62%">
+  <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.85"/>
+  <stop offset="0.45" stop-color="#B9E6FF" stop-opacity="0.28"/>
+  <stop offset="1" stop-color="#B9E6FF" stop-opacity="0"/>
+</radialGradient>
+<linearGradient id="waferTint" x1="0" y1="1" x2="1" y2="0">
+  <stop offset="0" stop-color="#6D5BE8" stop-opacity="0.5"/>
+  <stop offset="0.5" stop-color="#57A8FF" stop-opacity="0.25"/>
+  <stop offset="1" stop-color="#6FD9D2" stop-opacity="0.55"/>
+</linearGradient>
+<pattern id="grid" width="72" height="72" patternUnits="userSpaceOnUse">
+  <path d="M0 36H26M46 36H72M36 0V26M36 46V72" stroke="#8FB6E8" stroke-opacity="0.10" stroke-width="1"/>
+  <circle cx="36" cy="36" r="2" fill="#8FB6E8" fill-opacity="0.14"/>
+</pattern>
+<filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+  <feGaussianBlur stdDeviation="10" result="b"/>
+  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+</filter>
+<filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+  <feGaussianBlur stdDeviation="20"/>
+</filter>
+<clipPath id="tile"><rect width="512" height="512" rx="112"/></clipPath>
+</defs>
+  <g clip-path="url(#tile)">
+    <rect width="512" height="512" fill="url(#bg)"/>
+    <rect width="512" height="512" fill="url(#halo)"/>
+    <rect width="512" height="512" fill="url(#grid)"/>
+    <path d="M0 0h512v210L0 396Z" fill="url(#sheen)" opacity="0.5"/>
+    <ellipse cx="256" cy="452" rx="196" ry="62" fill="#020812" opacity="0.5" filter="url(#soft)"/>
+    
+    
+  <ellipse cx="256" cy="394" rx="74" ry="12" fill="#57A8FF" opacity="0.10" filter="url(#soft)"/>
+  <ellipse cx="256" cy="394" rx="112" ry="17" fill="none" stroke="#7FB2FF" stroke-opacity="0.16"/>
+    <path d="M180 176q0-18 76-18t76 18v148q0 20-76 20t-76-20Z" fill="url(#metal)" opacity="0.9"/>
+    <ellipse cx="256" cy="176" rx="76" ry="20" fill="#EAF4FF" opacity="0.85"/>
+    <ellipse cx="256" cy="176" rx="76" ry="20" fill="url(#iridescent)" opacity="0.5"/>
+    <path d="M180 210h152M180 250h152M180 290h152" stroke="#7C93B4" stroke-opacity="0.45" stroke-width="2"/>
+    <path d="M198 180v148M314 180v148" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.25"/>
+    <path d="M180 176q0-18 76-18t76 18" fill="none" stroke="#FFFFFF" stroke-opacity="0.6" stroke-width="3"/>
+    <circle cx="256" cy="340" r="18.2" fill="#9BE7FF" opacity="0.18" filter="url(#soft)"/><circle cx="256" cy="340" r="7" fill="#9BE7FF" />
+    <ellipse cx="256" cy="246" rx="112" ry="42" fill="none" stroke="#9BE7FF" stroke-opacity="0.18" stroke-width="2" transform="rotate(-18 256 246)"/>
+    <rect x="9" y="9" width="494" height="494" rx="103" fill="none" stroke="#FFFFFF" stroke-opacity="0.10" stroke-width="2"/>
+  </g>
+</svg>

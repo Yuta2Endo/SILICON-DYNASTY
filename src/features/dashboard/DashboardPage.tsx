@@ -139,6 +139,16 @@ export function DashboardPage({
     hasStockout
       ? { id: "stockout", message: t.dashboard.alertStockout, screen: "market" as ScreenId }
       : null,
+    state.oemContracts.offers.length > 0
+      ? {
+        id: "oem-offers",
+        message: t.dashboard.alertOemOffers.replace(
+          "{count}",
+          String(state.oemContracts.offers.length),
+        ),
+        screen: "market" as ScreenId,
+      }
+      : null,
     !state.research.activeProject && state.research.completedTechnologyIds.length === 0
       ? { id: "no-research", message: t.dashboard.alertNoResearch, screen: "research" as ScreenId }
       : null,

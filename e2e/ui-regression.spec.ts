@@ -218,6 +218,45 @@ test("compares two saved AI versions", async ({ page }) => {
   await expectNoHorizontalOverflow(page);
 });
 
+test("accepts an OEM design-win offer for a released processor", async ({ page }) => {
+  await openGame(page);
+
+  await page
+    .getByRole("navigation", { name: "Основная навигация" })
+    .getByRole("button", { name: "Процессор" })
+    .click();
+  await page.locator("#cpu-new-project-name").fill("OEM Core");
+  await page.locator(".cpu-create-form").getByRole("button", { name: "Создать CPU-проект" }).click();
+  await expect(page.locator("#cpu-edit-project-name")).toBeVisible();
+
+  await page
+    .getByRole("navigation", { name: "Основная навигация" })
+    .getByRole("button", { name: "Рынок" })
+    .click();
+  await page.locator("#market-release-name").fill("OEM One");
+  await page.getByRole("button", { name: "Выпустить продукт" }).click();
+  await expect(page.getByText("OEM One")).toBeVisible();
+
+  await page
+    .getByRole("navigation", { name: "Основная навигация" })
+    .getByRole("button", { name: "Обзор" })
+    .click();
+  await page.getByRole("button", { name: "Следующий день" }).click();
+  await page
+    .getByRole("navigation", { name: "Основная навигация" })
+    .getByRole("button", { name: "Рынок" })
+    .click();
+
+  const contracts = page.locator(".oem-contracts");
+  await expect(contracts.getByRole("heading", { name: "OEM-контракты" })).toBeVisible();
+  await expect(contracts.getByRole("button", { name: "Принять" })).toBeVisible();
+  await contracts.getByRole("button", { name: "Принять" }).click();
+
+  await expect(contracts.getByText("Активные контракты")).toBeVisible();
+  await expect(contracts.getByText("OEM One")).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});
+
 test("compares two saved device versions", async ({ page }) => {
   await openGame(page);
   await page.getByRole("button", { name: "Следующий день" }).click();

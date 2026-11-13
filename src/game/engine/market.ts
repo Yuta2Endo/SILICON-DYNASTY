@@ -27,6 +27,7 @@ import {
   PRODUCT_LIFECYCLE_RETIRE_AFTER_DAYS,
 } from "../formulas/market";
 import { getEconomicCycle } from "../formulas/economy";
+import { getOemContractDemandBonus } from "../models/oem-contracts";
 import { postFinanceTransaction } from "./finance";
 import { recordDailyUnits, roundUsd } from "../models/finance";
 
@@ -391,19 +392,27 @@ export function simulateMarketDay(state: GameState, date: string): GameState {
         ? total + calculateCompetitorProductAppeal(segmentDefinition, entry.product, competitorState)
         : total;
     }, 0);
-    const playerAppeals = playerProducts.map((product) => ({
-      product,
-      appeal: calculateProductAppeal({
-        segment: segmentDefinition,
-        configuration: product.configuration,
-        performanceScore: product.performanceScore,
-        priceUsd: product.priceUsd,
-        releaseDate: product.releaseDate,
+    const playerAppeals = playerProducts.map((product) => {
+      const contractBonus = getOemContractDemandBonus(
+        state.oemContracts,
+        product.id,
+        product.segmentId,
         date,
-        reputation: state.company.reputation,
-        marketingBudgetUsdPerDay: state.market.marketingBudgetUsdPerDay,
-      }),
-    }));
+      );
+      return {
+        product,
+        appeal: calculateProductAppeal({
+          segment: segmentDefinition,
+          configuration: product.configuration,
+          performanceScore: product.performanceScore,
+          priceUsd: product.priceUsd,
+          releaseDate: product.releaseDate,
+          date,
+          reputation: state.company.reputation,
+          marketingBudgetUsdPerDay: state.market.marketingBudgetUsdPerDay,
+        }) * (1 + contractBonus / 100),
+      };
+    });
     const playerAppeal = playerAppeals.reduce((total, entry) => total + entry.appeal, 0);
     const totalAppeal = playerAppeal + competitorAppeal;
     const playerDemand = totalAppeal > 0
@@ -538,6 +547,12 @@ export function estimateProductDailyDemand(
     },
     0,
   );
+  const contractBonus = getOemContractDemandBonus(
+    state.oemContracts,
+    product.id,
+    product.segmentId,
+    date,
+  );
   const appeal = calculateProductAppeal({
     segment,
     configuration: product.configuration,
@@ -547,7 +562,7 @@ export function estimateProductDailyDemand(
     date,
     reputation: state.company.reputation,
     marketingBudgetUsdPerDay: state.market.marketingBudgetUsdPerDay,
-  });
+  }) * (1 + contractBonus / 100);
   const totalAppeal = appeal + competitorAppeal;
   const marketDemandUnits = getSegmentDailyDemand(segment, date);
   const share = totalAppeal > 0 ? appeal / totalAppeal : 0;
