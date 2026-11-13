@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarDays, Layers3 } from "lucide-react";
+import { ArrowRight, CalendarDays, Layers3, Menu } from "lucide-react";
 import type { ReactNode } from "react";
 import type { GameState } from "../game/models/game-state";
 import { formatGameDate, formatYear } from "../localization/formatters";
@@ -9,6 +9,7 @@ interface AppShellProps {
   state: GameState;
   activeScreen: ScreenId;
   onNavigate: (screen: ScreenId) => void;
+  onOpenMenu: () => void;
   announcement: string | null;
   alert: string | null;
   children: ReactNode;
@@ -18,6 +19,7 @@ export function AppShell({
   state,
   activeScreen,
   onNavigate,
+  onOpenMenu,
   announcement,
   alert,
   children,
@@ -61,6 +63,16 @@ export function AppShell({
             })}
           </nav>
 
+          <button
+            aria-label={t.mainMenu.open}
+            className="sidebar-menu-button"
+            onClick={onOpenMenu}
+            type="button"
+          >
+            <Menu aria-hidden="true" size={18} />
+            <span>{t.mainMenu.open}</span>
+          </button>
+
           <div className="sidebar-era">
             <span className="sidebar-era__icon" aria-hidden="true"><Layers3 size={16} /></span>
             <div>
@@ -79,11 +91,21 @@ export function AppShell({
                 <span className="mobile-header__era">{year} · {t.app.era}</span>
               </div>
             </div>
-            <time className="mobile-header__year" dateTime={state.gameDate}>
-              <CalendarDays aria-hidden="true" size={16} />
-              <span className="sr-only">{t.dashboard.gameDate}: </span>
-              {year}
-            </time>
+            <div className="mobile-header__actions">
+              <time className="mobile-header__year" dateTime={state.gameDate}>
+                <CalendarDays aria-hidden="true" size={16} />
+                <span className="sr-only">{t.dashboard.gameDate}: </span>
+                {year}
+              </time>
+              <button
+                aria-label={t.mainMenu.open}
+                className="mobile-menu-button"
+                onClick={onOpenMenu}
+                type="button"
+              >
+                <Menu aria-hidden="true" size={20} />
+              </button>
+            </div>
           </header>
 
           <main className="main-scroll">

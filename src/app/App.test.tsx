@@ -33,8 +33,9 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Компания" }));
     expect(await screen.findByRole("heading", { name: "Профиль компании" })).toBeTruthy();
 
-    await user.clear(screen.getByRole("textbox", { name: "Название компании" }));
-    await user.type(screen.getByRole("textbox", { name: "Название компании" }), "Dynasty Labs");
+    const companyNameInput = await screen.findByRole("textbox", { name: "Название компании" });
+    await user.clear(companyNameInput);
+    await user.type(companyNameInput, "Dynasty Labs");
     await user.click(screen.getByRole("button", { name: "Сохранить изменения" }));
 
     await waitFor(async () => {
@@ -42,7 +43,7 @@ describe("App", () => {
     });
 
     await user.click(screen.getByRole("button", { name: "Настройки" }));
-    await user.click(screen.getByRole("button", { name: "English" }));
+    await user.click(await screen.findByRole("button", { name: "English" }));
     expect(await screen.findByRole("heading", { name: "Settings" })).toBeTruthy();
 
     const state = await application.load();
@@ -51,6 +52,18 @@ describe("App", () => {
 
     await user.click(screen.getByRole("button", { name: "Overview" }));
     expect(await screen.findByRole("heading", { name: "Company dashboard" })).toBeTruthy();
+  });
+
+  it("opens the main menu on start and continues to the dashboard", async () => {
+    const user = userEvent.setup();
+    const repository = new MemoryGameStateRepository();
+    const application = createGameApplication(repository);
+
+    render(<App application={application} initialMenuOpen />);
+
+    expect(await screen.findByRole("dialog", { name: "SILICON DYNASTY" })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Продолжить" }));
+    expect(await screen.findByRole("heading", { name: "Панель компании" })).toBeTruthy();
   });
 
   it("advances the game date through the dashboard action", async () => {
@@ -78,7 +91,8 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Рынок" }));
     expect(await screen.findByRole("heading", { name: "Рынок и продажи" })).toBeTruthy();
 
-    await user.click(screen.getByRole("tab", { name: "Финансы" }));
+    const financeTab = await screen.findByRole("tab", { name: "Финансы" });
+    await user.click(financeTab);
     expect(await screen.findByRole("heading", { name: "Финансы" })).toBeTruthy();
     expect(screen.getByRole("tab", { name: "Финансы" }).getAttribute("aria-selected")).toBe("true");
   });
@@ -93,11 +107,11 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Процессор" }));
     await screen.findByRole("heading", { name: "Конструктор процессоров" });
 
-    await user.click(screen.getByRole("button", { name: "ОС" }));
+    await user.click(await screen.findByRole("button", { name: "ОС" }));
     expect(await screen.findByRole("heading", { name: "Лаборатория ОС" })).toBeTruthy();
 
-    await user.type(screen.getByRole("textbox", { name: "Название проекта" }), "Dynasty OS");
-    await user.click(screen.getByRole("button", { name: "Создать проект" }));
+    await user.type(await screen.findByRole("textbox", { name: "Название проекта" }), "Dynasty OS");
+    await user.click(await screen.findByRole("button", { name: "Создать проект" }));
     expect(await screen.findByRole("heading", { name: "Dynasty OS" })).toBeTruthy();
 
     await waitFor(async () => {
@@ -117,11 +131,11 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Процессор" }));
     await screen.findByRole("heading", { name: "Конструктор процессоров" });
 
-    await user.click(screen.getByRole("button", { name: "ИИ" }));
+    await user.click(await screen.findByRole("button", { name: "ИИ" }));
     expect(await screen.findByRole("heading", { name: "Лаборатория ИИ" })).toBeTruthy();
 
-    await user.type(screen.getByRole("textbox", { name: "Название проекта" }), "Dynasty Vision");
-    await user.click(screen.getByRole("button", { name: "Создать проект" }));
+    await user.type(await screen.findByRole("textbox", { name: "Название проекта" }), "Dynasty Vision");
+    await user.click(await screen.findByRole("button", { name: "Создать проект" }));
     expect((await screen.findAllByDisplayValue("Dynasty Vision")).length).toBeGreaterThan(0);
 
     await waitFor(async () => {

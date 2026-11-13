@@ -88,6 +88,7 @@ import { exportGameState, parseImportedGameState } from "./save-transfer";
 
 export interface GameApplication {
   load(): Promise<GameState>;
+  newGame(): Promise<GameState>;
   advanceDay(): Promise<GameState>;
   startResearch(technologyId: ResearchTechnologyId): Promise<GameState>;
   renameCompany(name: string): Promise<GameState>;
@@ -189,6 +190,12 @@ export function createGameApplication(repository: GameStateRepository): GameAppl
 
   return {
     load,
+
+    async newGame() {
+      const state = await ensureLoaded();
+      const nextState = createInitialGameState();
+      return commit({ ...nextState, settings: state.settings });
+    },
 
     async advanceDay() {
       return commit(advanceGameDay(await ensureLoaded()));

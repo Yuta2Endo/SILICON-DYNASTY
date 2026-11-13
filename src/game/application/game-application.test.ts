@@ -408,4 +408,26 @@ describe("game application commands", () => {
     expect(daily?.financingUsd).toBe(5_000);
     expect(reloaded.company.balance).toBe(withLoan.company.balance);
   });
+
+  it("starts a new game while preserving interface settings", async () => {
+    const repository = new MemoryGameStateRepository();
+    const application = createGameApplication(repository);
+
+    await application.updateSettings({ locale: "en", theme: "dark" });
+    await application.advanceDay();
+    await application.renameCompany("Old Dynasty");
+
+    const reset = await application.newGame();
+
+    expect(reset.gameDate).toBe("1995-01-01");
+    expect(reset.company.name).toBe("Silicon Dynasty");
+    expect(reset.settings).toMatchObject({ locale: "en", theme: "dark" });
+    expect(reset.cpuProjects).toEqual([]);
+    expect(reset.finance.transactions).toEqual([]);
+
+    const reloaded = await createGameApplication(repository).load();
+    expect(reloaded.company.name).toBe("Silicon Dynasty");
+    expect(reloaded.gameDate).toBe("1995-01-01");
+    expect(reloaded.settings.locale).toBe("en");
+  });
 });

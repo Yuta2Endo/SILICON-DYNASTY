@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { BadgeCheck, Building2, CircleDollarSign, UsersRound } from "lucide-react";
 import { MetricCard } from "../../components/MetricCard";
+import { Button } from "../../components/ui/Button";
+import { Field } from "../../components/ui/Field";
 import { validateCompany, type Company } from "../../game/models/company";
 import type { GameState } from "../../game/models/game-state";
 import { formatCurrency, formatNumber, formatYear } from "../../localization/formatters";
@@ -87,8 +89,12 @@ export function CompanyPage({ state, isSaving, onRename }: CompanyPageProps) {
           </div>
         </div>
         <form className="company-form" onSubmit={handleSubmit}>
-          <div className="field-group">
-            <label htmlFor="company-name">{t.company.name}</label>
+          <Field
+            error={nameError}
+            hint={t.company.nameHint}
+            htmlFor="company-name"
+            label={t.company.name}
+          >
             <input
               autoComplete="organization"
               id="company-name"
@@ -99,18 +105,12 @@ export function CompanyPage({ state, isSaving, onRename }: CompanyPageProps) {
               }}
               value={draftName}
             />
-            <p className="field-hint">{t.company.nameHint}</p>
-            {nameError && <p className="field-error" role="alert">{nameError}</p>}
-          </div>
+          </Field>
           <div className="company-form__footer">
             <span className="form-footnote">{t.settings.localDataBody}</span>
-            <button
-              className="button button--primary touch-manipulation select-none active:scale-95 transition-transform duration-150 ease-out"
-              disabled={isSaving}
-              type="submit"
-            >
+            <Button disabled={isSaving} type="submit" variant="primary">
               {isSaving ? t.common.saving : t.company.save}
-            </button>
+            </Button>
           </div>
         </form>
       </section>

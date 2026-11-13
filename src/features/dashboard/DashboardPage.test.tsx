@@ -1,0 +1,62 @@
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { createInitialGameState } from "../../game/models/game-state";
+import { DashboardPage } from "./DashboardPage";
+
+afterEach(() => {
+  cleanup();
+  window.localStorage.clear();
+});
+
+function renderDashboard() {
+  const state = createInitialGameState();
+  const onNavigate = vi.fn();
+  const onAdvanceDay = vi.fn();
+  render(
+    <DashboardPage
+      isSaving={false}
+      onAdvanceDay={onAdvanceDay}
+      onNavigate={onNavigate}
+      state={state}
+    />,
+  );
+  return { onNavigate, onAdvanceDay };
+}
+
+describe("DashboardPage", () => {
+  it("shows the next first-run step and opens its workspace", () => {
+    const { onNavigate } = renderDashboard();
+
+    expect(screen.getByText("0 из 9 шагов")).toBeTruthy();
+    expect(screen.getByText("Создайте проект процессора")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Перейти" }));
+    expect(onNavigate).toHaveBeenCalledWith("cpu");
+  });
+
+  it("dismisses the quick start hint and remembers the choice", () => {
+    renderDashboard();
+
+    fireEvent.click(screen.getByRole("button", { name: "Скрыть подсказку быстрого старта" }));
+
+    expect(screen.queryByText("Быстрый старт")).toBeNull();
+    expect(window.localStorage.getItem("silicon-dynasty:quick-start-dismissed")).toBe("1");
+  });
+
+  it("shows actionable signals and navigates to the relevant screen", () => {
+    const { onNavigate } = renderDashboard();
+
+    expect(screen.getByText("Нет активных продуктов. Пора выходить на рынок.")).toBeTruthy();
+    expect(screen.getByText("Исследования ещё не запущены.")).toBeTruthy();
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Открыть" })[0]!);
+    expect(onNavigate).toHaveBeenCalledWith("market");
+  });
+
+  it("opens a workspace from the command center quick actions", () => {
+    const { onNavigate } = renderDashboard();
+
+    fireEvent.click(screen.getByRole("button", { name: "Новый процессор" }));
+    expect(onNavigate).toHaveBeenCalledWith("cpu");
+  });
+});

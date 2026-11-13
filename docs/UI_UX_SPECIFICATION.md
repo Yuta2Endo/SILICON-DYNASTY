@@ -92,15 +92,20 @@ Do not disable text selection globally. Inputs, text fields and copyable technic
 
 ## 3. Typography
 
-Use system fonts with native platform rendering:
+Use the bundled Manrope variable font with native fallbacks:
 
 ```css
 font-family:
+  "Manrope Variable",
+  "Manrope",
   -apple-system,
   BlinkMacSystemFont,
+  "Segoe UI",
   "Roboto",
   sans-serif;
 ```
+
+The font is bundled locally through `@fontsource-variable/manrope`; do not depend on a network font request. Manrope must include Cyrillic and Latin coverage.
 
 Use `tabular-nums` for:
 
@@ -115,6 +120,17 @@ Use `tabular-nums` for:
 - Timers and game statistics.
 
 Maintain consistent heading sizes, readable body text and sufficient contrast.
+
+### Shared UI primitives
+
+Use the shared primitives in `src/components/ui` for new UI work:
+
+- `Button` for primary, secondary, ghost and destructive actions.
+- `Card` for compact surfaces and grouped content.
+- `Panel` for titled sections with optional description, icon and action.
+- `Field` for label, hint, error and form control composition.
+
+Primitives own the common visual behavior; screen-specific classes may add layout or domain styling without redefining base button, card or field behavior.
 
 Layouts must tolerate long translated strings.
 
@@ -141,6 +157,17 @@ Available destinations:
 - Settings
 
 Use compact mobile navigation; do not force every destination into a bottom bar.
+
+### Main menu
+
+The game opens on a full-screen main menu when no campaign interaction has started. It must provide:
+
+- Current campaign summary: company, date, capital and era.
+- Continue, New Game and Settings actions.
+- A destructive confirmation before New Game resets progress.
+- Keyboard support: Escape closes the menu, and the primary action receives initial focus.
+
+The main menu is also reachable from the desktop sidebar and the mobile header. It must not replace the primary bottom navigation.
 
 ### Mobile navigation
 
@@ -172,6 +199,8 @@ Show:
 - Market value and share.
 - Sales.
 - Active products.
+- A command center with quick actions and actionable signals.
+- First-run quick start guidance until the tutorial is complete or the player dismisses it.
 - Research.
 - Manufacturing.
 - OS projects.

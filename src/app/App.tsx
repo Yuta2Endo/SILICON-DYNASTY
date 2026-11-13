@@ -1,13 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { AppShell } from "./AppShell";
 import { ConfirmationBottomSheet } from "../components/ConfirmationBottomSheet";
-import { CPUDesignerPage } from "../features/cpu/CPUDesignerPage";
-import { ComponentDesignerPage } from "../features/components/ComponentDesignerPage";
-import { OsDesignerPage } from "../features/os/OsDesignerPage";
-import { AiDesignerPage } from "../features/ai/AiDesignerPage";
-import { DeviceDesignerPage } from "../features/devices/DeviceDesignerPage";
-import { MarketPage } from "../features/market/MarketPage";
-import { ResearchPage } from "../features/research/ResearchPage";
+import { MainMenu } from "../features/menu/MainMenu";
 import { createGameApplication, type GameApplication } from "../game/application/game-application";
 import type { CpuConfiguration } from "../game/models/cpu";
 import type { AiConfiguration, AiDataset, AiOptimizationType } from "../game/models/ai";
@@ -17,22 +11,33 @@ import type { GameSettings, GameState } from "../game/models/game-state";
 import { createBrowserGameStateRepository } from "../storage/repositories/BrowserGameStateRepository";
 import type { SaveOverview } from "../storage/repositories/SaveManagement";
 import { translations } from "../localization/messages";
-import { CompanyPage } from "../features/company/CompanyPage";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
-import { SettingsPage } from "../features/settings/SettingsPage";
 import { type ScreenId } from "./navigation";
+
+const CompanyPage = lazy(() => import("../features/company/CompanyPage").then((module) => ({ default: module.CompanyPage })));
+const ResearchPage = lazy(() => import("../features/research/ResearchPage").then((module) => ({ default: module.ResearchPage })));
+const SettingsPage = lazy(() => import("../features/settings/SettingsPage").then((module) => ({ default: module.SettingsPage })));
+const CPUDesignerPage = lazy(() => import("../features/cpu/CPUDesignerPage").then((module) => ({ default: module.CPUDesignerPage })));
+const ComponentDesignerPage = lazy(() => import("../features/components/ComponentDesignerPage").then((module) => ({ default: module.ComponentDesignerPage })));
+const OsDesignerPage = lazy(() => import("../features/os/OsDesignerPage").then((module) => ({ default: module.OsDesignerPage })));
+const AiDesignerPage = lazy(() => import("../features/ai/AiDesignerPage").then((module) => ({ default: module.AiDesignerPage })));
+const DeviceDesignerPage = lazy(() => import("../features/devices/DeviceDesignerPage").then((module) => ({ default: module.DeviceDesignerPage })));
+const MarketPage = lazy(() => import("../features/market/MarketPage").then((module) => ({ default: module.MarketPage })));
 
 interface AppProps {
   application?: GameApplication;
+  initialMenuOpen?: boolean;
 }
 
-export function App({ application }: AppProps = {}) {
+export function App({ application, initialMenuOpen }: AppProps = {}) {
   const [gameApplication] = useState(
     () => application ?? createGameApplication(createBrowserGameStateRepository()),
   );
   const [state, setState] = useState<GameState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isMainMenuOpen, setIsMainMenuOpen] = useState(initialMenuOpen ?? !application);
+  const [menuError, setMenuError] = useState(false);
   const [activeScreen, setActiveScreen] = useState<ScreenId>("dashboard");
   const [hasLoadError, setHasLoadError] = useState(false);
   const [hasCommandError, setHasCommandError] = useState(false);
@@ -141,6 +146,24 @@ export function App({ application }: AppProps = {}) {
     }
   }, []);
 
+  const startNewGame = useCallback(async () => {
+    setMenuError(false);
+    const nextState = await runCommand(() => gameApplication.newGame());
+
+    if (!nextState) {
+      setMenuError(true);
+      return;
+    }
+
+    setActiveScreen("dashboard");
+    setHasUnsavedCpuDraft(false);
+    setHasUnsavedComponentDraft(false);
+    setHasUnsavedOsDraft(false);
+    setHasUnsavedAiDraft(false);
+    setHasUnsavedDeviceDraft(false);
+    setIsMainMenuOpen(false);
+  }, [gameApplication, runCommand]);
+
   const requestNavigation = useCallback((screen: ScreenId) => {
     if (screen === activeScreen) {
       return;
@@ -169,6 +192,16 @@ export function App({ application }: AppProps = {}) {
   }, [activeScreen, hasUnsavedCpuDraft, hasUnsavedComponentDraft, hasUnsavedOsDraft, hasUnsavedAiDraft, hasUnsavedDeviceDraft]);
 
   const cancelNavigation = useCallback(() => setPendingScreen(null), []);
+
+  const openSettingsFromMenu = useCallback(() => {
+    setIsMainMenuOpen(false);
+    requestNavigation("settings");
+  }, [requestNavigation]);
+
+  const openMainMenu = useCallback(() => {
+    setMenuError(false);
+    setIsMainMenuOpen(true);
+  }, []);
 
   const discardDraftAndNavigate = useCallback(() => {
     if (pendingScreen) {
@@ -210,17 +243,21 @@ export function App({ application }: AppProps = {}) {
   const alert = hasCommandError ? t.errors.save : null;
 
   return (
-    <AppShell
-      activeScreen={activeScreen}
-      alert={alert}
-      announcement={announcement}
-      onNavigate={requestNavigation}
-      state={state}
-    >
+    <>
+      <AppShell
+        activeScreen={activeScreen}
+        alert={alert}
+        announcement={announcement}
+        onNavigate={requestNavigation}
+        onOpenMenu={openMainMenu}
+        state={state}
+      >
+      <Suspense fallback={<ScreenLoading label={t.common.loading} />}>
       {activeScreen === "dashboard" && (
         <DashboardPage
           isSaving={isSaving}
           onAdvanceDay={() => void runCommand(() => gameApplication.advanceDay())}
+          onNavigate={requestNavigation}
           state={state}
         />
       )}
@@ -476,7 +513,28 @@ export function App({ application }: AppProps = {}) {
           title={t.cpu.unsavedTitle}
         />
       )}
-    </AppShell>
+      </Suspense>
+      </AppShell>
+      {isMainMenuOpen && (
+        <MainMenu
+          error={menuError}
+          isSaving={isSaving}
+          onContinue={() => setIsMainMenuOpen(false)}
+          onNewGame={() => void startNewGame()}
+          onSettings={openSettingsFromMenu}
+          state={state}
+        />
+      )}
+    </>
+  );
+}
+
+function ScreenLoading({ label }: { label: string }) {
+  return (
+    <div className="screen-loading" role="status">
+      <span className="screen-loading__spinner" aria-hidden="true" />
+      <span>{label}</span>
+    </div>
   );
 }
 
