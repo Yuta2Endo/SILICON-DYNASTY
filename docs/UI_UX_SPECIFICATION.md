@@ -369,6 +369,8 @@ Use dedicated visualizations for:
 
 Use charts, comparison panels and compact financial cards.
 
+The Market overview must include a 14-day market pulse with accessible sparklines for market share, player revenue and units sold, derived from real daily summaries. Show an empty state until the first simulated market day.
+
 All monetary values must use consistent formatting.
 
 ### Analytics

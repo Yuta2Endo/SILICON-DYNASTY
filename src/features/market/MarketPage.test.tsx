@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createDefaultCpuConfiguration, createCpuProject } from "../../game/models/cpu";
 import { createComponentProject, createDefaultComponentConfiguration } from "../../game/models/components";
 import { createInitialGameState } from "../../game/models/game-state";
+import type { MarketDaySummary } from "../../game/models/market";
 import type { ReleaseProductInput } from "../../game/engine/market";
 import type { ReleaseComponentProductInput } from "../../game/engine/component-market";
 import { translations } from "../../localization/messages";
@@ -106,6 +107,49 @@ describe("Market screen", () => {
     expect(screen.getByRole("heading", { name: ru.market.cycle.title })).toBeTruthy();
     expect(screen.getByText(ru.market.cycle.phases.stable)).toBeTruthy();
     expect(screen.getByText(ru.market.cycle.demand)).toBeTruthy();
+  });
+
+  it("shows market pulse sparklines from recent daily summaries", () => {
+    const summaries: MarketDaySummary[] = [
+      {
+        date: "1995-01-01",
+        totalDemandUnits: 100,
+        playerUnits: 10,
+        competitorUnits: 90,
+        playerRevenueUsd: 3_000,
+        marketShare: 0.1,
+        segments: {},
+        componentDemandUnits: 0,
+        componentUnits: 0,
+        componentRevenueUsd: 0,
+        componentManufacturingUsd: 0,
+      },
+      {
+        date: "1995-01-02",
+        totalDemandUnits: 100,
+        playerUnits: 12,
+        competitorUnits: 88,
+        playerRevenueUsd: 3_600,
+        marketShare: 0.12,
+        segments: {},
+        componentDemandUnits: 0,
+        componentUnits: 0,
+        componentRevenueUsd: 0,
+        componentManufacturingUsd: 0,
+      },
+    ];
+    renderMarket({
+      state: {
+        ...stateWithProject,
+        market: { ...stateWithProject.market, dailySummaries: summaries },
+      },
+    });
+
+    expect(screen.getByRole("heading", { name: ru.market.pulse.title })).toBeTruthy();
+    expect(screen.getAllByRole("img", { name: ru.market.pulse.share }).length).toBe(1);
+    expect(screen.getAllByRole("img", { name: ru.market.pulse.revenue }).length).toBe(1);
+    expect(screen.getAllByRole("img", { name: ru.market.pulse.units }).length).toBe(1);
+    expect(screen.getAllByText(ru.market.pulse.window).length).toBe(3);
   });
 
   it("switches to the analytics tab", async () => {

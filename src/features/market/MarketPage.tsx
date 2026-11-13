@@ -67,6 +67,7 @@ import {
 } from "../../localization/formatters";
 import { translations, type TranslationMessages } from "../../localization/messages";
 import { MetricCard } from "../../components/MetricCard";
+import { TrendSparkline } from "../../components/TrendSparkline";
 import { AnalyticsPanel } from "../analytics/AnalyticsPanel";
 
 export type MarketView = "market" | "finance" | "analytics";
@@ -217,6 +218,7 @@ function MarketOverview({
   const latest = state.market.dailySummaries.at(-1);
   const activeProducts = state.market.products.filter((product) => product.status === "active");
   const cycle = getEconomicCycle(state.gameDate);
+  const marketHistory = state.market.dailySummaries.slice(-14);
 
   return (
     <div className="page-stack">
@@ -276,6 +278,57 @@ function MarketOverview({
             <strong>×{formatDecimal(cycle.competitorAggression, locale, 2)}</strong>
           </div>
         </div>
+      </section>
+
+      <section className="market-pulse" aria-labelledby="market-pulse-title">
+        <SectionHeading
+          copy={copy.pulse.hint}
+          icon={Activity}
+          id="market-pulse-title"
+          title={copy.pulse.title}
+        />
+        {marketHistory.length === 0 ? (
+          <p className="market-pulse__empty">{copy.pulse.empty}</p>
+        ) : (
+          <div className="market-pulse__grid">
+            <article className="market-pulse__card">
+              <header>
+                <h3>{copy.pulse.share}</h3>
+                <strong>{formatShare(latest?.marketShare ?? 0, locale)}</strong>
+              </header>
+              <TrendSparkline
+                label={copy.pulse.share}
+                tone="violet"
+                values={marketHistory.map((summary) => summary.marketShare * 100)}
+              />
+              <p>{copy.pulse.window}</p>
+            </article>
+            <article className="market-pulse__card">
+              <header>
+                <h3>{copy.pulse.revenue}</h3>
+                <strong>{formatCurrency(latest?.playerRevenueUsd ?? 0, locale)}</strong>
+              </header>
+              <TrendSparkline
+                label={copy.pulse.revenue}
+                tone="green"
+                values={marketHistory.map((summary) => summary.playerRevenueUsd)}
+              />
+              <p>{copy.pulse.window}</p>
+            </article>
+            <article className="market-pulse__card">
+              <header>
+                <h3>{copy.pulse.units}</h3>
+                <strong>{formatNumber(latest?.playerUnits ?? 0, locale)}</strong>
+              </header>
+              <TrendSparkline
+                label={copy.pulse.units}
+                tone="blue"
+                values={marketHistory.map((summary) => summary.playerUnits)}
+              />
+              <p>{copy.pulse.window}</p>
+            </article>
+          </div>
+        )}
       </section>
 
       <ReleaseProductForm
