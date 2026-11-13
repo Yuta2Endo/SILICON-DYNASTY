@@ -252,6 +252,7 @@ Present:
 - TDP.
 - Die area.
 - Estimated cost.
+- Saved-version comparison with market performance, manufacturing cost, benchmark throughput, memory bandwidth and temperature deltas.
 
 ### GPU Designer
 

@@ -4,6 +4,7 @@ import { ConfirmationBottomSheet } from "../../components/ConfirmationBottomShee
 import { MetricCard } from "../../components/MetricCard";
 import { ProductWorkspaceTabs } from "../../components/ProductWorkspaceTabs";
 import { CPUBenchmarkPanel } from "../benchmark/CPUBenchmarkPanel";
+import { CpuVersionCompare } from "./CpuVersionCompare";
 import {
   CPU_ARCHITECTURE_OPTIONS,
   CPU_ISA_OPTIONS,
@@ -628,6 +629,8 @@ export function CPUDesignerPage({
             configurationIsValid={configurationValidation.valid}
             locale={locale}
           />
+
+          <CpuVersionCompare locale={locale} project={selectedProject} />
 
           <section className="cpu-version-section">
             <header className="cpu-version-section__heading">

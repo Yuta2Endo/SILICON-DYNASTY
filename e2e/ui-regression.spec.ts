@@ -121,9 +121,38 @@ test("compares two saved OS versions", async ({ page }) => {
   await page.selectOption("#os-field-driverModel", "user-space");
   await page.getByRole("button", { name: "Сохранить версию" }).click();
 
-  const compare = page.locator(".os-compare");
+  const compare = page.locator(".version-compare");
   await expect(compare).toBeVisible();
   await expect(compare.locator("select")).toHaveCount(2);
-  await expect(compare.locator(".os-compare__metric")).toHaveCount(8);
+  await expect(compare.locator(".version-compare__metric")).toHaveCount(8);
+  await expectNoHorizontalOverflow(page);
+});
+
+test("compares two saved CPU versions", async ({ page }) => {
+  await openGame(page);
+
+  await page
+    .getByRole("navigation", { name: "\u041e\u0441\u043d\u043e\u0432\u043d\u0430\u044f \u043d\u0430\u0432\u0438\u0433\u0430\u0446\u0438\u044f" })
+    .getByRole("button", { name: "\u041f\u0440\u043e\u0446\u0435\u0441\u0441\u043e\u0440" })
+    .click();
+
+  await page.locator("#cpu-new-project-name").fill("Compare E2E CPU");
+  await page
+    .locator(".cpu-create-form")
+    .getByRole("button", { name: "\u0421\u043e\u0437\u0434\u0430\u0442\u044c CPU-\u043f\u0440\u043e\u0435\u043a\u0442" })
+    .click();
+  await expect(page.locator("#cpu-clock-mhz")).toBeVisible();
+
+  await page.locator("#cpu-clock-mhz").fill("200");
+  await page.getByRole("button", { name: "\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c \u043d\u043e\u0432\u0443\u044e \u0432\u0435\u0440\u0441\u0438\u044e" }).click();
+
+  const compare = page.locator(".version-compare");
+  await expect(compare).toBeVisible();
+  await expect(compare.locator("select")).toHaveCount(2);
+  await expect(compare.locator(".version-compare__metric")).toHaveCount(6);
+  await expectNoHorizontalOverflow(page);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(compare).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });

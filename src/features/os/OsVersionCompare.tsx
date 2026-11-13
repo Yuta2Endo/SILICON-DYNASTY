@@ -74,9 +74,9 @@ export function OsVersionCompare({ locale, project }: OsVersionCompareProps) {
 
   if (versions.length < 2 || !comparison) {
     return (
-      <section className="os-compare">
-        <header className="os-compare__header">
-          <span className="os-compare__icon"><GitCompare aria-hidden="true" size={18} /></span>
+      <section className="version-compare">
+        <header className="version-compare__header">
+          <span className="version-compare__icon"><GitCompare aria-hidden="true" size={18} /></span>
           <div>
             <h2>{copy.versionCompare.title}</h2>
             <p>{copy.versionCompare.emptyHint}</p>
@@ -131,16 +131,16 @@ export function OsVersionCompare({ locale, project }: OsVersionCompareProps) {
   }
 
   return (
-    <section className="os-compare">
-      <header className="os-compare__header">
-        <span className="os-compare__icon"><GitCompare aria-hidden="true" size={18} /></span>
+    <section className="version-compare">
+      <header className="version-compare__header">
+        <span className="version-compare__icon"><GitCompare aria-hidden="true" size={18} /></span>
         <div>
           <h2>{copy.versionCompare.title}</h2>
           <p>{copy.versionCompare.hint}</p>
         </div>
       </header>
 
-      <div className="os-compare__selectors">
+      <div className="version-compare__selectors">
         <label>
           <span>{copy.versionCompare.from}</span>
           <select
@@ -154,7 +154,7 @@ export function OsVersionCompare({ locale, project }: OsVersionCompareProps) {
             ))}
           </select>
         </label>
-        <ArrowRight aria-hidden="true" className="os-compare__arrow" size={18} />
+        <ArrowRight aria-hidden="true" className="version-compare__arrow" size={18} />
         <label>
           <span>{copy.versionCompare.to}</span>
           <select
@@ -170,13 +170,13 @@ export function OsVersionCompare({ locale, project }: OsVersionCompareProps) {
         </label>
       </div>
 
-      <div className="os-compare__metrics">
+      <div className="version-compare__metrics">
         {METRIC_KEYS.map((key) => {
           const values = comparison.metrics[key];
           const delta = values.after - values.before;
           const formattedDelta = `${delta > 0 ? "+" : ""}${formatDecimal(delta, locale, 1)}`;
           return (
-            <article className="os-compare__metric" key={key}>
+            <article className="version-compare__metric" key={key}>
               <span>{copy.metrics[key]}</span>
               <strong>
                 {formatNumber(values.before, locale)}
@@ -186,10 +186,10 @@ export function OsVersionCompare({ locale, project }: OsVersionCompareProps) {
               <small
                 className={
                   delta > 0
-                    ? "os-compare__delta os-compare__delta--up"
+                    ? "version-compare__delta version-compare__delta--up"
                     : delta < 0
-                      ? "os-compare__delta os-compare__delta--down"
-                      : "os-compare__delta"
+                      ? "version-compare__delta version-compare__delta--down"
+                      : "version-compare__delta"
                 }
               >
                 {delta === 0 ? copy.versionCompare.unchanged : formattedDelta}
@@ -199,24 +199,24 @@ export function OsVersionCompare({ locale, project }: OsVersionCompareProps) {
         })}
       </div>
 
-      <div className="os-compare__changes">
+      <div className="version-compare__changes">
         <h3>
           {comparison.changes.length === 0
             ? copy.versionCompare.identical
             : copy.versionCompare.changed.replace("{count}", String(comparison.changes.length))}
         </h3>
         {comparison.changes.length === 0 ? (
-          <p className="os-compare__empty"><Check aria-hidden="true" size={16} /> {copy.versionCompare.noChanges}</p>
+          <p className="version-compare__empty"><Check aria-hidden="true" size={16} /> {copy.versionCompare.noChanges}</p>
         ) : (
           <ul>
             {comparison.changes.map((change) => (
               <li key={change.field}>
-                <span className="os-compare__change-label">{copy.fields[change.field]}</span>
-                <strong className="os-compare__change-value os-compare__change-value--before">
+                <span className="version-compare__change-label">{copy.fields[change.field]}</span>
+                <strong className="version-compare__change-value version-compare__change-value--before">
                   {formatValue(change.field, change.before)}
                 </strong>
                 <ArrowRight aria-hidden="true" size={13} />
-                <strong className="os-compare__change-value os-compare__change-value--after">
+                <strong className="version-compare__change-value version-compare__change-value--after">
                   {formatValue(change.field, change.after)}
                 </strong>
               </li>
