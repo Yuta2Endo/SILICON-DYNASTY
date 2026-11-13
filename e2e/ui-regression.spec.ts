@@ -150,6 +150,11 @@ test("compares two saved CPU versions", async ({ page }) => {
   await expect(compare).toBeVisible();
   await expect(compare.locator("select")).toHaveCount(2);
   await expect(compare.locator(".version-compare__metric")).toHaveCount(6);
+
+  const diePreview = page.locator(".cpu-die-preview");
+  await expect(diePreview).toBeVisible();
+  await expect(diePreview.locator(".cpu-die-block")).toHaveCount(5);
+  await expect(diePreview.locator(".cpu-die-block.is-selected")).toHaveCount(1);
   await expectNoHorizontalOverflow(page);
 
   await page.setViewportSize({ width: 390, height: 844 });

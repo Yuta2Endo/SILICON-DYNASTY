@@ -6,6 +6,8 @@ All formulas must have documented inputs, units, bounds and tests. Separate base
 ## CPU
 A conceptual throughput baseline may use IPC × effective frequency × effective cores, but final calculations must account for workload parallelism, memory, threads, power and thermal constraints. Do not assume every workload scales linearly across all cores. Stage 2 stores the target unit cost as an explicit project input; it is not presented as a calculated manufacturing cost. Stage 3 implements the deterministic CPU/GPU workload formulas in [`BENCHMARK_ENGINE.md`](BENCHMARK_ENGINE.md); results are simulated task throughput, not real hardware scores.
 
+The CPU editor also shows a derived die floorplan. Block heat starts from `10 + (tdp / dieArea) × 130 × nodeDensity + clock / 10000 × 8 + threadBonus + voltageBonus`, clamped to 5–100. `nodeDensity` rises from 1.0 to 1.35 as process nodes shrink. Core blocks receive an additional heat bonus. The preview is a game visualization, does not persist, and does not feed market or benchmark formulas.
+
 ## GPU
 Account for compute units, clock, architecture efficiency (represented by the validated operations-per-cycle-per-unit input), memory bandwidth/capacity, workload type and power/thermal limits. Gaming, rendering, compute and AI must not collapse into one universal score.
 

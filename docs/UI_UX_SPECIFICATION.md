@@ -254,6 +254,7 @@ Present:
 - Die area.
 - Estimated cost.
 - Saved-version comparison with market performance, manufacturing cost, benchmark throughput, memory bandwidth and temperature deltas.
+- Interactive die floorplan derived from the draft: core, L2/L3 cache and I/O blocks, keyboard-selectable blocks, thermal hotspot and density metrics. It must be labelled as a game simulation, not a physical CAD tool.
 
 ### GPU Designer
 

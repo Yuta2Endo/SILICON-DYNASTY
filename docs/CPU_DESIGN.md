@@ -49,6 +49,17 @@ New projects use a small 1995-era configuration: x86, monolithic, in-order, one 
 - Deterministic workload formulas are implemented in Stage 3 and documented in [BENCHMARK_ENGINE.md](BENCHMARK_ENGINE.md).
 - Research prerequisites, eras, costs, durations and unlocks are implemented in Stage 4 and documented in [RESEARCH_SYSTEM.md](RESEARCH_SYSTEM.md).
 
+## Die floorplan preview
+
+The CPU editor renders a deterministic, read-only die preview derived from the current draft configuration. It is not persisted and does not replace the physics or benchmark formulas.
+
+- The 100×72 layout places a core region, cache region and I/O region.
+- Up to 31 cores are shown individually; larger designs show an aggregate core tile with the remaining count.
+- L2 always appears; L3 appears only when `l3CacheMb` is greater than zero. The I/O strip shows memory controller, PCIe and display/I/O blocks.
+- Block heat is a game visualization derived from TDP per die area, process density, clock, threads per core and voltage. It is clamped to 5–100 and classified as cool, warm or hot.
+- Side metrics show die area, area per core, thermal density, hotspot score, cache share and block count.
+- The SVG blocks are keyboard-focusable and expose localized accessible names. The selected block defaults to the hotspot and can be changed with Enter or Space.
+
 ## Save compatibility
 
 Stage 4 uses save schema version 3. Version 1 saves migrate with their company, date and settings preserved, an empty `cpuProjects` list, and an initialized research state. Version 2 saves preserve all CPU projects and immutable configuration snapshots. For both versions, research progress, completions and spending start empty; `legacyUnlockIds` is derived as the union of CPU capabilities found across all saved version snapshots, so existing designs remain usable without granting fabricated research completions. New CPU projects and versions must satisfy the current research gates. Invalid or newer unsupported saves are rejected without replacing the source data.

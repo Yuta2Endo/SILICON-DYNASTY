@@ -5,6 +5,7 @@ import { MetricCard } from "../../components/MetricCard";
 import { ProductWorkspaceTabs } from "../../components/ProductWorkspaceTabs";
 import { CPUBenchmarkPanel } from "../benchmark/CPUBenchmarkPanel";
 import { CpuVersionCompare } from "./CpuVersionCompare";
+import { CpuDiePreview } from "./CpuDiePreview";
 import {
   CPU_ARCHITECTURE_OPTIONS,
   CPU_ISA_OPTIONS,
@@ -629,6 +630,8 @@ export function CPUDesignerPage({
             configurationIsValid={configurationValidation.valid}
             locale={locale}
           />
+
+          <CpuDiePreview configuration={draftConfiguration} locale={locale} />
 
           <CpuVersionCompare locale={locale} project={selectedProject} />
 
