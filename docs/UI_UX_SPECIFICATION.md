@@ -349,6 +349,7 @@ Present:
 - Pruning.
 - Distillation.
 - Deployment.
+- Saved-version comparison with architecture and dataset changes plus calculated quality, commercial, readiness, efficiency and VRAM metric deltas.
 
 Use charts to visualize simulated training and evaluation results.
 

@@ -16,6 +16,7 @@ import {
 import { ConfirmationBottomSheet } from "../../components/ConfirmationBottomSheet";
 import { MetricCard } from "../../components/MetricCard";
 import { ProductWorkspaceTabs } from "../../components/ProductWorkspaceTabs";
+import { AiVersionCompare } from "./AiVersionCompare";
 import {
   AI_ARCHITECTURE_OPTIONS,
   AI_DATASET_LICENSE_OPTIONS,
@@ -1157,6 +1158,8 @@ export function AiDesignerPage({
               </section>
             </>
           )}
+
+          <AiVersionCompare locale={locale} project={selectedProject} />
 
           <section className="cpu-version-section">
             <div className="section-heading">

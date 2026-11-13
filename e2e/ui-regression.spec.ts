@@ -186,3 +186,34 @@ test("compares two saved component versions", async ({ page }) => {
   await expect(compare).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
+
+test("compares two saved AI versions", async ({ page }) => {
+  await openGame(page);
+
+  await page
+    .getByRole("navigation", { name: "Основная навигация" })
+    .getByRole("button", { name: "Процессор" })
+    .click();
+  await page.locator(".product-workspace-tabs").getByRole("button", { name: "ИИ" }).click();
+  await expect(page.getByRole("heading", { name: "Лаборатория ИИ", level: 1 })).toBeVisible();
+
+  await page.locator("#ai-new-project-name").fill("Compare E2E AI");
+  await page
+    .locator("form.company-form")
+    .getByRole("button", { name: "Создать проект" })
+    .click();
+  await expect(page.locator("#ai-field-parameterCountM")).toBeVisible();
+
+  await page.locator("#ai-field-parameterCountM").fill("20");
+  await page.getByRole("button", { name: "Сохранить версию" }).click();
+
+  const compare = page.locator(".version-compare");
+  await expect(compare).toBeVisible();
+  await expect(compare.locator("select")).toHaveCount(2);
+  await expect(compare.locator(".version-compare__metric")).toHaveCount(6);
+  await expectNoHorizontalOverflow(page);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(compare).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});

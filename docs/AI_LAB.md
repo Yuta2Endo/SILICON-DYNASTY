@@ -123,9 +123,10 @@ The AI Lab is the fourth tab in the CPU/Components/OS/AI product workspace. It c
 - a Data Lab for adding and removing datasets;
 - model metric cards and a detailed metric list;
 - a hardware-requirements grid;
+- saved-version comparison with architecture and dataset changes plus quality, commercial, readiness, efficiency and VRAM metric deltas;
 - version history with configuration and dataset snapshots;
 - unsaved-draft confirmation and `beforeunload` protection.
 
 ## Tests
 
-Model tests cover defaults, round-trip parsing, bounds, attention/MoE constraints, year gates, dataset validation and version snapshots. Formula tests cover deterministic output, architecture and parameter effects, dataset quality/licensing, quantization and hardware requirements. UI tests cover creation, saving a configuration with a dataset, invalid input, dataset validation and workspace navigation. Application and game-state tests cover persistence and schema-v9 migration.
+Model tests cover defaults, round-trip parsing, bounds, attention/MoE constraints, year gates, dataset validation and version snapshots. Formula tests cover deterministic output, architecture and parameter effects, dataset quality/licensing, quantization and hardware requirements. UI tests cover creation, saving a configuration with a dataset, invalid input, dataset validation, version comparison and workspace navigation. Application and game-state tests cover persistence and schema-v9 migration.
