@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { GameState } from "../models/game-state";
 import { createDefaultCpuConfiguration } from "../models/cpu";
+import { getFinanceDailyRecord } from "../models/finance";
 import { createGameApplication } from "./game-application";
 import type { GameStateRepository } from "../../storage/repositories/GameStateRepository";
 
@@ -80,5 +81,53 @@ describe("game application commands", () => {
 
     await expect(application.createCpuProject("Dynasty Core", invalidConfiguration)).rejects.toThrow();
     expect(repository.state).toEqual(initial);
+  });
+
+  it("posts research spending to the finance ledger", async () => {
+    const repository = new MemoryGameStateRepository();
+    const application = createGameApplication(repository);
+
+    const state = await application.startResearch("out-of-order");
+
+    expect(state.company.balance).toBe(88_000);
+    expect(state.research.activeProject?.technologyId).toBe("out-of-order");
+    expect(getFinanceDailyRecord(state.finance, "1995-01-01")).toMatchObject({
+      researchUsd: 12_000,
+      netProfitUsd: -12_000,
+      closingBalanceUsd: 88_000,
+    });
+  });
+
+  it("persists release, pricing, production, marketing, and loan commands", async () => {
+    const repository = new MemoryGameStateRepository();
+    const application = createGameApplication(repository);
+    const configuration = createDefaultCpuConfiguration();
+
+    await application.createCpuProject("Dynasty Core", configuration);
+    const released = await application.releaseProduct({
+      projectId: "cpu-1",
+      projectVersion: 1,
+      name: "Dynasty One",
+      segmentId: "mainstream",
+      priceUsd: 600,
+    });
+    await application.orderProduction("product-1", 25);
+    await application.updateProductPrice("product-1", 575);
+    await application.updateMarketingBudget(250);
+    const withLoan = await application.takeLoan(5_000);
+
+    const reloaded = await createGameApplication(repository).load();
+    const product = reloaded.market.products[0];
+    const daily = getFinanceDailyRecord(reloaded.finance, "1995-01-01");
+
+    expect(released.market.products[0]?.releaseDate).toBe("1995-01-01");
+    expect(product?.priceUsd).toBe(575);
+    expect(reloaded.market.productionOrders[0]).toMatchObject({ quantity: 25, status: "in-production" });
+    expect(reloaded.market.marketingBudgetUsdPerDay).toBe(250);
+    expect(withLoan.finance.loan?.principalUsd).toBe(5_000);
+    expect(daily?.releaseUsd).toBe(5_000);
+    expect(daily?.manufacturingUsd).toBeGreaterThan(0);
+    expect(daily?.financingUsd).toBe(5_000);
+    expect(reloaded.company.balance).toBe(withLoan.company.balance);
   });
 });

@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Cpu, MemoryStick, Save, Workflow } from "lucide-react";
 import { ConfirmationBottomSheet } from "../../components/ConfirmationBottomSheet";
 import { MetricCard } from "../../components/MetricCard";
+import { CPUBenchmarkPanel } from "../benchmark/CPUBenchmarkPanel";
 import {
   CPU_ARCHITECTURE_OPTIONS,
   CPU_ISA_OPTIONS,
@@ -25,6 +26,7 @@ import {
   type CpuValidationIssue,
 } from "../../game/models/cpu";
 import type { GameState } from "../../game/models/game-state";
+import { getRequiredCpuResearchUnlocks, getUnlockedResearchIds } from "../../game/models/research";
 import { formatCurrency, formatGameDate, formatDecimal, formatNumber } from "../../localization/formatters";
 import { translations, type TranslationMessages } from "../../localization/messages";
 
@@ -68,7 +70,11 @@ export function CPUDesignerPage({
   const createNameIssue = validateCpuProjectName(newProjectName);
   const editorNameIssue = validateCpuProjectName(draftName);
   const configurationValidation = validateCpuConfiguration(draftConfiguration);
-  const editorIsValid = configurationValidation.valid && editorNameIssue === null;
+  const unlockedResearchIds = new Set(getUnlockedResearchIds(state.research));
+  const missingResearchUnlocks = configurationValidation.valid
+    ? getRequiredCpuResearchUnlocks(draftConfiguration).filter((unlockId) => !unlockedResearchIds.has(unlockId))
+    : [];
+  const editorIsValid = configurationValidation.valid && editorNameIssue === null && missingResearchUnlocks.length === 0;
   const supportedSimd = SIMD_BY_ISA[draftConfiguration.isa] ?? [];
   const totalCacheMb =
     (draftConfiguration.l1CacheKbPerCore * draftConfiguration.coreCount) / 1_024 +
@@ -212,6 +218,10 @@ export function CPUDesignerPage({
   const projectNameError = showCreateValidation ? getProjectNameError(createNameIssue, t.cpu) : undefined;
   const editorProjectNameError = showEditorValidation ? getProjectNameError(editorNameIssue, t.cpu) : undefined;
   const visibleConfigurationErrors = Object.entries(configurationValidation.errors);
+  const missingResearchNames = missingResearchUnlocks.map((unlockId) => t.research.unlocks[unlockId]);
+  const researchRequirementMessage = missingResearchNames.length > 0
+    ? t.cpu.researchRequirements.replace("{requirements}", missingResearchNames.join(", "))
+    : null;
   const pendingMessages = t.cpu;
 
   return (
@@ -282,14 +292,20 @@ export function CPUDesignerPage({
             <span className={`cpu-validation-card__icon${editorIsValid ? " is-valid" : " is-invalid"}`} aria-hidden="true">
               {editorIsValid ? <Workflow size={18} /> : <Cpu size={18} />}
             </span>
-            <div className="cpu-validation-card__copy">
-              <h2>{t.cpu.validationTitle}</h2>
-              <p>{editorIsValid ? t.cpu.validationPassed : t.cpu.validationFailed}</p>
-            </div>
+              <div className="cpu-validation-card__copy">
+                <h2>{t.cpu.validationTitle}</h2>
+                <p>{editorIsValid ? t.cpu.validationPassed : t.cpu.validationFailed}</p>
+                {researchRequirementMessage && (
+                  <p className="cpu-validation-card__requirements" role="alert">{researchRequirementMessage}</p>
+                )}
+              </div>
             <span className={`cpu-validation-card__status${editorIsValid ? " is-valid" : " is-invalid"}`}>
               {editorIsValid
                 ? t.cpu.validationStatusValid
-                : formatNumber(visibleConfigurationErrors.length + Number(Boolean(editorNameIssue)), locale)}
+                : formatNumber(
+                    visibleConfigurationErrors.length + Number(Boolean(editorNameIssue)) + missingResearchUnlocks.length,
+                    locale,
+                  )}
             </span>
           </section>
 
@@ -573,7 +589,7 @@ export function CPUDesignerPage({
                 </div>
                 <button
                   className="button button--primary"
-                  disabled={isSaving || !draftIsDirty}
+                  disabled={isSaving || !draftIsDirty || missingResearchUnlocks.length > 0}
                   type="submit"
                 >
                   <Save aria-hidden="true" size={16} />
@@ -582,6 +598,12 @@ export function CPUDesignerPage({
               </footer>
             </section>
           </form>
+
+          <CPUBenchmarkPanel
+            configuration={draftConfiguration}
+            configurationIsValid={configurationValidation.valid}
+            locale={locale}
+          />
 
           <section className="cpu-version-section">
             <header className="cpu-version-section__heading">

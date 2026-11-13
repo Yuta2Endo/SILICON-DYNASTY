@@ -41,3 +41,12 @@ export function formatGameDate(value: string, locale: Locale): string {
     timeZone: "UTC",
   }).format(new Date(`${value}T00:00:00.000Z`));
 }
+
+export function formatShortGameDate(value: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(LOCALE_TAGS[locale], {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${value}T00:00:00.000Z`));
+}

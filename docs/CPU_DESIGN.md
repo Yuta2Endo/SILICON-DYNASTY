@@ -36,7 +36,7 @@ This document records the Stage 2 CPU project contract. It describes the domain 
 | Die area | mm² | 1–2,000 |
 | Target unit cost | USD | 1–100,000 |
 
-The numeric bounds define the Stage 2 game-design envelope. Era/research gating is not implemented yet and belongs to later progression stages.
+Numeric bounds validate configuration inputs; they do not imply historical availability. Stage 4 enforces catalogued research unlocks for ARM and RISC-V ISA, chiplet topology, out-of-order and hybrid microarchitectures, multicore designs, non-SDR memory standards, and SIMD extensions. The baseline x86/in-order/monolithic, single-core SDR design remains available without research. Existing saved CPU versions retain their capabilities through migration-only legacy unlocks.
 
 ## Default baseline
 
@@ -46,9 +46,9 @@ New projects use a small 1995-era configuration: x86, monolithic, in-order, one 
 
 - The editor derives total cache capacity and threads per core from saved inputs. It does not invent a benchmark score.
 - The target unit cost is an explicit design input, not a calculated manufacturing cost. Yield, packaging, manufacturing, and market price belong to later stages.
-- Workload benchmarks and CPU performance formulas belong to Stage 3.
-- Research prerequisites and historical technology unlocks belong to Stage 4.
+- Deterministic workload formulas are implemented in Stage 3 and documented in [BENCHMARK_ENGINE.md](BENCHMARK_ENGINE.md).
+- Research prerequisites, eras, costs, durations and unlocks are implemented in Stage 4 and documented in [RESEARCH_SYSTEM.md](RESEARCH_SYSTEM.md).
 
 ## Save compatibility
 
-Stage 2 advances the game-state schema from version 1 to version 2. A version 1 save is parsed into the same company/date/settings state with an empty `cpuProjects` list, then written in the new schema by the repository. Invalid or unsupported saves are rejected and left intact.
+Stage 4 uses save schema version 3. Version 1 saves migrate with their company, date and settings preserved, an empty `cpuProjects` list, and an initialized research state. Version 2 saves preserve all CPU projects and immutable configuration snapshots. For both versions, research progress, completions and spending start empty; `legacyUnlockIds` is derived as the union of CPU capabilities found across all saved version snapshots, so existing designs remain usable without granting fabricated research completions. New CPU projects and versions must satisfy the current research gates. Invalid or newer unsupported saves are rejected without replacing the source data.

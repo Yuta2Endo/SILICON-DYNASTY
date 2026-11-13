@@ -18,6 +18,10 @@ Use IndexedDB transactions where applicable. Maintain a recovery strategy for in
 ## Versioning and migration
 Every save has `schemaVersion`. Migrations are sequential and tested against fixtures. Never silently overwrite a save from a newer schema. Preserve original data if migration fails.
 
+Schema v3 adds persisted research state: completed technology IDs, legacy unlock IDs, one active project's start date/progress/upfront cost, and cumulative research spending. Version 1 saves migrate with no CPU projects; version 2 saves retain every CPU project and saved version. Both migrations initialize research progress/completions/spending as empty and derive `legacyUnlockIds` from the union of CPU capabilities present across saved configuration history. This grandfathering preserves existing designs without marking their technologies researched. Research state in v3 is validated against the catalog, including active prerequisites, cost and progress bounds.
+
+Schema v4 adds `finance` and `market`. Finance stores transactions, daily aggregates, active loan, lifetime revenue/expenses/taxes/interest/financing. Market stores released products, production orders, competitor multipliers, observable actions, daily summaries and the marketing budget. Version 3 saves preserve company, date, CPU projects and research, then initialize finance and market at the saved game date. Finance parsing checks transaction sign/category, unique IDs and dates, recomputed daily totals, and loan bounds. Market parsing checks unique products/orders/actions, inventory equal to produced minus sold, known product references, the complete competitor catalog, capped histories, summary arithmetic and marketing budget bounds. Saves from schema 5 or newer are rejected rather than overwritten.
+
 ## Import/export
 Use a versioned format. Validate file structure, size and domain data. Invalid imports must not overwrite a working save. Treat imported values as untrusted.
 

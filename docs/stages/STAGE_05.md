@@ -1,7 +1,7 @@
 # STAGE 05 — Economy & Market
 
 **Project:** SILICON DYNASTY  
-**Status:** NOT STARTED  
+**Status:** COMPLETED  
 **Execution rule:** complete this stage only, then stop for approval.
 
 ## Objective
@@ -19,10 +19,10 @@ Implement company finance, unit costs, pricing, manufacturing, sales, market seg
 9. Stop. Do not begin the next stage without separate authorization.
 
 ## Acceptance criteria
-- [ ] Financial operations are consistent and tested.
-- [ ] Production and sales affect finances.
-- [ ] Demand considers price, specs, availability and competition.
-- [ ] Competitor actions follow observable strategies.
+- [x] Financial operations are consistent and tested.
+- [x] Production and sales affect finances.
+- [x] Demand considers price, specs, availability and competition.
+- [x] Competitor actions follow observable strategies.
 
 ## Engineering constraints
 - React + TypeScript strict + Vite + Capacitor.

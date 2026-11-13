@@ -40,7 +40,8 @@ export function AppShell({
 
           <nav className="primary-navigation" aria-label={t.navigation.label}>
             {navigationItems.map(({ id, icon: Icon }) => {
-              const isActive = activeScreen === id;
+              const isActive = activeScreen === id
+                || (id === "market" && activeScreen === "finance");
 
               return (
                 <button

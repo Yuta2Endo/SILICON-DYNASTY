@@ -63,6 +63,7 @@ input:focus-visible {
   --violet: #7754c9;
   --violet-soft: #f1edff;
   --amber: #ab7017;
+  --amber-strong: #805000;
   --amber-soft: #fff5df;
   --danger: #a71f2d;
   --danger-soft: #fff0f1;
@@ -97,6 +98,7 @@ input:focus-visible {
   --violet: #b8a4ff;
   --violet-soft: #332c51;
   --amber: #f1c371;
+  --amber-strong: #f1c371;
   --amber-soft: #3b3426;
   --danger: #ff9ca4;
   --danger-soft: #4a252d;
@@ -128,7 +130,7 @@ input:focus-visible {
   bottom: 0;
   left: 0;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 4px;
   padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--border);
@@ -140,12 +142,12 @@ input:focus-visible {
 .navigation-item {
   display: flex;
   min-width: 44px;
-  min-height: 52px;
+  min-height: 54px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 5px 4px;
+  padding: 5px 2px;
   border: 0;
   border-radius: 12px;
   color: var(--text-secondary);
@@ -163,9 +165,10 @@ input:focus-visible {
 .navigation-item span {
   max-width: 100%;
   overflow: hidden;
-  font-size: 0.69rem;
+  font-size: 0.63rem;
   font-weight: 650;
   line-height: 1.1;
+  text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -741,7 +744,8 @@ input:focus-visible {
   font-weight: 700;
 }
 
-.field-group input {
+.field-group input,
+.field-group select {
   width: 100%;
   min-height: 48px;
   padding: 0 13px;
@@ -752,10 +756,21 @@ input:focus-visible {
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
-.field-group input:focus {
+.field-group select {
+  cursor: pointer;
+}
+
+.field-group input:focus,
+.field-group select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
   outline: none;
+}
+
+.field-group input:disabled,
+.field-group select:disabled {
+  cursor: progress;
+  opacity: 0.7;
 }
 
 .field-hint,
@@ -1765,6 +1780,206 @@ input:focus-visible {
   font-size: 0.74rem;
 }
 
+.cpu-benchmark-panel {
+  display: grid;
+  min-width: 0;
+  gap: 15px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.cpu-benchmark-panel__header {
+  display: grid;
+  gap: 14px;
+}
+
+.cpu-benchmark-panel__intro {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.cpu-benchmark-panel__icon {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.cpu-benchmark-panel__intro h2 {
+  margin: 4px 0 5px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 740;
+  letter-spacing: -0.025em;
+}
+
+.cpu-benchmark-panel__intro > div > p:last-child {
+  max-width: 680px;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.cpu-benchmark-panel__run {
+  width: 100%;
+  min-height: 46px;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+.cpu-benchmark-panel__note,
+.cpu-benchmark-panel__error {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.cpu-benchmark-panel__note {
+  color: var(--text-secondary);
+}
+
+.cpu-benchmark-panel__error {
+  color: var(--danger);
+}
+
+.cpu-benchmark-panel__empty {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  gap: 9px;
+  padding: 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  background: var(--surface-muted);
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.cpu-benchmark-results {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+}
+
+.cpu-benchmark-result {
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-muted);
+}
+
+.cpu-benchmark-result__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cpu-benchmark-result__header > div {
+  min-width: 0;
+}
+
+.cpu-benchmark-result__header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  font-weight: 730;
+  line-height: 1.35;
+}
+
+.cpu-benchmark-result__tag,
+.cpu-benchmark-result__status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.cpu-benchmark-result__tag {
+  margin-top: 5px;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.cpu-benchmark-result__status {
+  flex: none;
+  text-align: center;
+}
+
+.cpu-benchmark-result__status.is-supported {
+  color: var(--green-strong);
+  background: var(--green-soft);
+}
+
+.cpu-benchmark-result__status.is-unavailable {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.cpu-benchmark-result__unavailable {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.cpu-benchmark-result__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px 9px;
+  margin: 0;
+}
+
+.cpu-benchmark-metric {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 5px;
+}
+
+.cpu-benchmark-metric dt {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 5px;
+  color: var(--text-secondary);
+  font-size: 0.63rem;
+  line-height: 1.35;
+}
+
+.cpu-benchmark-metric dt svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--accent-strong);
+}
+
+.cpu-benchmark-metric dd {
+  overflow-wrap: anywhere;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.68rem;
+  font-weight: 720;
+  line-height: 1.35;
+}
+
 .sheet-backdrop {
   position: fixed;
   z-index: 50;
@@ -1822,6 +2037,20 @@ input:focus-visible {
     padding: 22px;
   }
 
+  .cpu-benchmark-panel {
+    padding: 22px;
+  }
+
+  .cpu-benchmark-panel__header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .cpu-benchmark-panel__run {
+    width: auto;
+    min-width: 160px;
+  }
+
   .cpu-project-panel__controls {
     grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
     align-items: end;
@@ -1874,6 +2103,10 @@ input:focus-visible {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .cpu-benchmark-results {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .sheet-backdrop {
     align-items: center;
     padding: 24px;
@@ -1886,5 +2119,1399 @@ input:focus-visible {
 
   .sheet-handle {
     display: none;
+  }
+}
+
+.research-overview,
+.research-active-card,
+.research-idle-card,
+.research-legacy-card,
+.research-catalog {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.research-overview {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+  background: var(--surface);
+}
+
+.research-overview__intro {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.research-overview__icon,
+.research-active-card__icon,
+.research-idle-card__icon {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 13px;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.research-overview__intro > div,
+.research-catalog__header > div,
+.research-active-card__header > div {
+  min-width: 0;
+}
+
+.research-overview__intro h2,
+.research-catalog__header h2,
+.research-active-card h2,
+.research-idle-card h2,
+.research-legacy-card h2 {
+  margin: 4px 0 6px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 740;
+  letter-spacing: -0.025em;
+}
+
+.research-overview__intro > div > p:last-child,
+.research-catalog__header > div > p:last-child,
+.research-idle-card p,
+.research-legacy-card > div > p:last-child {
+  max-width: 700px;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.55;
+}
+
+.research-overview__metrics {
+  display: grid;
+  gap: 9px;
+}
+
+.research-overview__metric {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+}
+
+.research-overview__metric > span {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  font-weight: 650;
+}
+
+.research-overview__metric strong {
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 780;
+  font-variant-numeric: tabular-nums;
+}
+
+.research-era-banner {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--border));
+  border-radius: 16px;
+  background: var(--accent-soft);
+}
+
+.research-era-banner h2 {
+  margin: 3px 0;
+  color: var(--text-primary);
+  font-size: 0.92rem;
+  font-weight: 740;
+}
+
+.research-era-banner > div > p:last-child {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.research-era-banner__year {
+  display: inline-flex;
+  min-width: 52px;
+  min-height: 42px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--accent-strong);
+  background: var(--surface);
+  font-size: 0.8rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.research-active-card,
+.research-idle-card,
+.research-legacy-card {
+  padding: 16px;
+}
+
+.research-active-card {
+  display: grid;
+  gap: 14px;
+}
+
+.research-active-card__header {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.research-active-card__header > div {
+  flex: 1;
+}
+
+.research-active-card__header .eyebrow {
+  margin-bottom: 2px;
+}
+
+.research-active-card h2 {
+  overflow-wrap: anywhere;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.research-progress {
+  display: block;
+  width: 100%;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-muted);
+}
+
+.research-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--green));
+  transition: width 180ms ease;
+}
+
+.research-active-card__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 12px;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.research-idle-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.research-idle-card__icon {
+  width: 36px;
+  height: 36px;
+}
+
+.research-idle-card h2 {
+  margin-top: 1px;
+  font-size: 0.86rem;
+}
+
+.research-legacy-card {
+  display: grid;
+  gap: 14px;
+  border-color: color-mix(in srgb, var(--green) 30%, var(--border));
+  background: var(--green-soft);
+}
+
+.research-legacy-card h2 {
+  margin-top: 3px;
+  font-size: 0.9rem;
+}
+
+.research-unlock-list,
+.research-technology-list ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.research-unlock-list li {
+  padding: 6px 9px;
+  border: 1px solid color-mix(in srgb, var(--green) 35%, var(--border));
+  border-radius: 999px;
+  color: var(--green-strong);
+  background: var(--surface);
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.research-catalog {
+  display: grid;
+  gap: 18px;
+  padding: 16px;
+}
+
+.research-catalog__header {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.research-catalog__header h2 {
+  margin-top: 4px;
+}
+
+.research-investment-total {
+  display: inline-flex;
+  min-height: 38px;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  color: var(--text-primary);
+  background: var(--surface-muted);
+  font-size: 0.76rem;
+  font-weight: 730;
+  font-variant-numeric: tabular-nums;
+}
+
+.research-category-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding-bottom: 2px;
+}
+
+.research-category-filters button {
+  min-width: 44px;
+  min-height: 40px;
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  background: var(--surface-muted);
+  font-size: 0.68rem;
+  font-weight: 680;
+  cursor: pointer;
+}
+
+.research-category-filters button:hover,
+.research-category-filters button.is-selected {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.research-category-filters button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  outline-offset: 2px;
+}
+
+.research-era-section {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.research-era-section__heading {
+  display: flex;
+  min-width: 0;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--border);
+}
+
+.research-era-section__heading h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 740;
+}
+
+.research-era-section__heading p,
+.research-era-section__heading > span {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.research-era-section__heading > span {
+  flex: none;
+  margin: 0;
+  text-align: right;
+}
+
+.research-technology-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+
+.research-technology-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: var(--surface-muted);
+}
+
+.research-technology-card--available {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+}
+
+.research-technology-card--completed {
+  border-color: color-mix(in srgb, var(--green) 35%, var(--border));
+}
+
+.research-technology-card__header {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.research-technology-card__header > div {
+  min-width: 0;
+}
+
+.research-technology-card__category {
+  margin: 0 0 4px;
+  color: var(--accent-strong);
+  font-size: 0.62rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.research-technology-card h4 {
+  overflow-wrap: anywhere;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 740;
+  line-height: 1.35;
+}
+
+.research-technology-card__description {
+  margin: -4px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.71rem;
+  line-height: 1.5;
+}
+
+.research-status {
+  display: inline-flex;
+  min-height: 25px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 0.59rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.research-status--available,
+.research-status--completed {
+  color: var(--green-strong);
+  background: var(--green-soft);
+}
+
+.research-status--researching {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.research-status--future,
+.research-status--locked,
+.research-status--busy {
+  color: var(--amber-strong);
+  background: var(--amber-soft);
+}
+
+.research-status--unaffordable,
+.research-status--unknown {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.research-technology-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin: 0;
+}
+
+.research-technology-facts > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  padding: 8px;
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.research-technology-facts dt {
+  color: var(--text-secondary);
+  font-size: 0.62rem;
+}
+
+.research-technology-facts dd {
+  overflow-wrap: anywhere;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.72rem;
+  font-weight: 730;
+  font-variant-numeric: tabular-nums;
+}
+
+.research-technology-list h5 {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.65rem;
+  font-weight: 730;
+}
+
+.research-technology-list ul {
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.research-technology-list li {
+  display: inline-flex;
+  min-height: 25px;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 7px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  background: var(--surface);
+  font-size: 0.61rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.research-technology-list--unlocks li.is-unlocked {
+  border-color: color-mix(in srgb, var(--green) 30%, var(--border));
+  color: var(--green-strong);
+  background: var(--green-soft);
+}
+
+.research-technology-list--unlocks li.is-unlocked svg {
+  flex: none;
+}
+
+.research-legacy-note {
+  margin: 7px 0 0;
+  color: var(--green-strong);
+  font-size: 0.65rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.research-availability {
+  min-height: 32px;
+  margin: auto 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.66rem;
+  line-height: 1.45;
+}
+
+.research-availability--available,
+.research-availability--completed,
+.research-availability--researching {
+  color: var(--green-strong);
+}
+
+.research-availability--unaffordable,
+.research-availability--unknown {
+  color: var(--danger);
+}
+
+.research-start-button {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 0.72rem;
+}
+
+.research-empty-filter {
+  margin: 0;
+  padding: 20px 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .research-overview {
+    grid-template-columns: minmax(0, 1fr) minmax(230px, 0.72fr);
+    align-items: center;
+    padding: 22px;
+  }
+
+  .research-overview__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .research-legacy-card {
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 0.8fr);
+    align-items: center;
+    padding: 18px;
+  }
+
+  .research-catalog {
+    padding: 20px;
+  }
+
+  .research-catalog__header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .research-technology-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+
+@media (min-width: 900px) {
+  .research-overview {
+    padding: 24px;
+  }
+
+  .research-active-card,
+  .research-idle-card,
+  .research-legacy-card {
+    padding: 20px;
+  }
+
+  .research-technology-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+}
+
+/* Stage 05: market and finance */
+
+.market-page {
+  min-width: 0;
+}
+
+.market-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-muted);
+}
+
+.market-tabs .segment-button {
+  min-height: 46px;
+}
+
+.market-section {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+}
+
+.market-section__heading {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.market-section__icon {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.market-section__heading h2 {
+  margin: 1px 0 0;
+  color: var(--text-primary);
+  font-size: 0.96rem;
+  font-weight: 740;
+  letter-spacing: -0.02em;
+}
+
+.market-section__heading p {
+  max-width: 720px;
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.market-form-card,
+.market-card,
+.market-product-card,
+.market-segment-card,
+.market-competitor-card {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 17px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.market-form-card,
+.market-card {
+  padding: 16px;
+}
+
+.market-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px 12px;
+}
+
+.market-suggested-price {
+  align-content: start;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-muted);
+}
+
+.market-suggested-price > span {
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.market-suggested-price > strong {
+  overflow-wrap: anywhere;
+  color: var(--accent-strong);
+  font-size: 1.02rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.market-suggested-price .button {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 9px;
+  font-size: 0.68rem;
+}
+
+.market-release-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--surface-muted);
+}
+
+.market-summary-stat {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  padding: 6px;
+  border-radius: 9px;
+  background: var(--surface);
+}
+
+.market-summary-stat span {
+  color: var(--text-secondary);
+  font-size: 0.63rem;
+  line-height: 1.35;
+}
+
+.market-summary-stat strong {
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+}
+
+.market-form-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.market-form-footer .button {
+  width: 100%;
+}
+
+.market-product-list,
+.market-history-list,
+.market-transaction-list {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+}
+
+.market-product-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.market-product-card.is-discontinued {
+  opacity: 0.78;
+}
+
+.market-product-card__header {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.market-product-card__header > div {
+  min-width: 0;
+}
+
+.market-product-card__titleline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.market-product-card h3,
+.market-segment-card h3,
+.market-competitor-card h3 {
+  overflow-wrap: anywhere;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 740;
+}
+
+.market-product-card__header p,
+.market-competitor-card__strategy {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.67rem;
+  line-height: 1.45;
+}
+
+.market-product-card__header > strong {
+  flex: none;
+  color: var(--text-primary);
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.market-status {
+  display: inline-flex;
+  min-height: 24px;
+  flex: none;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 0.58rem;
+  font-weight: 760;
+  white-space: nowrap;
+}
+
+.market-status--active {
+  color: var(--green-strong);
+  background: var(--green-soft);
+}
+
+.market-status--discontinued {
+  color: var(--amber-strong);
+  background: var(--amber-soft);
+}
+
+.market-product-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.market-product-card__estimate {
+  margin: 0;
+  color: var(--accent-strong);
+  font-size: 0.68rem;
+  font-weight: 650;
+}
+
+.market-product-actions {
+  display: grid;
+  gap: 10px;
+  padding-top: 11px;
+  border-top: 1px solid var(--border);
+}
+
+.market-inline-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px;
+}
+
+.market-inline-form .field-group {
+  min-width: 0;
+}
+
+.market-inline-form .field-group input {
+  min-height: 44px;
+}
+
+.market-inline-form .button {
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: 0.7rem;
+}
+
+.market-inline-form + .market-inline-form {
+  margin-top: 2px;
+}
+
+.market-product-actions__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 5px 12px;
+  color: var(--text-secondary);
+  font-size: 0.65rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.market-discontinue-button {
+  justify-self: start;
+  min-height: 42px;
+  padding: 0 12px;
+  font-size: 0.69rem;
+}
+
+.market-data-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.market-data-list > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  padding: 8px;
+  border-radius: 9px;
+  background: var(--surface-muted);
+}
+
+.market-data-list dt {
+  color: var(--text-secondary);
+  font-size: 0.6rem;
+  line-height: 1.3;
+}
+
+.market-data-list dd {
+  overflow-wrap: anywhere;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.72rem;
+  font-weight: 720;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+}
+
+.market-segment-grid,
+.market-competitor-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+
+.market-segment-card,
+.market-competitor-card {
+  display: grid;
+  gap: 10px;
+  padding: 13px;
+}
+
+.market-segment-card__topline,
+.market-competitor-card__topline {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.market-segment-card__topline .status-pill {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.market-segment-card__growth {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.63rem;
+}
+
+.market-competitor-card__action {
+  margin: 0;
+  padding-top: 9px;
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.65rem;
+  line-height: 1.5;
+}
+
+.market-competitor-card__action strong {
+  color: var(--text-primary);
+}
+
+.market-history-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px 14px;
+  padding: 11px 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  background: var(--surface);
+  font-size: 0.67rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.market-history-row strong {
+  min-width: 92px;
+  color: var(--text-primary);
+  font-size: 0.72rem;
+}
+
+.market-history-row .market-status {
+  color: var(--text-secondary);
+  background: var(--surface-muted);
+}
+
+.market-finance-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+.market-card {
+  display: grid;
+  align-content: start;
+  gap: 13px;
+}
+
+.finance-chart {
+  min-width: 0;
+  margin: 0;
+}
+
+.finance-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+  font-size: 0.66rem;
+}
+
+.finance-chart__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.finance-chart__swatch {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+}
+
+.finance-chart__swatch--revenue {
+  background: #2563eb;
+}
+
+.finance-chart__swatch--expenses {
+  background: #d9485f;
+}
+
+.finance-chart__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 180px;
+  overflow: visible;
+}
+
+.finance-chart__grid {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.finance-chart__axis-label {
+  fill: var(--text-subtle);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.finance-chart__bar--revenue {
+  fill: #2563eb;
+}
+
+.finance-chart__bar--expenses {
+  fill: #d9485f;
+}
+
+.finance-breakdown {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin: 0;
+}
+
+.finance-breakdown > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  padding: 8px;
+  border-radius: 9px;
+  background: var(--surface-muted);
+}
+
+.finance-breakdown dt {
+  color: var(--text-secondary);
+  font-size: 0.61rem;
+  line-height: 1.3;
+}
+
+.finance-breakdown dd {
+  overflow-wrap: anywhere;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.72rem;
+  font-weight: 720;
+  font-variant-numeric: tabular-nums;
+}
+
+.finance-breakdown__total {
+  border: 1px solid color-mix(in srgb, var(--green) 35%, var(--border));
+  background: var(--green-soft) !important;
+}
+
+.finance-breakdown__expenses dd {
+  color: var(--danger);
+}
+
+.market-loan,
+.market-budget-form {
+  display: grid;
+  gap: 12px;
+}
+
+.market-budget-form__current {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 12px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface-muted);
+}
+
+.market-budget-form__current span {
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+}
+
+.market-budget-form__current strong {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.market-budget-form .button {
+  width: 100%;
+}
+
+.market-empty,
+.market-empty-text {
+  margin: 0;
+  padding: 20px 14px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 13px;
+  color: var(--text-secondary);
+  background: var(--surface-muted);
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.market-empty {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.market-empty__icon {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  color: var(--text-subtle);
+  background: var(--surface);
+}
+
+.market-empty strong {
+  color: var(--text-primary);
+  font-size: 0.8rem;
+}
+
+.market-empty p {
+  max-width: 420px;
+  margin: 5px 0 0;
+  font-size: 0.69rem;
+}
+
+.market-transaction-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface);
+}
+
+.market-transaction-row > div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.market-transaction-row > div:last-child {
+  flex: none;
+  text-align: right;
+}
+
+.market-transaction-row strong {
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.market-transaction-row span {
+  overflow-wrap: anywhere;
+  color: var(--text-secondary);
+  font-size: 0.61rem;
+  line-height: 1.4;
+}
+
+.market-amount--income {
+  color: var(--green-strong) !important;
+}
+
+.market-amount--expense {
+  color: var(--danger) !important;
+}
+
+.activity-event-list {
+  display: grid;
+  gap: 0;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.activity-event {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+
+.activity-event:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.activity-event__date {
+  color: var(--text-subtle);
+  font-size: 0.61rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.activity-event strong {
+  color: var(--text-primary);
+  font-size: 0.74rem;
+}
+
+.activity-event > span:last-child {
+  color: var(--text-secondary);
+  font-size: 0.67rem;
+  line-height: 1.4;
+}
+
+.market-tabs .segment-button:focus-visible,
+.market-page .button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  outline-offset: 2px;
+}
+
+@media (min-width: 640px) {
+  .market-form-card,
+  .market-card {
+    padding: 18px;
+  }
+
+  .market-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .market-release-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .market-form-footer {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .market-form-footer .button {
+    width: auto;
+  }
+
+  .market-product-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .market-product-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .market-segment-grid,
+  .market-competitor-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .market-history-row {
+    flex-wrap: nowrap;
+  }
+
+  .market-finance-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .market-budget-form .button {
+    width: auto;
+    justify-self: start;
+  }
+}
+
+@media (min-width: 900px) {
+  .market-form-card,
+  .market-card {
+    padding: 20px;
+  }
+
+  .market-release-summary {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .market-segment-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .market-competitor-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .market-inline-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .market-inline-form .button {
+    width: 100%;
+  }
+
+  .market-transaction-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .market-transaction-row > div:last-child {
+    text-align: left;
   }
 }

@@ -1,11 +1,29 @@
 import type { GameState } from "../models/game-state";
+import { addDays } from "../models/date";
+import { advanceResearchDay } from "./research";
+import { runCompetitorDay, runProductionDay, simulateMarketDay, updateMarketReputation } from "./market";
+import { settleDailyFinance } from "./finance";
 
 export function advanceGameDay(state: GameState): GameState {
-  const date = new Date(`${state.gameDate}T00:00:00.000Z`);
-  date.setUTCDate(date.getUTCDate() + 1);
+  const simulationDate = state.gameDate;
+
+  let nextState: GameState = {
+    ...state,
+    research: advanceResearchDay(state.research),
+  };
+
+  nextState = runProductionDay(nextState, simulationDate);
+  nextState = runCompetitorDay(nextState, simulationDate);
+  nextState = simulateMarketDay(nextState, simulationDate);
+  nextState = settleDailyFinance(nextState, simulationDate);
+
+  const summary = nextState.market.dailySummaries.at(-1);
+  if (summary?.date === simulationDate) {
+    nextState = updateMarketReputation(nextState, summary);
+  }
 
   return {
-    ...state,
-    gameDate: date.toISOString().slice(0, 10),
+    ...nextState,
+    gameDate: addDays(simulationDate, 1),
   };
 }

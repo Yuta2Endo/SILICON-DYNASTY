@@ -32,7 +32,8 @@ Feature modules: dashboard, company, CPU, GPU, components, research, benchmark, 
 UI action → application command → domain validation → domain system → updated state → persistence boundary → UI refresh.
 
 ## Simulation order
-Document and keep a fixed order, for example: events; research/development; manufacturing; delivery/sales; finance; competitors; reputation/ecosystem; date advancement. Changing order may alter balance and must be tested.
+
+The implemented daily pipeline is fixed and tested: advance research; deliver due production orders; apply due competitor actions; simulate market sales and market share; settle finance (operating costs, loan interest, emergency funding and profit tax); update reputation; advance the game date. Changing the order may alter balance and requires tests for the affected stage. Stage 05 details are in [`ECONOMY_MARKET.md`](ECONOMY_MARKET.md).
 
 ## Worker boundary
 Workers receive serializable snapshots and explicit commands. They must not access React state or mutate the database outside a documented protocol.

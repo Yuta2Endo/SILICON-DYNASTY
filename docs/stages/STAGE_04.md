@@ -1,7 +1,7 @@
 # STAGE 04 — Research & Timeline
 
 **Project:** SILICON DYNASTY  
-**Status:** NOT STARTED  
+**Status:** COMPLETED WITH KNOWN ISSUES
 **Execution rule:** complete this stage only, then stop for approval.
 
 ## Objective
@@ -19,10 +19,10 @@ Implement technology tree, categories, prerequisites, progress, eras, unlocks an
 9. Stop. Do not begin the next stage without separate authorization.
 
 ## Acceptance criteria
-- [ ] Unavailable technologies cannot be researched.
-- [ ] Completed research unlocks only defined items.
-- [ ] Progress and costs persist.
-- [ ] Dependency cycles are detected or prevented.
+- [x] Unavailable technologies cannot be researched.
+- [x] Completed research unlocks only defined items.
+- [x] Progress and costs persist.
+- [x] Dependency cycles are detected or prevented.
 
 ## Engineering constraints
 - React + TypeScript strict + Vite + Capacitor.

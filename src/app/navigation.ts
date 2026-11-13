@@ -1,6 +1,6 @@
-import { Building2, Cpu, LayoutDashboard, Settings2, type LucideIcon } from "lucide-react";
+import { Building2, Cpu, FlaskConical, LayoutDashboard, Settings2, TrendingUp, type LucideIcon } from "lucide-react";
 
-export type ScreenId = "dashboard" | "company" | "cpu" | "settings";
+export type ScreenId = "dashboard" | "research" | "company" | "cpu" | "market" | "finance" | "settings";
 
 export interface NavigationItem {
   id: ScreenId;
@@ -9,7 +9,9 @@ export interface NavigationItem {
 
 export const navigationItems: NavigationItem[] = [
   { id: "dashboard", icon: LayoutDashboard },
+  { id: "research", icon: FlaskConical },
   { id: "company", icon: Building2 },
   { id: "cpu", icon: Cpu },
+  { id: "market", icon: TrendingUp },
   { id: "settings", icon: Settings2 },
 ];

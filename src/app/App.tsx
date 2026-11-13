@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "./AppShell";
 import { ConfirmationBottomSheet } from "../components/ConfirmationBottomSheet";
 import { CPUDesignerPage } from "../features/cpu/CPUDesignerPage";
+import { MarketPage } from "../features/market/MarketPage";
+import { ResearchPage } from "../features/research/ResearchPage";
 import { createGameApplication, type GameApplication } from "../game/application/game-application";
 import type { CpuConfiguration } from "../game/models/cpu";
 import type { GameSettings, GameState } from "../game/models/game-state";
@@ -128,6 +130,15 @@ export function App({ application }: AppProps = {}) {
           state={state}
         />
       )}
+      {activeScreen === "research" && (
+        <ResearchPage
+          isSaving={isSaving}
+          onStartResearch={async (technologyId) =>
+            (await runCommand(() => gameApplication.startResearch(technologyId))) !== null
+          }
+          state={state}
+        />
+      )}
       {activeScreen === "cpu" && (
         <CPUDesignerPage
           isSaving={isSaving}
@@ -139,6 +150,35 @@ export function App({ application }: AppProps = {}) {
           onSaveVersion={async (projectId, name, configuration: CpuConfiguration) =>
             (await runCommand(() => gameApplication.saveCpuVersion(projectId, name, configuration))) !== null
           }
+          state={state}
+        />
+      )}
+      {(activeScreen === "market" || activeScreen === "finance") && (
+        <MarketPage
+          activeView={activeScreen}
+          isSaving={isSaving}
+          onDiscontinueProduct={async (productId) =>
+            (await runCommand(() => gameApplication.discontinueProduct(productId))) !== null
+          }
+          onOrderProduction={async (productId, quantity) =>
+            (await runCommand(() => gameApplication.orderProduction(productId, quantity))) !== null
+          }
+          onReleaseProduct={async (input) =>
+            (await runCommand(() => gameApplication.releaseProduct(input))) !== null
+          }
+          onUpdatePrice={async (productId, priceUsd) =>
+            (await runCommand(() => gameApplication.updateProductPrice(productId, priceUsd))) !== null
+          }
+          onUpdateMarketingBudget={async (amountUsd) =>
+            (await runCommand(() => gameApplication.updateMarketingBudget(amountUsd))) !== null
+          }
+          onTakeLoan={async (amountUsd) =>
+            (await runCommand(() => gameApplication.takeLoan(amountUsd))) !== null
+          }
+          onRepayLoan={async (amountUsd) =>
+            (await runCommand(() => gameApplication.repayLoan(amountUsd))) !== null
+          }
+          onViewChange={requestNavigation}
           state={state}
         />
       )}

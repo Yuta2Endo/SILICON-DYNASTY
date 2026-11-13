@@ -1,6 +1,25 @@
-import { ArrowUpRight, CalendarDays, CircleDollarSign, History, Sparkles, UsersRound } from "lucide-react";
+import {
+  ArrowUpRight,
+  Banknote,
+  CalendarDays,
+  CircleDollarSign,
+  History,
+  Percent,
+  ShoppingCart,
+  Sparkles,
+  TrendingUp,
+  UsersRound,
+} from "lucide-react";
 import type { GameState } from "../../game/models/game-state";
-import { formatCurrency, formatGameDate, formatNumber, formatYear } from "../../localization/formatters";
+import { getCompetitor } from "../../game/models/market";
+import {
+  formatCurrency,
+  formatDecimal,
+  formatGameDate,
+  formatNumber,
+  formatShortGameDate,
+  formatYear,
+} from "../../localization/formatters";
 import { translations } from "../../localization/messages";
 import { MetricCard } from "../../components/MetricCard";
 
@@ -13,6 +32,9 @@ interface DashboardPageProps {
 export function DashboardPage({ state, isSaving, onAdvanceDay }: DashboardPageProps) {
   const locale = state.settings.locale;
   const t = translations[locale];
+  const latestMarket = state.market.dailySummaries.at(-1);
+  const latestFinance = state.finance.dailyRecords.at(-1);
+  const recentActions = state.market.actions.slice(0, 4);
 
   return (
     <div className="page-stack">
@@ -67,6 +89,34 @@ export function DashboardPage({ state, isSaving, onAdvanceDay }: DashboardPagePr
           label={t.dashboard.founded}
           value={formatYear(state.company.foundedYear, locale)}
         />
+        <MetricCard
+          accent="green"
+          detail={t.dashboard.dailyRevenueHint}
+          icon={Banknote}
+          label={t.dashboard.dailyRevenue}
+          value={formatCurrency(latestFinance?.revenueUsd ?? 0, locale)}
+        />
+        <MetricCard
+          accent="blue"
+          detail={t.dashboard.netProfitHint}
+          icon={TrendingUp}
+          label={t.dashboard.netProfit}
+          value={formatCurrency(latestFinance?.netProfitUsd ?? 0, locale)}
+        />
+        <MetricCard
+          accent="violet"
+          detail={t.dashboard.marketShareHint}
+          icon={Percent}
+          label={t.dashboard.marketShare}
+          value={`${formatDecimal((latestMarket?.marketShare ?? 0) * 100, locale, 2)}%`}
+        />
+        <MetricCard
+          accent="amber"
+          detail={t.dashboard.dailyUnitsHint}
+          icon={ShoppingCart}
+          label={t.dashboard.dailyUnits}
+          value={formatNumber(latestMarket?.playerUnits ?? 0, locale)}
+        />
       </section>
 
       <section className="dashboard-lower-grid">
@@ -89,11 +139,31 @@ export function DashboardPage({ state, isSaving, onAdvanceDay }: DashboardPagePr
             <span className="section-heading__icon" aria-hidden="true"><History size={18} /></span>
             <h2>{t.dashboard.activityTitle}</h2>
           </div>
-          <div className="empty-activity">
-            <span className="empty-activity__icon" aria-hidden="true"><History size={20} /></span>
-            <strong>{t.dashboard.activityEmpty}</strong>
-            <p>{t.dashboard.activityHint}</p>
-          </div>
+          {recentActions.length === 0 ? (
+            <div className="empty-activity">
+              <span className="empty-activity__icon" aria-hidden="true"><History size={20} /></span>
+              <strong>{t.dashboard.activityEmpty}</strong>
+              <p>{t.dashboard.activityHint}</p>
+            </div>
+          ) : (
+            <ul className="activity-event-list">
+              {recentActions.map((action) => {
+                const competitor = getCompetitor(action.competitorId);
+                return (
+                  <li className="activity-event" key={action.id}>
+                    <span className="activity-event__date">{formatShortGameDate(action.date, locale)}</span>
+                    <strong>{competitor?.name ?? action.competitorId}</strong>
+                    <span>
+                      {t.market.actions[action.type]} · {t.market.actions.value.replace(
+                        "{percent}",
+                        formatDecimal(action.valuePercent, locale, 1),
+                      )}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </article>
       </section>
     </div>

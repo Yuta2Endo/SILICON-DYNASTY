@@ -1,7 +1,26 @@
 import { validateCompany, type Company } from "./company";
 import { parseCpuProject, type CpuProject } from "./cpu";
+import { isValidDateOnly } from "./date";
+import {
+  createInitialFinanceState,
+  parseFinanceState,
+  type FinanceState,
+} from "./finance";
+import {
+  createInitialMarketState,
+  parseMarketState,
+  type MarketState,
+} from "./market";
+import {
+  createInitialResearchState,
+  getLegacyCpuResearchUnlocks,
+  parseResearchState,
+  type ResearchState,
+} from "./research";
 
-export const SAVE_SCHEMA_VERSION = 2 as const;
+export const SAVE_SCHEMA_VERSION = 4 as const;
+
+const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, SAVE_SCHEMA_VERSION] as const;
 
 export type Locale = "ru" | "en";
 export type Theme = "light" | "dark";
@@ -16,6 +35,9 @@ export interface GameState {
   gameDate: string;
   company: Company;
   cpuProjects: CpuProject[];
+  research: ResearchState;
+  finance: FinanceState;
+  market: MarketState;
   settings: GameSettings;
 }
 
@@ -27,10 +49,15 @@ export class InvalidGameStateError extends Error {
 }
 
 export function createInitialGameState(): GameState {
+  const gameDate = "1995-01-01";
+
   return {
     schemaVersion: SAVE_SCHEMA_VERSION,
-    gameDate: "1995-01-01",
+    gameDate,
     cpuProjects: [],
+    research: createInitialResearchState(),
+    finance: createInitialFinanceState(),
+    market: createInitialMarketState(gameDate),
     company: {
       id: "player-company",
       name: "Silicon Dynasty",
@@ -51,7 +78,10 @@ export function parseGameState(value: unknown): GameState {
     throw new InvalidGameStateError("Save data must be an object.");
   }
 
-  if (value.schemaVersion !== 1 && value.schemaVersion !== SAVE_SCHEMA_VERSION) {
+  if (
+    typeof value.schemaVersion !== "number"
+    || !SUPPORTED_SCHEMA_VERSIONS.includes(value.schemaVersion as (typeof SUPPORTED_SCHEMA_VERSIONS)[number])
+  ) {
     throw new InvalidGameStateError("Save data uses an unsupported schema version.");
   }
 
@@ -107,7 +137,7 @@ export function parseGameState(value: unknown): GameState {
   }
 
   let cpuProjects: CpuProject[] = [];
-  if (sourceSchemaVersion === SAVE_SCHEMA_VERSION) {
+  if (sourceSchemaVersion >= 2) {
     if (!Array.isArray(value.cpuProjects)) {
       throw new InvalidGameStateError("Save data contains an invalid CPU project list.");
     }
@@ -124,24 +154,48 @@ export function parseGameState(value: unknown): GameState {
     }
   }
 
+  let research: ResearchState;
+  if (sourceSchemaVersion >= 3) {
+    try {
+      research = parseResearchState(value.research, value.gameDate);
+    } catch {
+      throw new InvalidGameStateError("Save data contains invalid research data.");
+    }
+  } else {
+    research = createInitialResearchState(getLegacyCpuResearchUnlocks(cpuProjects));
+  }
+
+  let finance: FinanceState;
+  let market: MarketState;
+  if (sourceSchemaVersion === SAVE_SCHEMA_VERSION) {
+    try {
+      finance = parseFinanceState(value.finance);
+    } catch {
+      throw new InvalidGameStateError("Save data contains invalid finance data.");
+    }
+
+    try {
+      market = parseMarketState(value.market);
+    } catch {
+      throw new InvalidGameStateError("Save data contains invalid market data.");
+    }
+  } else {
+    finance = createInitialFinanceState();
+    market = createInitialMarketState(value.gameDate);
+  }
+
   return {
     schemaVersion: SAVE_SCHEMA_VERSION,
     gameDate: value.gameDate,
     company: { ...company },
     cpuProjects,
+    research,
+    finance,
+    market,
     settings: { locale, theme },
   };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function isValidDateOnly(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return false;
-  }
-
-  const date = new Date(`${value}T00:00:00.000Z`);
-  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }

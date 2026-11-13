@@ -67,6 +67,22 @@ describe("App", () => {
     });
   });
 
+  it("opens the Market screen and switches to Finance", async () => {
+    const user = userEvent.setup();
+    const repository = new MemoryGameStateRepository();
+    const application = createGameApplication(repository);
+
+    render(<App application={application} />);
+    await screen.findByRole("heading", { name: "Панель компании" });
+
+    await user.click(screen.getByRole("button", { name: "Рынок" }));
+    expect(await screen.findByRole("heading", { name: "Рынок и продажи" })).toBeTruthy();
+
+    await user.click(screen.getByRole("tab", { name: "Финансы" }));
+    expect(await screen.findByRole("heading", { name: "Финансы" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Финансы" }).getAttribute("aria-selected")).toBe("true");
+  });
+
   it("creates and versions a CPU project, rejects invalid input, and protects unsaved edits", async () => {
     const user = userEvent.setup();
     const repository = new MemoryGameStateRepository();
