@@ -174,7 +174,9 @@ The main menu is also reachable from the desktop sidebar and the mobile header. 
 
 Use a bottom navigation bar for the primary destinations.
 
-Recommended height: 60–68 px plus bottom safe area.
+On narrow Android widths (360-390 px), show four primary destinations - dashboard, research, the processor workspace and market - plus an «Ещё» destination. «Ещё» opens a focus-trapped sheet for company and settings instead of squeezing six labels into the bar. Every destination must remain reachable and keyboard accessible.
+
+Recommended height: 60-68 px plus bottom safe area.
 
 Visual characteristics:
 
@@ -322,6 +324,8 @@ Include:
 - SDK and API.
 
 Use architecture diagrams, subsystem cards, compatibility indicators and development progress.
+
+Show a live visual OS preview derived from the current draft configuration and latest saved release. The preview must evolve through terminal, desktop shell, modern desktop and adaptive GUI levels, use a platform-appropriate device frame (desktop, mobile, server or gaming), reflect Alpha/Beta/RC/Stable release polish, and unlock or lock application icons from real compatibility results. It is a game simulation, not a real operating system, and must not create a second persisted configuration.
 
 ## 9. AI Lab
 

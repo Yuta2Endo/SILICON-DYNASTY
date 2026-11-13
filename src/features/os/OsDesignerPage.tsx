@@ -16,6 +16,7 @@ import {
 import { ConfirmationBottomSheet } from "../../components/ConfirmationBottomSheet";
 import { MetricCard } from "../../components/MetricCard";
 import { ProductWorkspaceTabs } from "../../components/ProductWorkspaceTabs";
+import { OsPreviewPanel } from "./OsPreviewPanel";
 import {
   OS_ADDRESS_BIT_OPTIONS,
   OS_API_OPTIONS,
@@ -693,7 +694,8 @@ export function OsDesignerPage({
       </section>
 
       {selectedProject ? (
-        <>
+        <div className="os-workbench">
+          <div className="os-workbench__main">
           <form className="cpu-editor-card os-editor-card" onSubmit={(event) => void handleSave(event)}>
             <header className="cpu-editor-card__header">
               <div>
@@ -935,7 +937,16 @@ export function OsDesignerPage({
             onStartRelease={onStartRelease ? () => void handleStartRelease() : undefined}
             project={selectedProject}
           />
-        </>
+          </div>
+
+          <aside className="os-workbench__side">
+            <OsPreviewPanel
+              configuration={draftConfiguration}
+              locale={locale}
+              project={selectedProject}
+            />
+          </aside>
+        </div>
       ) : (
         <section className="component-empty-state">
           <MonitorCog aria-hidden="true" size={28} />

@@ -15,3 +15,13 @@ export const navigationItems: NavigationItem[] = [
   { id: "market", icon: TrendingUp },
   { id: "settings", icon: Settings2 },
 ];
+
+const mobilePrimaryIds: ScreenId[] = ["dashboard", "research", "cpu", "market"];
+
+export const mobilePrimaryNavigationItems = navigationItems.filter((item) =>
+  mobilePrimaryIds.includes(item.id),
+);
+
+export const mobileMoreNavigationItems = navigationItems.filter(
+  (item) => !mobilePrimaryIds.includes(item.id),
+);

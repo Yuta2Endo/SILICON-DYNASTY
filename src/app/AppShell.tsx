@@ -1,9 +1,11 @@
-import { ArrowRight, CalendarDays, Layers3, Menu } from "lucide-react";
-import { useEffect, useRef, type ReactNode } from "react";
+import { ArrowRight, CalendarDays, Layers3, Menu, MoreHorizontal, X } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { GameState } from "../game/models/game-state";
+import { useFocusTrap } from "../hooks/useFocusTrap";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 import { formatGameDate, formatYear } from "../localization/formatters";
 import { translations } from "../localization/messages";
-import { navigationItems, type ScreenId } from "./navigation";
+import { mobileMoreNavigationItems, mobilePrimaryNavigationItems, navigationItems, type ScreenId } from "./navigation";
 
 interface AppShellProps {
   state: GameState;
@@ -29,6 +31,24 @@ export function AppShell({
   const year = formatYear(Number(state.gameDate.slice(0, 4)), state.settings.locale);
   const mainRef = useRef<HTMLElement>(null);
   const previousScreen = useRef(activeScreen);
+  const isMobileLayout = useMediaQuery("(max-width: 899px)");
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const moreSheetRef = useRef<HTMLDivElement>(null);
+  const moreCloseRef = useRef<HTMLButtonElement>(null);
+  const visibleNavigationItems = isMobileLayout ? mobilePrimaryNavigationItems : navigationItems;
+  const isMoreActive = activeScreen === "company" || activeScreen === "settings";
+
+  useFocusTrap(moreSheetRef, {
+    enabled: isMoreOpen,
+    initialFocusRef: moreCloseRef,
+    onEscape: () => setIsMoreOpen(false),
+  });
+
+  useEffect(() => {
+    if (!isMobileLayout) {
+      setIsMoreOpen(false);
+    }
+  }, [isMobileLayout]);
 
   useEffect(() => {
     if (previousScreen.current === activeScreen) {
@@ -61,7 +81,7 @@ export function AppShell({
           </div>
 
           <nav className="primary-navigation" aria-label={t.navigation.label}>
-            {navigationItems.map(({ id, icon: Icon }) => {
+            {visibleNavigationItems.map(({ id, icon: Icon }) => {
               const isActive = activeScreen === id
                 || (id === "cpu" && (activeScreen === "components" || activeScreen === "os" || activeScreen === "ai" || activeScreen === "devices"))
                 || (id === "market" && (activeScreen === "finance" || activeScreen === "analytics"));
@@ -81,6 +101,20 @@ export function AppShell({
                 </button>
               );
             })}
+            {isMobileLayout && (
+              <button
+                aria-controls="mobile-more-sheet"
+                aria-expanded={isMoreOpen}
+                aria-haspopup="dialog"
+                aria-label={t.navigation.more}
+                className={`navigation-item${isMoreActive || isMoreOpen ? " is-active" : ""}`}
+                onClick={() => setIsMoreOpen(true)}
+                type="button"
+              >
+                <MoreHorizontal aria-hidden="true" size={20} strokeWidth={1.8} />
+                <span>{t.navigation.more}</span>
+              </button>
+            )}
           </nav>
 
           <button
@@ -159,6 +193,63 @@ export function AppShell({
           </main>
         </div>
       </div>
+
+      {isMobileLayout && isMoreOpen && (
+        <div
+          className="mobile-more-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setIsMoreOpen(false);
+            }
+          }}
+          role="presentation"
+        >
+          <section
+            aria-labelledby="mobile-more-title"
+            aria-modal="true"
+            className="mobile-more-sheet"
+            id="mobile-more-sheet"
+            ref={moreSheetRef}
+            role="dialog"
+          >
+            <header className="mobile-more-sheet__header">
+              <div>
+                <p className="eyebrow">{t.app.name}</p>
+                <h2 id="mobile-more-title">{t.navigation.more}</h2>
+              </div>
+              <button
+                aria-label={t.navigation.close}
+                className="mobile-more-sheet__close"
+                onClick={() => setIsMoreOpen(false)}
+                ref={moreCloseRef}
+                type="button"
+              >
+                <X aria-hidden="true" size={20} />
+              </button>
+            </header>
+            <div className="mobile-more-sheet__list">
+              {mobileMoreNavigationItems.map(({ id, icon: Icon }) => (
+                <button
+                  aria-current={activeScreen === id ? "page" : undefined}
+                  className="mobile-more-sheet__item"
+                  key={id}
+                  onClick={() => {
+                    setIsMoreOpen(false);
+                    onNavigate(id);
+                  }}
+                  type="button"
+                >
+                  <span className="mobile-more-sheet__icon" aria-hidden="true">
+                    <Icon size={19} strokeWidth={1.8} />
+                  </span>
+                  <span>{t.navigation[id]}</span>
+                  <ArrowRight aria-hidden="true" size={16} />
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
