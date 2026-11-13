@@ -100,6 +100,14 @@ describe("Market screen", () => {
     expect(screen.queryByRole("button", { name: ru.market.release.submit })).toBeNull();
   });
 
+  it("shows the current economic cycle and its multipliers", () => {
+    renderMarket();
+
+    expect(screen.getByRole("heading", { name: ru.market.cycle.title })).toBeTruthy();
+    expect(screen.getByText(ru.market.cycle.phases.stable)).toBeTruthy();
+    expect(screen.getByText(ru.market.cycle.demand)).toBeTruthy();
+  });
+
   it("switches to the analytics tab", async () => {
     const user = userEvent.setup();
     const onViewChange = vi.fn();

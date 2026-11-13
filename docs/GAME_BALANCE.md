@@ -277,3 +277,19 @@ save management and a derived experience layer; full details are in
 - Market share is player units divided by total demand across the selected
   summaries. Segment shares use the same units/demand aggregation.
 - CSV export contains the selected daily points and does not alter game state.
+
+## Economic cycles and product lifecycle (Plugin Stage 04)
+
+- `formulas/economy.ts` defines an eight-year deterministic cycle from 1995:
+  stable, expansion, peak, contraction, trough, then repeat. 1995 is neutral.
+- Demand multiplier: stable ×1.00, expansion ×1.06, peak ×1.12,
+  contraction ×0.94, trough ×0.88. It scales segment demand after growth.
+- Cost multiplier: stable ×1.00, expansion ×1.02, peak ×1.05,
+  contraction ×0.98, trough ×0.96. It scales daily payroll and overhead only.
+- Competitor aggression: stable ×1.00, expansion ×1.05, peak ×1.10,
+  contraction ×1.15, trough ×1.20. It scales both reported action percentages
+  and applied competitor price/performance/marketing changes.
+- Product lifecycle appeal: launch ×1.00, growth ×1.05, mature ×1.00,
+  decline ×0.90, legacy ×0.70. Products auto-retire after 3,650 days unless an
+  in-production order is still open.
+- No save-schema or dependency change. Full details: `SIMULATION_DEPTH.md`.

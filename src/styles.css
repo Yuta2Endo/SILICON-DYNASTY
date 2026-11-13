@@ -6866,3 +6866,48 @@ textarea {
     transition: none;
   }
 }
+
+.market-cycle {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  padding: 18px;
+}
+
+.market-cycle__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.market-cycle__item {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  background: var(--surface-muted);
+}
+
+.market-cycle__item--phase {
+  background: var(--surface-blue);
+}
+
+.market-cycle__label {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.market-cycle__item strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 1.05rem;
+}
+
+@media (min-width: 640px) {
+  .market-cycle__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

@@ -53,6 +53,10 @@ Devices and cloud are the fifth product-development tab. `src/game/models/device
 
 `src/app/useGameSession.ts` owns game-state loading, command execution, save overview, backup restore, command feedback and native status-bar synchronization; `App.tsx` keeps navigation, draft guards and menu state. `src/components/AppErrorBoundary.tsx` wraps the application and renders a localized reload screen after an uncaught render error. Project version histories are capped at 100 new versions, CPU market products at 100 and component products at 60. Imported save payloads are capped at 5 MiB before parsing. These caps are enforced on new writes and releases, not in save parsers, so existing saves remain loadable. Every application command autosaves; native Back-button and app-state lifecycle handling is deferred to the Android integration stage with `@capacitor/app`. Stage 02 details are in [`stages/PLUGIN_STAGE_02_REPORT.md`](stages/PLUGIN_STAGE_02_REPORT.md).
 
+## Simulation depth
+
+`src/game/formulas/economy.ts` owns the deterministic eight-year economic cycle. Its demand multiplier is applied in `getSegmentDailyDemand`, its cost multiplier to daily payroll and overhead in `settleDailyFinance`, and its competitor-aggression multiplier to market competitor actions. `src/game/formulas/market.ts` owns product lifecycle stages and appeal factors; `src/game/engine/market.ts` retires legacy products only when they have no open production orders. The Market screen shows the current cycle as a read-only indicator. Stage 04 details are in [`SIMULATION_DEPTH.md`](SIMULATION_DEPTH.md).
+
 ## Worker boundary
 Workers receive serializable snapshots and explicit commands. They must not access React state or mutate the database outside a documented protocol.
 

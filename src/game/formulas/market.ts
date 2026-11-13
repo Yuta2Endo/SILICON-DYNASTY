@@ -5,6 +5,7 @@ import {
 import type { CpuConfiguration } from "../models/cpu";
 import { createDefaultCpuConfiguration } from "../models/cpu";
 import { daysBetween } from "../models/date";
+import { getEconomicCycle } from "./economy";
 import type {
   CompetitorMarketState,
   CompetitorProductDefinition,
@@ -133,8 +134,11 @@ export function calculateGrossMargin(priceUsd: number, unitCostUsd: number): num
 
 export function getSegmentDailyDemand(segment: MarketSegmentDefinition, date: string): number {
   const elapsedDays = Math.max(0, daysBetween("1995-01-01", date));
+  const cycle = getEconomicCycle(date);
   return Math.max(0, Math.round(
-    segment.baseDailyUnits * Math.pow(1 + segment.annualGrowthRate, elapsedDays / 365.25),
+    segment.baseDailyUnits
+      * Math.pow(1 + segment.annualGrowthRate, elapsedDays / 365.25)
+      * cycle.demandMultiplier,
   ));
 }
 
@@ -175,6 +179,33 @@ export function calculateFreshnessFactor(releaseDate: string, date: string): num
   return clamp(1.15 - days / 2_500, 0.55, 1.15);
 }
 
+export type ProductLifecycleStage = "launch" | "growth" | "mature" | "decline" | "legacy";
+
+export const PRODUCT_LIFECYCLE_RETIRE_AFTER_DAYS = 3_650;
+
+export interface ProductLifecycle {
+  stage: ProductLifecycleStage;
+  factor: number;
+  daysOnMarket: number;
+}
+
+export function getProductLifecycle(releaseDate: string, date: string): ProductLifecycle {
+  const daysOnMarket = Math.max(0, daysBetween(releaseDate, date));
+  if (daysOnMarket < 30) {
+    return { stage: "launch", factor: 1, daysOnMarket };
+  }
+  if (daysOnMarket < 180) {
+    return { stage: "growth", factor: 1.05, daysOnMarket };
+  }
+  if (daysOnMarket < 730) {
+    return { stage: "mature", factor: 1, daysOnMarket };
+  }
+  if (daysOnMarket < 1_825) {
+    return { stage: "decline", factor: 0.9, daysOnMarket };
+  }
+  return { stage: "legacy", factor: 0.7, daysOnMarket };
+}
+
 export function calculateProductAppeal(input: ProductAppealInput): number {
   return PLAYER_APPEAL_BASE
     * calculatePriceAppealFactor(input.priceUsd, input.segment)
@@ -183,7 +214,8 @@ export function calculateProductAppeal(input: ProductAppealInput): number {
     * calculateMarketingAppealFactor(input.marketingBudgetUsdPerDay)
     * input.segment.isaAppealMultipliers[input.configuration.isa]
     * calculateLaunchRamp(input.releaseDate, input.date)
-    * calculateFreshnessFactor(input.releaseDate, input.date);
+    * calculateFreshnessFactor(input.releaseDate, input.date)
+    * getProductLifecycle(input.releaseDate, input.date).factor;
 }
 
 export function calculateCompetitorProductAppeal(

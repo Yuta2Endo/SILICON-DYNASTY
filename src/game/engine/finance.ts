@@ -1,4 +1,5 @@
 import type { GameState } from "../models/game-state";
+import { getEconomicCycle } from "../formulas/economy";
 import {
   applyFinanceTransaction,
   FINANCE_DAILY_RULES,
@@ -105,10 +106,11 @@ export function getRemainingLoanCapacity(state: GameState): number {
 
 export function settleDailyFinance(state: GameState, date: string): GameState {
   let nextState = state;
+  const cycle = getEconomicCycle(date);
   const payrollUsd = roundUsd(
-    state.company.employeeCount * FINANCE_DAILY_RULES.salaryPerEmployeeUsd,
+    state.company.employeeCount * FINANCE_DAILY_RULES.salaryPerEmployeeUsd * cycle.costMultiplier,
   );
-  const overheadUsd = FINANCE_DAILY_RULES.overheadUsd;
+  const overheadUsd = roundUsd(FINANCE_DAILY_RULES.overheadUsd * cycle.costMultiplier);
   const marketingUsd = state.market.marketingBudgetUsdPerDay;
   const interestUsd = getLoanDailyInterest(state);
   const fixedCosts = roundUsd(payrollUsd + overheadUsd + marketingUsd + interestUsd);

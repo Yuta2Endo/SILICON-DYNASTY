@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import {
   Banknote,
+  Activity,
   BarChart3,
   Boxes,
   CircleDollarSign,
@@ -21,6 +22,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { GameState } from "../../game/models/game-state";
+import { getEconomicCycle } from "../../game/formulas/economy";
 import { validateComponentName } from "../../game/models/components";
 import {
   COMPETITORS,
@@ -214,6 +216,7 @@ function MarketOverview({
   const locale = state.settings.locale;
   const latest = state.market.dailySummaries.at(-1);
   const activeProducts = state.market.products.filter((product) => product.status === "active");
+  const cycle = getEconomicCycle(state.gameDate);
 
   return (
     <div className="page-stack">
@@ -246,6 +249,33 @@ function MarketOverview({
           label={copy.activeProducts}
           value={formatNumber(activeProducts.length, locale)}
         />
+      </section>
+
+      <section className="market-cycle" aria-labelledby="market-cycle-title">
+        <SectionHeading
+          copy={copy.cycle.hint}
+          icon={Activity}
+          id="market-cycle-title"
+          title={copy.cycle.title}
+        />
+        <div className="market-cycle__grid">
+          <div className="market-cycle__item market-cycle__item--phase">
+            <span className="market-cycle__label">{copy.cycle.phase}</span>
+            <strong>{copy.cycle.phases[cycle.phase]}</strong>
+          </div>
+          <div className="market-cycle__item">
+            <span className="market-cycle__label">{copy.cycle.demand}</span>
+            <strong>×{formatDecimal(cycle.demandMultiplier, locale, 2)}</strong>
+          </div>
+          <div className="market-cycle__item">
+            <span className="market-cycle__label">{copy.cycle.cost}</span>
+            <strong>×{formatDecimal(cycle.costMultiplier, locale, 2)}</strong>
+          </div>
+          <div className="market-cycle__item">
+            <span className="market-cycle__label">{copy.cycle.aggression}</span>
+            <strong>×{formatDecimal(cycle.competitorAggression, locale, 2)}</strong>
+          </div>
+        </div>
       </section>
 
       <ReleaseProductForm

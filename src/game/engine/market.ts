@@ -22,8 +22,11 @@ import {
   calculateCpuMarketPerformanceScore,
   calculateProductAppeal,
   estimateManufacturingCost,
+  getProductLifecycle,
   getSegmentDailyDemand,
+  PRODUCT_LIFECYCLE_RETIRE_AFTER_DAYS,
 } from "../formulas/market";
+import { getEconomicCycle } from "../formulas/economy";
 import { postFinanceTransaction } from "./finance";
 import { recordDailyUnits, roundUsd } from "../models/finance";
 
@@ -309,7 +312,12 @@ export function runCompetitorDay(state: GameState, date: string): GameState {
       continue;
     }
 
-    const action = applyCompetitorStrategy(competitorState, definition.strategy, competitorState.actionCount);
+    const action = applyCompetitorStrategy(
+      competitorState,
+      definition.strategy,
+      competitorState.actionCount,
+      getEconomicCycle(date).competitorAggression,
+    );
     competitors = competitors.map((candidate) =>
       candidate.competitorId === competitorState.competitorId
         ? {
@@ -344,7 +352,21 @@ export function runCompetitorDay(state: GameState, date: string): GameState {
 }
 
 export function simulateMarketDay(state: GameState, date: string): GameState {
-  let products = state.market.products;
+  const openProductIds = new Set(
+    state.market.productionOrders
+      .filter((order) => order.status === "in-production")
+      .map((order) => order.productId),
+  );
+  let products = state.market.products.map((product): MarketProduct => {
+    if (
+      product.status === "active"
+      && !openProductIds.has(product.id)
+      && getProductLifecycle(product.releaseDate, date).daysOnMarket >= PRODUCT_LIFECYCLE_RETIRE_AFTER_DAYS
+    ) {
+      return { ...product, status: "discontinued" };
+    }
+    return product;
+  });
   const segmentResults: Partial<Record<MarketSegmentId, MarketSegmentDayResult>> = {};
   const competitorStates = new Map(
     state.market.competitors.map((competitor) => [competitor.competitorId, competitor]),
@@ -560,6 +582,7 @@ function applyCompetitorStrategy(
   competitorState: MarketState["competitors"][number],
   strategy: (typeof COMPETITORS)[number]["strategy"],
   actionCount: number,
+  aggression: number,
 ): {
   type: CompetitorActionType;
   valuePercent: number;
@@ -568,63 +591,103 @@ function applyCompetitorStrategy(
     "priceMultiplier" | "performanceMultiplier" | "marketingMultiplier"
   >>;
 } {
+  const percent = (value: number): number => Math.round(value * 100) / 100;
+
   switch (strategy) {
     case "volume":
       return {
         type: "price-cut",
-        valuePercent: 1.5,
-        multipliers: { priceMultiplier: roundMultiplier(competitorState.priceMultiplier * 0.985, 0.75, 1) },
+        valuePercent: percent(1.5 * aggression),
+        multipliers: {
+          priceMultiplier: roundMultiplier(
+            competitorState.priceMultiplier * (1 - 0.015 * aggression),
+            0.75,
+            1,
+          ),
+        },
       };
     case "aggressive":
       return {
         type: "price-cut",
-        valuePercent: 3,
-        multipliers: { priceMultiplier: roundMultiplier(competitorState.priceMultiplier * 0.97, 0.65, 1) },
+        valuePercent: percent(3 * aggression),
+        multipliers: {
+          priceMultiplier: roundMultiplier(
+            competitorState.priceMultiplier * (1 - 0.03 * aggression),
+            0.65,
+            1,
+          ),
+        },
       };
     case "premium":
       return actionCount % 2 === 0
         ? {
           type: "price-increase",
-          valuePercent: 1.2,
-          multipliers: { priceMultiplier: roundMultiplier(competitorState.priceMultiplier * 1.012, 1, 1.4) },
+          valuePercent: percent(1.2 * aggression),
+          multipliers: {
+            priceMultiplier: roundMultiplier(
+              competitorState.priceMultiplier * (1 + 0.012 * aggression),
+              1,
+              1.4,
+            ),
+          },
         }
         : {
           type: "performance-refresh",
-          valuePercent: 2,
+          valuePercent: percent(2 * aggression),
           multipliers: {
-            performanceMultiplier: roundMultiplier(competitorState.performanceMultiplier * 1.02, 1, 1.6),
+            performanceMultiplier: roundMultiplier(
+              competitorState.performanceMultiplier * (1 + 0.02 * aggression),
+              1,
+              1.6,
+            ),
           },
         };
     case "performance":
       return {
         type: "performance-refresh",
-        valuePercent: 2.5,
+        valuePercent: percent(2.5 * aggression),
         multipliers: {
-          performanceMultiplier: roundMultiplier(competitorState.performanceMultiplier * 1.025, 1, 1.7),
+          performanceMultiplier: roundMultiplier(
+            competitorState.performanceMultiplier * (1 + 0.025 * aggression),
+            1,
+            1.7,
+          ),
         },
       };
     case "balanced":
       return {
         type: "campaign",
-        valuePercent: 4,
+        valuePercent: percent(4 * aggression),
         multipliers: {
-          marketingMultiplier: roundMultiplier(competitorState.marketingMultiplier * 1.04, 1, 1.4),
+          marketingMultiplier: roundMultiplier(
+            competitorState.marketingMultiplier * (1 + 0.04 * aggression),
+            1,
+            1.4,
+          ),
         },
       };
     case "enterprise":
       return actionCount % 2 === 0
         ? {
           type: "performance-refresh",
-          valuePercent: 1.5,
+          valuePercent: percent(1.5 * aggression),
           multipliers: {
-            performanceMultiplier: roundMultiplier(competitorState.performanceMultiplier * 1.015, 1, 1.5),
+            performanceMultiplier: roundMultiplier(
+              competitorState.performanceMultiplier * (1 + 0.015 * aggression),
+              1,
+              1.5,
+            ),
           },
         }
         : {
           type: "campaign",
-          valuePercent: 3,
+          valuePercent: percent(3 * aggression),
           multipliers: {
-            marketingMultiplier: roundMultiplier(competitorState.marketingMultiplier * 1.03, 1, 1.4),
+            marketingMultiplier: roundMultiplier(
+              competitorState.marketingMultiplier * (1 + 0.03 * aggression),
+              1,
+              1.4,
+            ),
           },
         };
   }

@@ -761,6 +761,21 @@ const ru = {
     dailyRevenueHint: "Поступления от продаж",
     activeProducts: "Активные продукты",
     activeProductsHint: "Сейчас на рынке",
+    cycle: {
+      title: "Экономический цикл",
+      hint: "Макроэкономическая фаза влияет на спрос, издержки и активность конкурентов.",
+      phase: "Фаза",
+      demand: "Спрос",
+      cost: "Издержки",
+      aggression: "Агрессия конкурентов",
+      phases: {
+        stable: "Стабильность",
+        expansion: "Рост",
+        peak: "Пик",
+        contraction: "Спад",
+        trough: "Дно",
+      },
+    },
     emptyProducts: "На рынке пока нет ваших продуктов",
     emptyProductsHint: "Создайте CPU-проект, сохраните версию и выпустите продукт ниже.",
     componentMarket: {
@@ -2525,6 +2540,21 @@ const en: Translation = {
     dailyRevenueHint: "Cash received from sales",
     activeProducts: "Active products",
     activeProductsHint: "Currently on the market",
+    cycle: {
+      title: "Economic cycle",
+      hint: "The macroeconomic phase affects demand, costs and competitor activity.",
+      phase: "Phase",
+      demand: "Demand",
+      cost: "Costs",
+      aggression: "Competitor aggression",
+      phases: {
+        stable: "Stable",
+        expansion: "Expansion",
+        peak: "Peak",
+        contraction: "Contraction",
+        trough: "Trough",
+      },
+    },
     emptyProducts: "You have no products on the market yet",
     emptyProductsHint: "Create a CPU project, save a version, and launch a product below.",
     componentMarket: {
