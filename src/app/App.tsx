@@ -12,6 +12,7 @@ import { createBrowserGameStateRepository } from "../storage/repositories/Browse
 import type { SaveOverview } from "../storage/repositories/SaveManagement";
 import { translations } from "../localization/messages";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
+import { syncStatusBar, triggerHaptic } from "../native/native-services";
 import { type ScreenId } from "./navigation";
 
 const CompanyPage = lazy(() => import("../features/company/CompanyPage").then((module) => ({ default: module.CompanyPage })));
@@ -123,6 +124,14 @@ export function App({ application, initialMenuOpen }: AppProps = {}) {
     }
   }, [state?.settings.locale]);
 
+  const theme = state?.settings.theme;
+
+  useEffect(() => {
+    if (theme) {
+      void syncStatusBar(theme);
+    }
+  }, [theme]);
+
   const runCommand = useCallback(async (
     command: () => Promise<GameState>,
     options: { suppressErrorAlert?: boolean } = {},
@@ -135,10 +144,12 @@ export function App({ application, initialMenuOpen }: AppProps = {}) {
       const nextState = await command();
       setState(nextState);
       setShowSavedFeedback(true);
+      void triggerHaptic("light");
       return nextState;
     } catch {
       if (!options.suppressErrorAlert) {
         setHasCommandError(true);
+        void triggerHaptic("warning");
       }
       return null;
     } finally {
