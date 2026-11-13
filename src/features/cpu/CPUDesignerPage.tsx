@@ -38,6 +38,7 @@ interface CPUDesignerPageProps {
   onCreateProject: (name: string, configuration: CpuConfiguration) => Promise<string | null>;
   onSaveVersion: (projectId: string, name: string, configuration: CpuConfiguration) => Promise<boolean>;
   onOpenComponents: () => void;
+  onOpenOs?: () => void;
 }
 
 type PendingAction =
@@ -51,6 +52,7 @@ export function CPUDesignerPage({
   onCreateProject,
   onSaveVersion,
   onOpenComponents,
+  onOpenOs = () => undefined,
 }: CPUDesignerPageProps) {
   const locale = state.settings.locale;
   const t = translations[locale];
@@ -236,6 +238,8 @@ export function CPUDesignerPage({
         label={t.productWorkspace.label}
         onOpenComponents={onOpenComponents}
         onOpenCpu={() => undefined}
+        onOpenOs={onOpenOs}
+        osLabel={t.productWorkspace.os}
       />
 
       <section className="cpu-project-panel">

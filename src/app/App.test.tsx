@@ -83,6 +83,30 @@ describe("App", () => {
     expect(screen.getByRole("tab", { name: "Финансы" }).getAttribute("aria-selected")).toBe("true");
   });
 
+  it("opens the OS Lab from the product workspace and creates an OS project", async () => {
+    const user = userEvent.setup();
+    const repository = new MemoryGameStateRepository();
+    const application = createGameApplication(repository);
+
+    render(<App application={application} />);
+    await screen.findByRole("heading", { name: "Панель компании" });
+    await user.click(screen.getByRole("button", { name: "Процессор" }));
+    await screen.findByRole("heading", { name: "Конструктор процессоров" });
+
+    await user.click(screen.getByRole("button", { name: "ОС" }));
+    expect(await screen.findByRole("heading", { name: "Лаборатория ОС" })).toBeTruthy();
+
+    await user.type(screen.getByRole("textbox", { name: "Название проекта" }), "Dynasty OS");
+    await user.click(screen.getByRole("button", { name: "Создать проект" }));
+    expect(await screen.findByRole("heading", { name: "Dynasty OS" })).toBeTruthy();
+
+    await waitFor(async () => {
+      const reloaded = await createGameApplication(repository).load();
+      expect(reloaded.osProjects[0]?.name).toBe("Dynasty OS");
+      expect(reloaded.osProjects[0]?.versions).toHaveLength(1);
+    });
+  });
+
   it("creates and versions a CPU project, rejects invalid input, and protects unsaved edits", async () => {
     const user = userEvent.setup();
     const repository = new MemoryGameStateRepository();

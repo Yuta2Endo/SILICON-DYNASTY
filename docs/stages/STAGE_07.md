@@ -1,7 +1,7 @@
 # STAGE 07 — OS Architecture & Kernel Lab
 
 **Project:** SILICON DYNASTY  
-**Status:** NOT STARTED  
+**Status:** COMPLETED
 **Execution rule:** complete this stage only, then stop for approval.
 
 ## Objective
@@ -19,10 +19,10 @@ Implement OS projects and simulated kernel architecture: Monolithic, Microkernel
 9. Stop. Do not begin the next stage without separate authorization.
 
 ## Acceptance criteria
-- [ ] Create and version an OS project.
-- [ ] Architecture choices affect calculated metrics.
-- [ ] Requirements and constraints are validated.
-- [ ] The UI clearly presents this as a game simulation, not a real OS.
+- [x] Create and version an OS project.
+- [x] Architecture choices affect calculated metrics.
+- [x] Requirements and constraints are validated.
+- [x] The UI clearly presents this as a game simulation, not a real OS.
 
 ## Engineering constraints
 - React + TypeScript strict + Vite + Capacitor.

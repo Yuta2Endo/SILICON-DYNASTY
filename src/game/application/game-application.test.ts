@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { GameState } from "../models/game-state";
 import { createDefaultCpuConfiguration } from "../models/cpu";
 import { createDefaultComponentConfiguration, type GpuConfiguration } from "../models/components";
+import { createDefaultOsConfiguration } from "../models/os";
 import { getFinanceDailyRecord } from "../models/finance";
 import { createGameApplication } from "./game-application";
 import type { GameStateRepository } from "../../storage/repositories/GameStateRepository";
@@ -131,6 +132,43 @@ describe("game application commands", () => {
     await expect(
       application.createComponentProject("gpu", "Broken GPU", invalidConfiguration),
     ).rejects.toThrow();
+    expect(repository.state).toEqual(initial);
+  });
+
+  it("creates, versions, saves, and reloads an OS project", async () => {
+    const repository = new MemoryGameStateRepository();
+    const application = createGameApplication(repository);
+    const initial = createDefaultOsConfiguration();
+
+    await application.load();
+    await application.createOsProject("Dynasty OS", initial);
+    await application.saveOsVersion("os-1", "Dynasty OS", {
+      ...initial,
+      kernelType: "microkernel",
+      ipcModel: "message-passing",
+      driverModel: "user-space",
+      moduleSupport: "user-space",
+    });
+
+    const reloaded = await createGameApplication(repository).load();
+    const project = reloaded.osProjects[0];
+
+    expect(project?.name).toBe("Dynasty OS");
+    expect(project?.configuration.kernelType).toBe("microkernel");
+    expect(project?.versions.map((version) => version.version)).toEqual([1, 2]);
+  });
+
+  it("rejects invalid OS configurations without persisting them", async () => {
+    const repository = new MemoryGameStateRepository();
+    const application = createGameApplication(repository);
+    const initial = await application.load();
+    const invalidConfiguration = {
+      ...createDefaultOsConfiguration(),
+      kernelType: "microkernel" as const,
+      ipcModel: "pipes" as const,
+    };
+
+    await expect(application.createOsProject("Broken OS", invalidConfiguration)).rejects.toThrow();
     expect(repository.state).toEqual(initial);
   });
 

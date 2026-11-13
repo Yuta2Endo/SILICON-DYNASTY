@@ -1,6 +1,7 @@
 import { validateCompany, type Company } from "./company";
 import { parseCpuProject, type CpuProject } from "./cpu";
 import { parseComponentProject, type ComponentProject } from "./components";
+import { parseOsProject, type OsProject } from "./os";
 import { isValidDateOnly } from "./date";
 import {
   createInitialFinanceState,
@@ -19,9 +20,9 @@ import {
   type ResearchState,
 } from "./research";
 
-export const SAVE_SCHEMA_VERSION = 5 as const;
+export const SAVE_SCHEMA_VERSION = 6 as const;
 
-const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, SAVE_SCHEMA_VERSION] as const;
+const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, SAVE_SCHEMA_VERSION] as const;
 
 export type Locale = "ru" | "en";
 export type Theme = "light" | "dark";
@@ -37,6 +38,7 @@ export interface GameState {
   company: Company;
   cpuProjects: CpuProject[];
   componentProjects: ComponentProject[];
+  osProjects: OsProject[];
   research: ResearchState;
   finance: FinanceState;
   market: MarketState;
@@ -58,6 +60,7 @@ export function createInitialGameState(): GameState {
     gameDate,
     cpuProjects: [],
     componentProjects: [],
+    osProjects: [],
     research: createInitialResearchState(),
     finance: createInitialFinanceState(),
     market: createInitialMarketState(gameDate),
@@ -175,6 +178,24 @@ export function parseGameState(value: unknown): GameState {
     }
   }
 
+  let osProjects: OsProject[] = [];
+  if (sourceSchemaVersion >= 6) {
+    if (!Array.isArray(value.osProjects)) {
+      throw new InvalidGameStateError("Save data contains an invalid OS project list.");
+    }
+
+    try {
+      osProjects = value.osProjects.map((project) => parseOsProject(project, value.gameDate as string));
+    } catch {
+      throw new InvalidGameStateError("Save data contains an invalid OS project.");
+    }
+
+    const osProjectIds = new Set(osProjects.map((project) => project.id));
+    if (osProjectIds.size !== osProjects.length) {
+      throw new InvalidGameStateError("Save data contains duplicate OS project IDs.");
+    }
+  }
+
   let research: ResearchState;
   if (sourceSchemaVersion >= 3) {
     try {
@@ -213,6 +234,7 @@ export function parseGameState(value: unknown): GameState {
     company: { ...company },
     cpuProjects,
     componentProjects,
+    osProjects,
     research,
     finance,
     market,

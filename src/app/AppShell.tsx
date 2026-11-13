@@ -41,7 +41,7 @@ export function AppShell({
           <nav className="primary-navigation" aria-label={t.navigation.label}>
             {navigationItems.map(({ id, icon: Icon }) => {
               const isActive = activeScreen === id
-                || (id === "cpu" && activeScreen === "components")
+                || (id === "cpu" && (activeScreen === "components" || activeScreen === "os"))
                 || (id === "market" && activeScreen === "finance");
 
               return (

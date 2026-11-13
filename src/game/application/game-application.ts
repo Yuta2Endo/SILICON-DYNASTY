@@ -23,6 +23,12 @@ import {
   type ComponentProject,
   type ComponentType,
 } from "../models/components";
+import {
+  createOsProject as buildOsProject,
+  saveOsVersion as buildOsVersion,
+  type OsConfiguration,
+  type OsProject,
+} from "../models/os";
 import { startResearchProject } from "../engine/research";
 import {
   discontinueProduct,
@@ -60,6 +66,8 @@ export interface GameApplication {
     name: string,
     configuration: ComponentConfiguration,
   ): Promise<GameState>;
+  createOsProject(name: string, configuration: OsConfiguration): Promise<GameState>;
+  saveOsVersion(projectId: string, name: string, configuration: OsConfiguration): Promise<GameState>;
   releaseProduct(input: ReleaseProductInput): Promise<GameState>;
   releaseComponentProduct(input: ReleaseComponentProductInput): Promise<GameState>;
   updateComponentProductPrice(productId: string, priceUsd: number): Promise<GameState>;
@@ -222,6 +230,32 @@ export function createGameApplication(repository: GameStateRepository): GameAppl
       return commit(discontinueComponentProduct(await ensureLoaded(), productId));
     },
 
+    async createOsProject(name, configuration) {
+      const state = await ensureLoaded();
+      const project = buildOsProject(nextOsProjectId(state.osProjects), name, configuration, state.gameDate);
+      return commit({ ...state, osProjects: [...state.osProjects, project] });
+    },
+
+    async saveOsVersion(projectId, name, configuration) {
+      const state = await ensureLoaded();
+      const projectIndex = state.osProjects.findIndex((project) => project.id === projectId);
+      if (projectIndex < 0) {
+        throw new Error("OS project was not found.");
+      }
+
+      const project = state.osProjects[projectIndex];
+      if (!project) {
+        throw new Error("OS project was not found.");
+      }
+
+      const updatedProject = buildOsVersion(project, name, configuration, state.gameDate);
+      const osProjects = state.osProjects.map((currentProject) =>
+        currentProject.id === projectId ? updatedProject : currentProject,
+      );
+
+      return commit({ ...state, osProjects });
+    },
+
     async updateProductPrice(productId, priceUsd) {
       return commit(updateProductPrice(await ensureLoaded(), productId, priceUsd));
     },
@@ -262,6 +296,14 @@ function nextComponentProjectId(projects: ComponentProject[]): string {
     sequence += 1;
   }
   return `component-${sequence}`;
+}
+
+function nextOsProjectId(projects: OsProject[]): string {
+  let sequence = 1;
+  while (projects.some((project) => project.id === `os-${sequence}`)) {
+    sequence += 1;
+  }
+  return `os-${sequence}`;
 }
 
 function assertCpuConfigurationUnlocked(configuration: CpuConfiguration, state: GameState): void {

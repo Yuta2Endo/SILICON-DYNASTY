@@ -79,3 +79,38 @@ bounds and a default 1995 configuration. Full field lists and formulas live in
   Errors block compatibility; a missing RAM module is a warning.
 - Component sales are part of the daily pipeline and post to the same finance
   ledger and market summaries as CPU sales.
+
+## OS kernel lab (Stage 07)
+
+Stage 07 adds simulated OS projects with version history. All results are game
+models, not measurements of a real kernel. Configuration covers target platform,
+kernel type, bootloader, scheduler, memory manager, virtual memory, IPC, syscall
+count, module/driver model, address width, process limit and supported CPU
+architectures. Full fields, bounds, profiles and formulas are in
+[`OS_LAB.md`](OS_LAB.md).
+
+- Kernel architecture is a multiplier profile, not a single win button. Monolithic
+  favors performance and footprint; microkernel favors isolation, stability and
+  maintainability but pays IPC latency; hybrid balances; modular favors
+  compatibility and maintenance.
+- Boot time is `bootloader seconds + 2 + footprint / 85 + module/driver overhead +
+  syscalls / 600 + address overhead + virtual-memory overhead + kernel boot factor`,
+  clamped to 1..600 seconds.
+- Memory footprint starts from 24 MB, then applies kernel, memory-manager, module,
+  driver, virtual-memory, syscall, process-count, architecture-count and address
+  overhead, clamped to 16..4,096 MB.
+- Performance, stability, security, compatibility, energy and maintainability are
+  products of kernel/subsystem multiplier profiles and bounded factors. IPC latency
+  and syscall overhead are separate latency outputs.
+- Overall score uses platform-specific weights: desktop values stability and
+  performance; mobile values energy; server values stability/security; gaming values
+  performance and IPC latency; universal balances the categories.
+- Requirements are platform-specific thresholds over the same metrics. A failed
+  requirement shows comparator, target and actual value.
+- Constraints are validated: virtual memory needs paging; microkernel needs
+  message-passing/hybrid IPC and user-space/hybrid drivers; monolithic cannot use
+  user-space drivers; user-space modules need microkernel/hybrid; modular needs
+  modules; processes are capped by address width; UEFI (2005), coreboot (1999) and
+  64-bit addressing (2003) are year-gated.
+- OS projects are not yet part of the daily market/finance pipeline. They persist in
+  save schema v6 with lightweight migration from v5.

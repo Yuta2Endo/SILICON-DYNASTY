@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createInitialGameState, InvalidGameStateError, parseGameState } from "./game-state";
 import { createCpuProject, createDefaultCpuConfiguration } from "./cpu";
+import { createDefaultOsConfiguration, createOsProject } from "./os";
 
 describe("game state validation", () => {
   it("round-trips a valid starting state", () => {
@@ -13,7 +14,7 @@ describe("game state validation", () => {
     const state = createInitialGameState();
 
     expect(() => parseGameState({ ...state, gameDate: "1995-02-30" })).toThrow(InvalidGameStateError);
-    expect(() => parseGameState({ ...state, schemaVersion: 6 })).toThrow(InvalidGameStateError);
+    expect(() => parseGameState({ ...state, schemaVersion: 7 })).toThrow(InvalidGameStateError);
   });
 
   it("migrates a Stage 1 save without losing company, date, or settings", () => {
@@ -27,12 +28,13 @@ describe("game state validation", () => {
 
     const migrated = parseGameState(legacyStageOneSave);
 
-    expect(migrated.schemaVersion).toBe(5);
+    expect(migrated.schemaVersion).toBe(6);
     expect(migrated.gameDate).toBe(current.gameDate);
     expect(migrated.company).toEqual(current.company);
     expect(migrated.settings).toEqual(current.settings);
     expect(migrated.cpuProjects).toEqual([]);
     expect(migrated.componentProjects).toEqual([]);
+    expect(migrated.osProjects).toEqual([]);
     expect(migrated.research).toEqual(current.research);
     expect(migrated.finance).toEqual(current.finance);
     expect(migrated.market).toEqual(current.market);
@@ -55,9 +57,10 @@ describe("game state validation", () => {
       settings: current.settings,
     });
 
-    expect(migrated.schemaVersion).toBe(5);
+    expect(migrated.schemaVersion).toBe(6);
     expect(migrated.cpuProjects).toEqual([cpuProject]);
     expect(migrated.componentProjects).toEqual([]);
+    expect(migrated.osProjects).toEqual([]);
     expect(migrated.finance).toEqual(current.finance);
     expect(migrated.market).toEqual(current.market);
     expect(migrated.research.completedTechnologyIds).toEqual([]);
@@ -79,8 +82,9 @@ describe("game state validation", () => {
 
     const migrated = parseGameState(legacySave);
 
-    expect(migrated.schemaVersion).toBe(5);
+    expect(migrated.schemaVersion).toBe(6);
     expect(migrated.gameDate).toBe("1998-06-15");
+    expect(migrated.osProjects).toEqual([]);
     expect(migrated.finance).toEqual(current.finance);
     expect(migrated.market.products).toEqual([]);
     expect(migrated.market.componentProducts).toEqual([]);
@@ -117,9 +121,10 @@ describe("game state validation", () => {
 
     const migrated = parseGameState(legacySave);
 
-    expect(migrated.schemaVersion).toBe(5);
+    expect(migrated.schemaVersion).toBe(6);
     expect(migrated.company.balance).toBe(123_456);
     expect(migrated.componentProjects).toEqual([]);
+    expect(migrated.osProjects).toEqual([]);
     expect(migrated.market.componentProducts).toEqual([]);
     expect(migrated.market.marketingBudgetUsdPerDay).toBe(500);
     expect(migrated.market.dailySummaries[0]).toEqual(expect.objectContaining({
@@ -129,6 +134,47 @@ describe("game state validation", () => {
       componentRevenueUsd: 0,
       componentManufacturingUsd: 0,
     }));
+  });
+
+  it("migrates schema-5 saves by initializing the OS project list", () => {
+    const state = createInitialGameState();
+    const stageFiveState = {
+      schemaVersion: 5,
+      gameDate: state.gameDate,
+      company: state.company,
+      cpuProjects: state.cpuProjects,
+      componentProjects: state.componentProjects,
+      research: state.research,
+      finance: state.finance,
+      market: state.market,
+      settings: state.settings,
+    };
+    const migrated = parseGameState(stageFiveState);
+
+    expect(migrated.schemaVersion).toBe(6);
+    expect(migrated.osProjects).toEqual([]);
+    expect(migrated.componentProjects).toEqual(state.componentProjects);
+  });
+
+  it("preserves valid OS projects in schema-6 saves", () => {
+    const state = createInitialGameState();
+    const project = createOsProject(
+      "os-1",
+      "Dynasty OS",
+      createDefaultOsConfiguration(),
+      state.gameDate,
+    );
+    const parsed = parseGameState({ ...state, osProjects: [project] });
+
+    expect(parsed.osProjects).toEqual([project]);
+  });
+
+  it("rejects invalid OS projects in the current save schema", () => {
+    const state = createInitialGameState();
+
+    expect(() => parseGameState({ ...state, osProjects: [{ id: "bad" }] })).toThrow(
+      InvalidGameStateError,
+    );
   });
 
   it("rejects invalid component projects in the current save schema", () => {
