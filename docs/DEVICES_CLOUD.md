@@ -162,6 +162,7 @@ The Devices page is the fifth product-workspace tab. It provides:
 - device metrics, cost, power, thermal, memory, storage and synergy;
 - saved device-version comparison with overall score, performance, appeal, compatibility, unit cost and power deltas, plus reference changes shown by project/release name;
 - cloud creation from a saved server device, capacity fields and cloud metrics;
+- saved cloud-version comparison with capacity, compute units, availability, operating cost and capital expenditure deltas, plus server reference changes shown by device name and version;
 - version history, unsaved-draft confirmation and a simulation disclaimer.
 
 The bottom navigation remains six destinations; Devices is reached through the product workspace.
@@ -172,5 +173,5 @@ Model tests cover suggested devices, missing and mismatched references, platform
 persistence and strict parsing. Formula tests cover device metrics, OS/AI integration, type-specific
 cost/power, bounded synergy and cloud capacity/operating cost. Engine/application tests cover
 create/save/reload. UI tests cover device creation, cloud creation, compatibility errors, tabs and
-saved-version comparison.
+device/cloud saved-version comparison.
 Schema tests cover v10→v11 migration and repository persistence.

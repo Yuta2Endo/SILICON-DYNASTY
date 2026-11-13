@@ -292,3 +292,73 @@ test("compares two saved device versions", async ({ page }) => {
   await expect(compare).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
+
+test("compares two saved cloud versions", async ({ page }) => {
+  await openGame(page);
+  await page.getByRole("button", { name: "Следующий день" }).click();
+
+  await page.evaluate(async () => {
+    const request = indexedDB.open("silicon-dynasty");
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const readRequest = database
+      .transaction("game-saves", "readonly")
+      .objectStore("game-saves")
+      .get("current");
+    const state = await new Promise<{ cloudProjects?: unknown[] }>((resolve, reject) => {
+      readRequest.onsuccess = () => resolve(readRequest.result as { cloudProjects?: unknown[] });
+      readRequest.onerror = () => reject(readRequest.error);
+    });
+    const first = {
+      serverDeviceProjectId: "device-missing",
+      serverDeviceVersion: 1,
+      dataCenters: 1,
+      serversPerCenter: 100,
+      storageTb: 1_000,
+      networkGbps: 10_000,
+      aiAcceleratorUnits: 0,
+      redundancy: 2,
+    };
+    const second = { ...first, dataCenters: 2, redundancy: 3 };
+    state.cloudProjects = [{
+      id: "cloud-compare-e2e",
+      name: "Compare E2E Cloud",
+      configuration: second,
+      versions: [
+        { version: 1, savedOn: "1995-01-01", configuration: first },
+        { version: 2, savedOn: "1995-01-02", configuration: second },
+      ],
+    }];
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction("game-saves", "readwrite");
+      transaction.objectStore("game-saves").put(state, "current");
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+    database.close();
+  });
+
+  await page.reload();
+  const continueButton = page.getByRole("button", { name: "Продолжить" });
+  await continueButton.waitFor({ state: "visible", timeout: 10_000 });
+  await continueButton.click();
+
+  await page
+    .getByRole("navigation", { name: "Основная навигация" })
+    .getByRole("button", { name: "Процессор" })
+    .click();
+  await page.locator(".product-workspace-tabs").getByRole("button", { name: "Устройства" }).click();
+  await page.getByRole("tab", { name: "Облако" }).click();
+
+  const cloudCompare = page.locator(".cloud-compare");
+  await expect(cloudCompare).toBeVisible();
+  await expect(cloudCompare.locator("select")).toHaveCount(2);
+  await expect(cloudCompare.locator(".version-compare__metric")).toHaveCount(6);
+  await expectNoHorizontalOverflow(page);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(cloudCompare).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});

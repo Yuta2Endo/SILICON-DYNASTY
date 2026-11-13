@@ -35,6 +35,7 @@ import {
 } from "../../game/models/cloud";
 import { calculateCloudMetrics, type CloudMetrics } from "../../game/formulas/cloud";
 import { calculateDeviceMetrics, type DeviceMetrics } from "../../game/formulas/devices";
+import { CloudVersionCompare } from "./CloudVersionCompare";
 import { DeviceVersionCompare } from "./DeviceVersionCompare";
 import type { GameState } from "../../game/models/game-state";
 import { formatCurrency, formatDecimal, formatNumber } from "../../localization/formatters";
@@ -1014,6 +1015,7 @@ export function DeviceDesignerPage({
             <>
               {renderCloudEditor()}
               {cloudMetrics && <CloudMetricsPanel locale={locale} metrics={cloudMetrics} />}
+              <CloudVersionCompare locale={locale} project={selectedCloud} state={state} />
               <section className="cpu-version-section">
                 <header className="cpu-version-section__heading">
                   <h2>{copy.versions.title}</h2>

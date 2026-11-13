@@ -281,6 +281,7 @@ Present the device configurator and cloud infrastructure as separate in-page tab
 - Saved-version comparison with overall score, performance, appeal, compatibility, unit cost and power draw deltas.
 - Display changed references by project or release name, not raw identifiers.
 - Show cloud capacity, availability, operating cost and capital expenditure from the referenced server device.
+- Cloud saved-version comparison with capacity, compute units, availability, operating cost and capital expenditure deltas; reference changes use the server project name and version.
 
 ### Designer interaction principles
 
