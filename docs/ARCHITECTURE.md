@@ -39,6 +39,8 @@ The OS Lab does not run in the daily pipeline yet. `src/game/models/os.ts` owns 
 
 The AI Lab is the fourth product-development tab. `src/game/models/ai.ts` owns AI configurations, dataset validation, project versions, training/deployment snapshots and strict parsing; `src/game/formulas/ai.ts` owns model-quality, dataset, appeal, GPU/VRAM/RAM/storage requirements, deterministic training progress and optimization/deployment metrics; `src/game/engine/ai-training.ts` charges training, optimization and deployment costs through the finance ledger. Active training jobs advance once per game day before finance settlement. `AiDesignerPage` calls application commands and presents itself as a game simulation. Stage 10 details are in [`AI_LAB.md`](AI_LAB.md); Stage 11 training/deployment rules are in [`AI_TRAINING.md`](AI_TRAINING.md).
 
+Devices and cloud are the fifth product-development tab. `src/game/models/devices.ts` owns device references, platform matching, slot rules, version histories and strict parsing; `src/game/models/cloud.ts` owns cloud configuration, server references and limits. `src/game/formulas/devices.ts` derives device metrics, cost, power, thermal load and ecosystem synergy from canonical CPU/component/OS/AI projects; `src/game/formulas/cloud.ts` derives capacity, availability, operating cost and capex from a saved server device. Device and cloud projects do not yet run in the daily sales pipeline. Stage 12 details are in [`DEVICES_CLOUD.md`](DEVICES_CLOUD.md).
+
 ## Worker boundary
 Workers receive serializable snapshots and explicit commands. They must not access React state or mutate the database outside a documented protocol.
 

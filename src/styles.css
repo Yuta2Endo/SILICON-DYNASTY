@@ -3519,7 +3519,7 @@ input:focus-visible {
 /* Stage 06: component designer and component market */
 .product-workspace-tabs {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
   padding: 5px;
   border: 1px solid var(--border);
@@ -4873,5 +4873,152 @@ input:focus-visible {
 @media (min-width: 900px) {
   .ai-training-stats {
     grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+/* Stage 12: devices, cloud and ecosystem synergy */
+.device-simulation-banner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+}
+
+.device-simulation-banner__icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+
+.device-simulation-banner h2 {
+  margin: 2px 0 5px;
+  font-size: 1rem;
+}
+
+.device-simulation-banner p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.device-simulation-banner__pill {
+  grid-column: 2;
+  justify-self: start;
+}
+
+.device-workspace-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.device-workspace-tabs .segment-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+}
+
+.device-validation-section {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-muted);
+}
+
+.device-validation-section > header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.device-validation-section h3 {
+  margin: 0 0 3px;
+  font-size: 0.94rem;
+}
+
+.device-validation-section p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.device-validation {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.device-validation ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.device-validation li,
+.device-validation--ok {
+  display: flex;
+  gap: 7px;
+  align-items: flex-start;
+}
+
+.device-validation--invalid {
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--border));
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 7%, var(--surface));
+}
+
+.device-validation--ok {
+  border: 1px solid color-mix(in srgb, var(--green) 32%, var(--border));
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 7%, var(--surface));
+}
+
+.device-metrics-section {
+  display: grid;
+  gap: 12px;
+}
+
+.device-metrics-section .os-metric-list {
+  margin: 0;
+}
+
+.cloud-metrics-section .metrics-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+  .device-simulation-banner {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    padding: 18px;
+  }
+
+  .device-simulation-banner__pill {
+    grid-column: auto;
+    justify-self: end;
+  }
+
+  .cloud-metrics-section .metrics-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }

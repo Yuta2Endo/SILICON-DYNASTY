@@ -37,6 +37,22 @@ import {
   type AiOptimizationType,
   type AiProject,
 } from "../models/ai";
+import {
+  createCloudProject as buildCloudProject,
+  saveCloudVersion as buildCloudVersion,
+  validateCloudConfiguration,
+  type CloudConfiguration,
+  type CloudProject,
+  type CloudReferenceContext,
+} from "../models/cloud";
+import {
+  createDeviceProject as buildDeviceProject,
+  saveDeviceVersion as buildDeviceVersion,
+  validateDeviceConfiguration,
+  type DeviceConfiguration,
+  type DeviceProject,
+  type DeviceReferenceContext,
+} from "../models/devices";
 import { startResearchProject } from "../engine/research";
 import {
   discontinueProduct,
@@ -99,6 +115,10 @@ export interface GameApplication {
     type: AiOptimizationType,
   ): Promise<GameState>;
   deployAiModel(projectId: string, trainingJobId: string): Promise<GameState>;
+  createDeviceProject(name: string, configuration: DeviceConfiguration): Promise<GameState>;
+  saveDeviceVersion(projectId: string, name: string, configuration: DeviceConfiguration): Promise<GameState>;
+  createCloudProject(name: string, configuration: CloudConfiguration): Promise<GameState>;
+  saveCloudVersion(projectId: string, name: string, configuration: CloudConfiguration): Promise<GameState>;
   releaseProduct(input: ReleaseProductInput): Promise<GameState>;
   releaseComponentProduct(input: ReleaseComponentProductInput): Promise<GameState>;
   updateComponentProductPrice(productId: string, priceUsd: number): Promise<GameState>;
@@ -333,6 +353,74 @@ export function createGameApplication(repository: GameStateRepository): GameAppl
       return commit(deployAiModel(await ensureLoaded(), projectId, trainingJobId));
     },
 
+    async createDeviceProject(name, configuration) {
+      const state = await ensureLoaded();
+      const validation = validateDeviceConfiguration(configuration, deviceContext(state));
+      if (!validation.valid) {
+        throw new Error("Device configuration is incompatible with the selected hardware or OS.");
+      }
+      const project = buildDeviceProject(
+        nextDeviceProjectId(state.deviceProjects),
+        name,
+        configuration,
+        state.gameDate,
+      );
+      return commit({ ...state, deviceProjects: [...state.deviceProjects, project] });
+    },
+
+    async saveDeviceVersion(projectId, name, configuration) {
+      const state = await ensureLoaded();
+      const validation = validateDeviceConfiguration(configuration, deviceContext(state));
+      if (!validation.valid) {
+        throw new Error("Device configuration is incompatible with the selected hardware or OS.");
+      }
+      const project = state.deviceProjects.find((candidate) => candidate.id === projectId);
+      if (!project) {
+        throw new Error("Device project was not found.");
+      }
+      const updatedProject = buildDeviceVersion(project, name, configuration, state.gameDate);
+      return commit({
+        ...state,
+        deviceProjects: state.deviceProjects.map((candidate) =>
+          candidate.id === projectId ? updatedProject : candidate,
+        ),
+      });
+    },
+
+    async createCloudProject(name, configuration) {
+      const state = await ensureLoaded();
+      const validation = validateCloudConfiguration(configuration, cloudContext(state));
+      if (!validation.valid) {
+        throw new Error("Cloud configuration is incompatible with the selected server device.");
+      }
+      const project = buildCloudProject(
+        nextCloudProjectId(state.cloudProjects),
+        name,
+        configuration,
+        state.gameDate,
+      );
+      return commit({ ...state, cloudProjects: [...state.cloudProjects, project] });
+    },
+
+    async saveCloudVersion(projectId, name, configuration) {
+      const state = await ensureLoaded();
+      const validation = validateCloudConfiguration(configuration, cloudContext(state));
+      if (!validation.valid) {
+        throw new Error("Cloud configuration is incompatible with the selected server device.");
+      }
+      const project = state.cloudProjects.find((candidate) => candidate.id === projectId);
+      if (!project) {
+        throw new Error("Cloud project was not found.");
+      }
+      const updatedProject = buildCloudVersion(project, name, configuration, state.gameDate);
+      return commit({
+        ...state,
+        cloudProjects: state.cloudProjects.map((candidate) =>
+          candidate.id === projectId ? updatedProject : candidate,
+        ),
+      });
+    },
+
     async updateProductPrice(productId, priceUsd) {
       return commit(updateProductPrice(await ensureLoaded(), productId, priceUsd));
     },
@@ -389,6 +477,38 @@ function nextAiProjectId(projects: AiProject[]): string {
     sequence += 1;
   }
   return `ai-${sequence}`;
+}
+
+function nextDeviceProjectId(projects: DeviceProject[]): string {
+  let sequence = 1;
+  while (projects.some((project) => project.id === `device-${sequence}`)) {
+    sequence += 1;
+  }
+  return `device-${sequence}`;
+}
+
+function nextCloudProjectId(projects: CloudProject[]): string {
+  let sequence = 1;
+  while (projects.some((project) => project.id === `cloud-${sequence}`)) {
+    sequence += 1;
+  }
+  return `cloud-${sequence}`;
+}
+
+function deviceContext(state: GameState): DeviceReferenceContext {
+  return {
+    cpuProjects: state.cpuProjects,
+    componentProjects: state.componentProjects,
+    osProjects: state.osProjects,
+    aiProjects: state.aiProjects,
+  };
+}
+
+function cloudContext(state: GameState): CloudReferenceContext {
+  return {
+    ...deviceContext(state),
+    deviceProjects: state.deviceProjects,
+  };
 }
 
 function assertCpuConfigurationUnlocked(configuration: CpuConfiguration, state: GameState): void {

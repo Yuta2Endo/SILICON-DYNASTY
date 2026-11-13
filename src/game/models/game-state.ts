@@ -2,6 +2,8 @@ import { validateCompany, type Company } from "./company";
 import { parseCpuProject, type CpuProject } from "./cpu";
 import { parseComponentProject, type ComponentProject } from "./components";
 import { parseAiProject, type AiProject } from "./ai";
+import { parseCloudProject, type CloudProject } from "./cloud";
+import { parseDeviceProject, type DeviceProject } from "./devices";
 import { parseOsProject, type OsProject } from "./os";
 import { isValidDateOnly } from "./date";
 import {
@@ -21,9 +23,9 @@ import {
   type ResearchState,
 } from "./research";
 
-export const SAVE_SCHEMA_VERSION = 10 as const;
+export const SAVE_SCHEMA_VERSION = 11 as const;
 
-const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, SAVE_SCHEMA_VERSION] as const;
+const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, SAVE_SCHEMA_VERSION] as const;
 
 export type Locale = "ru" | "en";
 export type Theme = "light" | "dark";
@@ -41,6 +43,8 @@ export interface GameState {
   componentProjects: ComponentProject[];
   osProjects: OsProject[];
   aiProjects: AiProject[];
+  deviceProjects: DeviceProject[];
+  cloudProjects: CloudProject[];
   research: ResearchState;
   finance: FinanceState;
   market: MarketState;
@@ -64,6 +68,8 @@ export function createInitialGameState(): GameState {
     componentProjects: [],
     osProjects: [],
     aiProjects: [],
+    deviceProjects: [],
+    cloudProjects: [],
     research: createInitialResearchState(),
     finance: createInitialFinanceState(),
     market: createInitialMarketState(gameDate),
@@ -225,6 +231,42 @@ export function parseGameState(value: unknown): GameState {
     }
   }
 
+  let deviceProjects: DeviceProject[] = [];
+  if (sourceSchemaVersion >= 11) {
+    if (!Array.isArray(value.deviceProjects)) {
+      throw new InvalidGameStateError("Save data contains an invalid device project list.");
+    }
+
+    try {
+      deviceProjects = value.deviceProjects.map(parseDeviceProject);
+    } catch {
+      throw new InvalidGameStateError("Save data contains an invalid device project.");
+    }
+
+    const deviceProjectIds = new Set(deviceProjects.map((project) => project.id));
+    if (deviceProjectIds.size !== deviceProjects.length) {
+      throw new InvalidGameStateError("Save data contains duplicate device project IDs.");
+    }
+  }
+
+  let cloudProjects: CloudProject[] = [];
+  if (sourceSchemaVersion >= 11) {
+    if (!Array.isArray(value.cloudProjects)) {
+      throw new InvalidGameStateError("Save data contains an invalid cloud project list.");
+    }
+
+    try {
+      cloudProjects = value.cloudProjects.map(parseCloudProject);
+    } catch {
+      throw new InvalidGameStateError("Save data contains an invalid cloud project.");
+    }
+
+    const cloudProjectIds = new Set(cloudProjects.map((project) => project.id));
+    if (cloudProjectIds.size !== cloudProjects.length) {
+      throw new InvalidGameStateError("Save data contains duplicate cloud project IDs.");
+    }
+  }
+
   let research: ResearchState;
   if (sourceSchemaVersion >= 3) {
     try {
@@ -265,6 +307,8 @@ export function parseGameState(value: unknown): GameState {
     componentProjects,
     osProjects,
     aiProjects,
+    deviceProjects,
+    cloudProjects,
     research,
     finance,
     market,

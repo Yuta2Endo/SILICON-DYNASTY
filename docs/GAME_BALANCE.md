@@ -217,3 +217,32 @@ costs and formulas are in [`AI_TRAINING.md`](AI_TRAINING.md).
 - Training/deployment persist in save schema v10. Active jobs advance once per
   game day after component sales and before finance settlement. Deployment does
   not yet affect the market or reputation pipeline.
+
+## Devices and cloud (Stage 12)
+
+Stage 12 adds device configurators and cloud infrastructure. Full rules and
+formulas are in [`DEVICES_CLOUD.md`](DEVICES_CLOUD.md).
+
+- Devices reference canonical CPU, component, OS-release and AI-deployment
+  projects. They do not copy component specifications, so compatibility and
+  metrics always use the saved source projects.
+- Required slots are CPU + version, motherboard, RAM, SSD, and OS project +
+  release. Gaming additionally requires a GPU, servers require networking, and
+  AI devices require an AI accelerator, AI project and AI deployment.
+- The OS release must target the device platform or `universal`. Device saving
+  reuses both build compatibility and OS hardware-driver compatibility.
+- Device performance combines CPU/GPU/RAM/storage/network scores with OS release
+  quality. OS integration also uses ecosystem score and platform match; AI
+  capability combines deployment quality and accelerator score.
+- Power is component TDP plus platform overhead; thermal load uses a type-specific
+  capacity. Efficiency, reliability and compatibility are bounded game scores.
+- Overall device score uses type-specific weights (desktop favors CPU/OS, gaming
+  favors GPU, server favors networking/reliability, AI device favors AI).
+- Ecosystem synergy combines CPU 15%, GPU 10%, AI 20%, OS integration 20%,
+  application coverage 20%, network 5% and platform match 10%.
+- Cloud projects reference a saved server device/version and add data centers,
+  servers per center, storage, network, AI units and redundancy. Compute, memory,
+  AI TFLOPS, availability, efficiency, daily operating cost, capex and capacity
+  are derived from the server device rather than duplicated.
+- Device and cloud projects persist in save schema v11 but are not yet sold in the
+  daily market pipeline. They are explicitly presented as game simulations.

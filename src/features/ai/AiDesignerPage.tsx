@@ -77,6 +77,7 @@ interface AiDesignerPageProps {
     type: AiOptimizationType,
   ) => Promise<boolean>;
   onDeployModel?: (projectId: string, trainingJobId: string) => Promise<boolean>;
+  onOpenDevices?: () => void;
 }
 
 type PendingAction =
@@ -127,6 +128,7 @@ export function AiDesignerPage({
   onStartTraining,
   onApplyOptimization,
   onDeployModel,
+  onOpenDevices = () => undefined,
 }: AiDesignerPageProps) {
   const locale = state.settings.locale;
   const t = translations[locale];
@@ -533,7 +535,9 @@ export function AiDesignerPage({
         onOpenComponents={onOpenComponents}
         onOpenCpu={onOpenCpu}
         onOpenOs={onOpenOs}
+        onOpenDevices={onOpenDevices}
         osLabel={t.productWorkspace.os}
+        devicesLabel={t.productWorkspace.devices}
       />
 
       <section className="ai-simulation-banner" role="note" aria-labelledby="ai-simulation-title">

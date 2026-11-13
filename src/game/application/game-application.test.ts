@@ -1,8 +1,21 @@
 import { describe, expect, it } from "vitest";
 import type { GameState } from "../models/game-state";
-import { createDefaultCpuConfiguration } from "../models/cpu";
-import { createDefaultComponentConfiguration, type GpuConfiguration } from "../models/components";
-import { createDefaultOsConfiguration } from "../models/os";
+import { createInitialGameState } from "../models/game-state";
+import { createCpuProject, createDefaultCpuConfiguration } from "../models/cpu";
+import {
+  createComponentProject,
+  createDefaultComponentConfiguration,
+  type ComponentConfiguration,
+  type ComponentType,
+  type GpuConfiguration,
+} from "../models/components";
+import { createDefaultOsConfiguration, createOsProject } from "../models/os";
+import {
+  buildSuggestedDeviceConfiguration,
+  createDeviceProject,
+  type DeviceReferenceContext,
+} from "../models/devices";
+import { buildSuggestedCloudConfiguration } from "../models/cloud";
 import { createDefaultAiConfiguration, createDefaultAiDataset } from "../models/ai";
 import { getFinanceDailyRecord } from "../models/finance";
 import { createGameApplication } from "./game-application";
@@ -268,6 +281,84 @@ describe("game application commands", () => {
     });
     expect(reloaded.aiProjects[0]?.deployments[0]?.id).toBe("ai-deployment-1");
     expect(reloaded.company.balance).toBe(deployed.company.balance);
+  });
+
+  it("persists device and cloud projects with canonical component references", async () => {
+    const repository = new MemoryGameStateRepository();
+    const application = createGameApplication(repository);
+    const base = createInitialGameState();
+    const osConfiguration = {
+      ...createDefaultOsConfiguration(),
+      targetPlatform: "universal" as const,
+      driverFramework: "acpi" as const,
+    };
+    const osBase = createOsProject("os-1", "Dynasty Everywhere", osConfiguration, base.gameDate);
+    const osProjects = [{
+      ...osBase,
+      releases: [{
+        id: "os-release-1",
+        version: 1,
+        stage: "stable" as const,
+        createdOn: base.gameDate,
+        configuration: osConfiguration,
+        qualityScore: 60,
+        appealScore: 55,
+        costUsd: 80_000,
+      }],
+    }];
+    const context: DeviceReferenceContext = {
+      cpuProjects: [createCpuProject("cpu-1", "Dynasty Core", {
+        ...createDefaultCpuConfiguration(),
+        memoryStandard: "ddr",
+      }, base.gameDate)],
+      componentProjects: (["motherboard", "ram", "ssd", "networking"] as ComponentType[])
+        .map((type) => createComponentProject(
+          `component-${type}`,
+          `${type} project`,
+          type,
+          type === "motherboard"
+            ? ({ ...createDefaultComponentConfiguration("motherboard"), pcieGeneration: 3 } as ComponentConfiguration)
+            : createDefaultComponentConfiguration(type),
+          base.gameDate,
+        )),
+      osProjects,
+      aiProjects: [],
+    };
+    const serverConfiguration = {
+      ...buildSuggestedDeviceConfiguration("server", context),
+      gpuProjectId: null,
+      aiAcceleratorProjectId: null,
+    };
+    const server = createDeviceProject("device-1", "Dynasty Server", serverConfiguration, base.gameDate);
+    repository.state = {
+      ...base,
+      cpuProjects: [...context.cpuProjects],
+      componentProjects: [...context.componentProjects],
+      osProjects,
+      deviceProjects: [server],
+    };
+
+    await application.load();
+    const desktopConfiguration = {
+      ...buildSuggestedDeviceConfiguration("desktop", context),
+      gpuProjectId: null,
+      networkingProjectId: null,
+      aiAcceleratorProjectId: null,
+    };
+    await application.createDeviceProject("Dynasty Desktop", desktopConfiguration);
+    await application.createCloudProject(
+      "Dynasty Cloud",
+      buildSuggestedCloudConfiguration([server]),
+    );
+
+    const reloaded = await createGameApplication(repository).load();
+    const desktop = reloaded.deviceProjects.find((project) => project.name === "Dynasty Desktop");
+    const cloud = reloaded.cloudProjects[0];
+
+    expect(desktop?.configuration.cpuProjectId).toBe("cpu-1");
+    expect(desktop?.configuration.osReleaseId).toBe("os-release-1");
+    expect(cloud?.configuration.serverDeviceProjectId).toBe("device-1");
+    expect(reloaded.deviceProjects).toHaveLength(2);
   });
 
   it("posts research spending to the finance ledger", async () => {

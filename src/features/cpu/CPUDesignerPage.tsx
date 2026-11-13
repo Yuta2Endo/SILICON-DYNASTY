@@ -40,6 +40,7 @@ interface CPUDesignerPageProps {
   onOpenComponents: () => void;
   onOpenOs?: () => void;
   onOpenAi?: () => void;
+  onOpenDevices?: () => void;
 }
 
 type PendingAction =
@@ -55,6 +56,7 @@ export function CPUDesignerPage({
   onOpenComponents,
   onOpenOs = () => undefined,
   onOpenAi = () => undefined,
+  onOpenDevices = () => undefined,
 }: CPUDesignerPageProps) {
   const locale = state.settings.locale;
   const t = translations[locale];
@@ -242,8 +244,10 @@ export function CPUDesignerPage({
         onOpenCpu={() => undefined}
         onOpenOs={onOpenOs}
         onOpenAi={onOpenAi}
+        onOpenDevices={onOpenDevices}
         osLabel={t.productWorkspace.os}
         aiLabel={t.productWorkspace.ai}
+        devicesLabel={t.productWorkspace.devices}
       />
 
       <section className="cpu-project-panel">
