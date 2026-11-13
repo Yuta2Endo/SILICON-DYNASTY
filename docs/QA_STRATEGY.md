@@ -13,10 +13,10 @@ New game → create company → research technology → design CPU → benchmark
 Test each data type, corrupted data, interrupted writes, autosave restart, migrations, invalid imports and backup recovery.
 
 ## Mobile QA
-Screen sizes, safe areas, keyboard/forms, background/resume, Back handling, memory pressure, long sessions, large lists and chart performance. Android QA additionally covers signed APK/AAB install, cold start, offline launch after the first load, process death, WebView storage persistence, battery/heat and the device checklist in `ANDROID_RELEASE.md`.
+Screen sizes, safe areas, keyboard/forms, background/resume, Back handling, memory pressure, long sessions, large lists and chart performance. Android QA additionally covers signed APK/AAB install, cold start, offline launch after the first load, process death, WebView storage persistence, battery/heat and the device checklist in `ANDROID_RELEASE.md`. Plugin Stage 07 added desktop Playwright flows at 1000×700; they do not cover Android WebView. No physical Android device or Android profiling was available in Stage 07, so device QA remains pending.
 
 ## Commands
-`npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`. `test:e2e` is **NOT AVAILABLE** in this repository; do not report it as a pass. Android builds use the Gradle commands in `ANDROID_RELEASE.md`. Report exact output/status.
+`npm run typecheck`, `npm run lint`, `npm run test` (Vitest unit/integration plus deterministic fast-check property tests), `npm run test:e2e` (Playwright Chromium desktop flows), `npm run build`. Playwright requires `npx playwright install chromium` once and runs against the Vite dev server on port 4173. It is desktop-only and must not be reported as Android WebView coverage. Android builds use the Gradle commands in `ANDROID_RELEASE.md`. Report exact output/status.
 
 ## Definition of Done
 Acceptance criteria met, no known critical regression, checks actually executed, documentation updated, changed files listed, known issues recorded and no next stage started without approval. A release is not done until the signed Android artifact passes real-device install/launch and save-lifecycle QA.
