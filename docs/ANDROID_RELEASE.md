@@ -65,8 +65,9 @@ because there is no signature, and `jarsigner` reports the AAB as unsigned.
 - `sdkVersion:'24'`, `targetSdkVersion:'36'`;
 - label `SILICON DYNASTY`;
 - launchable activity `com.silicondynasty.game.MainActivity`;
-- permissions: `android.permission.INTERNET` and the generated
-  `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` only.
+- permissions: `android.permission.INTERNET`, `android.permission.VIBRATE` and the
+  generated `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` only. Native save export
+  uses the app cache and system share sheet, so it adds no storage permission.
 
 ## Signing
 
@@ -131,7 +132,11 @@ For release testing, sign the APK first and install the signed file. Use
 - The game autosaves after every successful command.
 - IndexedDB is the primary store; localStorage is the fallback.
 - Manual slots, backup, JSON import/export and recovery are available in
-  Settings.
+  Settings. Android exports write a UTF-8 JSON file to the app cache and open
+  the system share sheet; web exports use a normal browser download.
+- The Android Back button closes the main menu first, cancels an unsaved-draft
+  navigation prompt, returns to the dashboard, and exits only from the
+  dashboard root. Returning to the foreground refreshes save metadata.
 - A normal reload, app restart or process recreation loads the latest autosave.
 - Android WebView storage survives background/resume and normal restarts.
 - Clearing app data or uninstalling the app deletes local saves. There is no
@@ -171,7 +176,10 @@ install/lifecycle check. Do not treat desktop numbers as Android profiling.
 - [x] Force-stop the app, relaunch and confirm the save survives.
 - [ ] Test a manual slot save/load and backup restore.
 - [ ] Test export and import, including an invalid file.
-- [ ] Test Back navigation and the unsaved-draft warning.
+- The Android Back button closes the main menu first, cancels an unsaved-draft
+  navigation prompt, returns to the dashboard, and exits only from the
+  dashboard root. Returning to the foreground refreshes save metadata.
+- [ ] Verify Android Back/menu/draft/dashboard/exit behavior on a device.
 - [ ] Run the core loop: CPU, component, OS, AI, device, market, finance.
 - [ ] Check portrait/landscape layout, safe areas and 44 px touch targets.
 - [ ] Check long-session memory, heat and battery behavior.

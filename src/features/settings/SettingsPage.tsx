@@ -24,6 +24,7 @@ import {
 } from "../../storage/repositories/SaveManagement";
 import { GameJourney } from "./GameJourney";
 import { MAX_SAVE_IMPORT_BYTES } from "../../game/application/save-transfer";
+import { exportSaveWithNativeShare } from "../../native/save-file";
 
 interface SettingsPageProps {
   state: GameState;
@@ -153,12 +154,18 @@ export function SettingsPage({
         throw new Error("Export failed.");
       }
 
+      const fileName = `silicon-dynasty-${state.gameDate}.json`;
+      if (await exportSaveWithNativeShare(serialized, fileName)) {
+        setFeedback({ tone: "success", text: copy.exportSuccess });
+        return;
+      }
+
       if (typeof URL.createObjectURL === "function") {
         const blob = new Blob([serialized], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement("a");
         anchor.href = url;
-        anchor.download = `silicon-dynasty-${state.gameDate}.json`;
+        anchor.download = fileName;
         anchor.click();
         URL.revokeObjectURL(url);
       }

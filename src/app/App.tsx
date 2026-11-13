@@ -13,6 +13,7 @@ import { translations } from "../localization/messages";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { type ScreenId } from "./navigation";
 import { useGameSession } from "./useGameSession";
+import { exitNativeApp, registerNativeLifecycle } from "../native/app-lifecycle";
 
 const CompanyPage = lazy(() => import("../features/company/CompanyPage").then((module) => ({ default: module.CompanyPage })));
 const ResearchPage = lazy(() => import("../features/research/ResearchPage").then((module) => ({ default: module.ResearchPage })));
@@ -115,6 +116,29 @@ export function App({ application, initialMenuOpen }: AppProps = {}) {
   }, [activeScreen, hasUnsavedCpuDraft, hasUnsavedComponentDraft, hasUnsavedOsDraft, hasUnsavedAiDraft, hasUnsavedDeviceDraft]);
 
   const cancelNavigation = useCallback(() => setPendingScreen(null), []);
+
+  useEffect(() => registerNativeLifecycle({
+    onBack: () => {
+      if (isMainMenuOpen) {
+        setIsMainMenuOpen(false);
+        return;
+      }
+      if (pendingScreen) {
+        setPendingScreen(null);
+        return;
+      }
+      if (activeScreen !== "dashboard") {
+        requestNavigation("dashboard");
+        return;
+      }
+      void exitNativeApp();
+    },
+    onActiveChange: (isActive) => {
+      if (isActive) {
+        void refreshSaveOverview();
+      }
+    },
+  }), [activeScreen, isMainMenuOpen, pendingScreen, refreshSaveOverview, requestNavigation]);
 
   const openSettingsFromMenu = useCallback(() => {
     setIsMainMenuOpen(false);
