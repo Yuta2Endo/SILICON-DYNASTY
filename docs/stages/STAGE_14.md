@@ -1,7 +1,7 @@
 # STAGE 14 — Android Release & Final QA
 
-**Project:** SILICON DYNASTY  
-**Status:** NOT STARTED  
+**Project:** SILICON DYNASTY
+**Status:** PARTIALLY COMPLETED
 **Execution rule:** complete this stage only, then stop for approval.
 
 ## Objective
@@ -19,10 +19,15 @@ Prepare Capacitor Android release, optimization, device testing, performance/mem
 9. Stop. Do not begin the next stage without separate authorization.
 
 ## Acceptance criteria
-- [ ] Production and Android builds pass.
+- [x] Production and Android builds pass.
 - [ ] Install and launch are verified on a real device.
 - [ ] Saves survive background/resume and restart.
-- [ ] Release notes and known limitations are documented.
+- [x] Release notes and known limitations are documented.
+
+**Status note:** Android debug/release APK and AAB builds pass, and production-web
+save persistence across reload/restart was verified. No physical Android device
+was attached (`adb devices` empty), so real-device install/launch and Android
+background/resume verification remain blocked. See `STAGE_14_REPORT.md`.
 
 ## Engineering constraints
 - React + TypeScript strict + Vite + Capacitor.
