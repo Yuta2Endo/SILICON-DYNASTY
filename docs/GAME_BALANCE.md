@@ -137,3 +137,30 @@ rules and formulas are in [`OS_SYSTEMS.md`](OS_SYSTEMS.md).
   rolling updates need a package manager; all advanced options are year-gated.
 - System fields persist in save schema v7. Version 6 OS projects migrate with 1995
   defaults. OS projects still do not participate in the daily market/finance pipeline.
+
+## OS interface and software ecosystem (Stage 09)
+
+Stage 09 adds platform profiles, GUI/SDK/API/developer-tools/app-store choices,
+six catalog applications and a staged OS release lifecycle. Full rules and tables
+are in [`OS_ECOSYSTEM.md`](OS_ECOSYSTEM.md).
+
+- Ecosystem scores are fixed capability profiles: GUI 20/55/78/92, SDK 10/45/75/92,
+  API 35/62/58/82, developer tools 20/48/72/90 and app store 10/50/75/68.
+- Ecosystem score is a weighted blend of SDK 32%, API 23%, GUI 20%, developer
+  tools 15% and app store 10%.
+- Application coverage is the share of the six catalog applications whose GUI,
+  SDK, API, architecture, memory, security and developer-tools requirements are
+  met. Coverage contributes 25% of platform appeal; the kernel contributes 30%,
+  ecosystem score 30% and app-store score 15%.
+- Applications use real calculated kernel footprint and security. Address width
+  caps usable memory at 16 MB, 4,096 MB or 1,000,000 MB.
+- Release stages are Alpha, Beta, RC and Stable with costs $25k, $35k, $50k and
+  $80k and quality/appeal factors 0.78, 0.88, 0.95 and 1.0. Advancing a release
+  from Alpha to Stable costs $190k and posts to the finance ledger.
+- Release quality blends kernel overall 40% with platform appeal 60%, then applies
+  the stage factor. Appeal is platform appeal times the stage factor.
+- Constraints: app stores, IDEs and suites require an SDK; suites require a full
+  or professional SDK; web APIs require a non-basic network stack. All advanced
+  options are year-gated.
+- OS releases persist in save schema v8. They remain a design/simulation feature
+  and do not enter the daily market, finance or reputation pipeline.

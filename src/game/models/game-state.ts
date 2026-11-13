@@ -20,9 +20,9 @@ import {
   type ResearchState,
 } from "./research";
 
-export const SAVE_SCHEMA_VERSION = 7 as const;
+export const SAVE_SCHEMA_VERSION = 8 as const;
 
-const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, SAVE_SCHEMA_VERSION] as const;
+const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7, SAVE_SCHEMA_VERSION] as const;
 
 export type Locale = "ru" | "en";
 export type Theme = "light" | "dark";
@@ -188,6 +188,8 @@ export function parseGameState(value: unknown): GameState {
       osProjects = value.osProjects.map((project) =>
         parseOsProject(project, value.gameDate as string, {
           allowMissingSystems: sourceSchemaVersion < 7,
+          allowMissingEcosystem: sourceSchemaVersion < 8,
+          allowMissingReleases: sourceSchemaVersion < 8,
         }),
       );
     } catch {

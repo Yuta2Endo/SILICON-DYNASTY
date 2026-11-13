@@ -34,6 +34,13 @@ export const OS_ENCRYPTION_OPTIONS = ["none", "disk", "full-disk", "hardware"] a
 export const OS_UPDATE_MODEL_OPTIONS = ["manual", "package-manager", "staged", "rolling"] as const;
 export const OS_PACKAGE_MANAGER_OPTIONS = ["none", "centralized", "signed", "decentralized"] as const;
 export const OS_DIAGNOSTICS_OPTIONS = ["none", "logs", "crash-dumps", "telemetry"] as const;
+export const OS_GUI_OPTIONS = ["cli", "desktop-shell", "modern-desktop", "adaptive"] as const;
+export const OS_SDK_OPTIONS = ["none", "basic", "full", "professional"] as const;
+export const OS_API_OPTIONS = ["proprietary", "posix", "web", "hybrid"] as const;
+export const OS_DEVELOPER_TOOLS_OPTIONS = ["none", "compiler", "ide", "suite"] as const;
+export const OS_APP_STORE_OPTIONS = ["none", "curated", "open", "enterprise"] as const;
+export const OS_RELEASE_STAGE_OPTIONS = ["alpha", "beta", "rc", "stable"] as const;
+export const OS_PLATFORM_PROFILE_OPTIONS = ["desktop", "mobile", "server", "gaming"] as const;
 
 export type OsPlatform = (typeof OS_PLATFORM_OPTIONS)[number];
 export type OsKernelType = (typeof OS_KERNEL_OPTIONS)[number];
@@ -52,6 +59,13 @@ export type OsEncryption = (typeof OS_ENCRYPTION_OPTIONS)[number];
 export type OsUpdateModel = (typeof OS_UPDATE_MODEL_OPTIONS)[number];
 export type OsPackageManager = (typeof OS_PACKAGE_MANAGER_OPTIONS)[number];
 export type OsDiagnostics = (typeof OS_DIAGNOSTICS_OPTIONS)[number];
+export type OsGui = (typeof OS_GUI_OPTIONS)[number];
+export type OsSdk = (typeof OS_SDK_OPTIONS)[number];
+export type OsApi = (typeof OS_API_OPTIONS)[number];
+export type OsDeveloperTools = (typeof OS_DEVELOPER_TOOLS_OPTIONS)[number];
+export type OsAppStore = (typeof OS_APP_STORE_OPTIONS)[number];
+export type OsReleaseStage = (typeof OS_RELEASE_STAGE_OPTIONS)[number];
+export type OsPlatformProfile = (typeof OS_PLATFORM_PROFILE_OPTIONS)[number];
 
 export interface OsConfiguration {
   targetPlatform: OsPlatform;
@@ -75,6 +89,11 @@ export interface OsConfiguration {
   updateModel: OsUpdateModel;
   packageManager: OsPackageManager;
   diagnostics: OsDiagnostics;
+  gui: OsGui;
+  sdk: OsSdk;
+  api: OsApi;
+  developerTools: OsDeveloperTools;
+  appStore: OsAppStore;
 }
 
 export interface OsDesignVersion {
@@ -83,11 +102,23 @@ export interface OsDesignVersion {
   configuration: OsConfiguration;
 }
 
+export interface OsRelease {
+  id: string;
+  version: number;
+  stage: OsReleaseStage;
+  createdOn: string;
+  configuration: OsConfiguration;
+  qualityScore: number;
+  appealScore: number;
+  costUsd: number;
+}
+
 export interface OsProject {
   id: string;
   name: string;
   configuration: OsConfiguration;
   versions: OsDesignVersion[];
+  releases: OsRelease[];
 }
 
 export type OsConfigurationField = keyof OsConfiguration;
@@ -107,7 +138,11 @@ export type OsValidationIssue =
   | { code: "process-limit"; max: number }
   | { code: "filesystem-requires-64-bit" }
   | { code: "encryption-requires-security" }
-  | { code: "rolling-updates-require-package-manager" };
+  | { code: "rolling-updates-require-package-manager" }
+  | { code: "app-store-requires-sdk" }
+  | { code: "developer-tools-require-sdk" }
+  | { code: "suite-requires-full-sdk" }
+  | { code: "web-api-requires-network" };
 
 export interface OsConfigurationValidationResult {
   valid: boolean;
@@ -140,6 +175,17 @@ export const OS_MINIMUM_YEARS = {
   signedPackages: 2002,
   decentralizedPackages: 2012,
   telemetry: 2008,
+  modernDesktop: 2000,
+  adaptiveGui: 2008,
+  fullSdk: 1998,
+  professionalSdk: 2005,
+  webApi: 1997,
+  hybridApi: 2003,
+  ideTools: 1997,
+  suiteTools: 2004,
+  curatedStore: 1999,
+  openStore: 2003,
+  enterpriseStore: 2007,
 } as const;
 
 export const OS_PROCESS_LIMITS_BY_ADDRESS_BITS: Record<OsAddressBits, number> = {
@@ -178,7 +224,68 @@ export function createDefaultOsConfiguration(): OsConfiguration {
     updateModel: "manual",
     packageManager: "none",
     diagnostics: "logs",
+    gui: "cli",
+    sdk: "basic",
+    api: "proprietary",
+    developerTools: "compiler",
+    appStore: "none",
   };
+}
+
+export function createOsPlatformProfileConfiguration(profile: OsPlatformProfile): OsConfiguration {
+  const defaults = createDefaultOsConfiguration();
+
+  switch (profile) {
+    case "mobile":
+      return cloneOsConfiguration({
+        ...defaults,
+        targetPlatform: "mobile",
+        kernelType: "microkernel",
+        scheduler: "energy-aware",
+        ipcModel: "message-passing",
+        syscallCount: 96,
+        moduleSupport: "user-space",
+        driverModel: "user-space",
+        maxProcesses: 256,
+        supportedArchitectures: ["arm"],
+        filesystem: "ext2",
+        gui: "desktop-shell",
+      });
+    case "server":
+      return cloneOsConfiguration({
+        ...defaults,
+        targetPlatform: "server",
+        scheduler: "priority",
+        ipcModel: "message-passing",
+        syscallCount: 256,
+        maxProcesses: 4_096,
+        filesystem: "ext2",
+        driverFramework: "acpi",
+        networkStack: "tcp-ip",
+        packageManager: "centralized",
+        diagnostics: "crash-dumps",
+        api: "posix",
+      });
+    case "gaming":
+      return cloneOsConfiguration({
+        ...defaults,
+        targetPlatform: "gaming",
+        kernelType: "hybrid",
+        scheduler: "priority",
+        ipcModel: "shared-memory",
+        syscallCount: 256,
+        driverModel: "hybrid",
+        maxProcesses: 1_024,
+        driverFramework: "acpi",
+        gui: "desktop-shell",
+      });
+    case "desktop":
+    default:
+      return cloneOsConfiguration({
+        ...defaults,
+        gui: "desktop-shell",
+      });
+  }
 }
 
 export function validateOsProjectName(name: string): OsProjectNameIssue | null {
@@ -251,6 +358,21 @@ export function validateOsConfiguration(
   }
   if (!isOsDiagnostics(configuration.diagnostics)) {
     errors.diagnostics = { code: "invalid-option" };
+  }
+  if (!isOsGui(configuration.gui)) {
+    errors.gui = { code: "invalid-option" };
+  }
+  if (!isOsSdk(configuration.sdk)) {
+    errors.sdk = { code: "invalid-option" };
+  }
+  if (!isOsApi(configuration.api)) {
+    errors.api = { code: "invalid-option" };
+  }
+  if (!isOsDeveloperTools(configuration.developerTools)) {
+    errors.developerTools = { code: "invalid-option" };
+  }
+  if (!isOsAppStore(configuration.appStore)) {
+    errors.appStore = { code: "invalid-option" };
   }
   if (!isOsAddressBits(configuration.addressBits)) {
     errors.addressBits = { code: "invalid-option" };
@@ -352,6 +474,26 @@ export function validateOsConfiguration(
     errors.updateModel = { code: "rolling-updates-require-package-manager" };
   }
 
+  if (configuration.appStore !== "none" && configuration.sdk === "none") {
+    errors.appStore = { code: "app-store-requires-sdk" };
+  }
+
+  if (configuration.developerTools !== "none" && configuration.sdk === "none") {
+    errors.developerTools = { code: "developer-tools-require-sdk" };
+  }
+
+  if (
+    configuration.developerTools === "suite"
+    && configuration.sdk !== "full"
+    && configuration.sdk !== "professional"
+  ) {
+    errors.developerTools = { code: "suite-requires-full-sdk" };
+  }
+
+  if (configuration.api === "web" && configuration.networkStack === "basic") {
+    errors.api = { code: "web-api-requires-network" };
+  }
+
   if (options.currentYear !== undefined) {
     if (
       configuration.bootloader === "coreboot"
@@ -425,6 +567,39 @@ export function validateOsConfiguration(
     if (configuration.diagnostics === "telemetry" && options.currentYear < OS_MINIMUM_YEARS.telemetry) {
       errors.diagnostics = { code: "future-technology", minYear: OS_MINIMUM_YEARS.telemetry };
     }
+    if (configuration.gui === "modern-desktop" && options.currentYear < OS_MINIMUM_YEARS.modernDesktop) {
+      errors.gui = { code: "future-technology", minYear: OS_MINIMUM_YEARS.modernDesktop };
+    }
+    if (configuration.gui === "adaptive" && options.currentYear < OS_MINIMUM_YEARS.adaptiveGui) {
+      errors.gui = { code: "future-technology", minYear: OS_MINIMUM_YEARS.adaptiveGui };
+    }
+    if (configuration.sdk === "full" && options.currentYear < OS_MINIMUM_YEARS.fullSdk) {
+      errors.sdk = { code: "future-technology", minYear: OS_MINIMUM_YEARS.fullSdk };
+    }
+    if (configuration.sdk === "professional" && options.currentYear < OS_MINIMUM_YEARS.professionalSdk) {
+      errors.sdk = { code: "future-technology", minYear: OS_MINIMUM_YEARS.professionalSdk };
+    }
+    if (configuration.api === "web" && options.currentYear < OS_MINIMUM_YEARS.webApi) {
+      errors.api = { code: "future-technology", minYear: OS_MINIMUM_YEARS.webApi };
+    }
+    if (configuration.api === "hybrid" && options.currentYear < OS_MINIMUM_YEARS.hybridApi) {
+      errors.api = { code: "future-technology", minYear: OS_MINIMUM_YEARS.hybridApi };
+    }
+    if (configuration.developerTools === "ide" && options.currentYear < OS_MINIMUM_YEARS.ideTools) {
+      errors.developerTools = { code: "future-technology", minYear: OS_MINIMUM_YEARS.ideTools };
+    }
+    if (configuration.developerTools === "suite" && options.currentYear < OS_MINIMUM_YEARS.suiteTools) {
+      errors.developerTools = { code: "future-technology", minYear: OS_MINIMUM_YEARS.suiteTools };
+    }
+    if (configuration.appStore === "curated" && options.currentYear < OS_MINIMUM_YEARS.curatedStore) {
+      errors.appStore = { code: "future-technology", minYear: OS_MINIMUM_YEARS.curatedStore };
+    }
+    if (configuration.appStore === "open" && options.currentYear < OS_MINIMUM_YEARS.openStore) {
+      errors.appStore = { code: "future-technology", minYear: OS_MINIMUM_YEARS.openStore };
+    }
+    if (configuration.appStore === "enterprise" && options.currentYear < OS_MINIMUM_YEARS.enterpriseStore) {
+      errors.appStore = { code: "future-technology", minYear: OS_MINIMUM_YEARS.enterpriseStore };
+    }
   }
 
   return { valid: Object.keys(errors).length === 0, errors };
@@ -455,6 +630,7 @@ export function createOsProject(
       savedOn,
       configuration: cloneOsConfiguration(configuration),
     }],
+    releases: [],
   };
 }
 
@@ -497,7 +673,7 @@ export function osConfigurationsEqual(left: OsConfiguration, right: OsConfigurat
 
 export function parseOsConfiguration(
   value: unknown,
-  options: { allowMissingSystems?: boolean } = {},
+  options: { allowMissingSystems?: boolean; allowMissingEcosystem?: boolean } = {},
 ): OsConfiguration {
   if (!isRecord(value)) {
     throw new InvalidOsDataError("OS configuration is invalid.");
@@ -506,6 +682,8 @@ export function parseOsConfiguration(
   const defaults = createDefaultOsConfiguration();
   const missingSystemValue = (key: keyof OsConfiguration): boolean =>
     options.allowMissingSystems === true && value[key] === undefined;
+  const missingEcosystemValue = (key: keyof OsConfiguration): boolean =>
+    options.allowMissingEcosystem === true && value[key] === undefined;
   const systemFields: Array<keyof OsConfiguration> = [
     "filesystem",
     "driverFramework",
@@ -515,6 +693,13 @@ export function parseOsConfiguration(
     "updateModel",
     "packageManager",
     "diagnostics",
+  ];
+  const ecosystemFields: Array<keyof OsConfiguration> = [
+    "gui",
+    "sdk",
+    "api",
+    "developerTools",
+    "appStore",
   ];
 
   if (
@@ -533,6 +718,7 @@ export function parseOsConfiguration(
     || !Array.isArray(value.supportedArchitectures)
     || !value.supportedArchitectures.every((entry) => typeof entry === "string")
     || systemFields.some((key) => typeof value[key] !== "string" && !missingSystemValue(key))
+    || ecosystemFields.some((key) => typeof value[key] !== "string" && !missingEcosystemValue(key))
   ) {
     throw new InvalidOsDataError("OS configuration is incomplete.");
   }
@@ -559,6 +745,11 @@ export function parseOsConfiguration(
     updateModel: (value.updateModel ?? defaults.updateModel) as OsUpdateModel,
     packageManager: (value.packageManager ?? defaults.packageManager) as OsPackageManager,
     diagnostics: (value.diagnostics ?? defaults.diagnostics) as OsDiagnostics,
+    gui: (value.gui ?? defaults.gui) as OsGui,
+    sdk: (value.sdk ?? defaults.sdk) as OsSdk,
+    api: (value.api ?? defaults.api) as OsApi,
+    developerTools: (value.developerTools ?? defaults.developerTools) as OsDeveloperTools,
+    appStore: (value.appStore ?? defaults.appStore) as OsAppStore,
   };
 
   const validation = validateOsConfiguration(configuration);
@@ -572,7 +763,11 @@ export function parseOsConfiguration(
 export function parseOsProject(
   value: unknown,
   currentDate: string,
-  options: { allowMissingSystems?: boolean } = {},
+  options: {
+    allowMissingSystems?: boolean;
+    allowMissingEcosystem?: boolean;
+    allowMissingReleases?: boolean;
+  } = {},
 ): OsProject {
   if (!isRecord(value)) {
     throw new InvalidOsDataError("OS project data is invalid.");
@@ -632,11 +827,76 @@ export function parseOsProject(
     throw new InvalidOsDataError("OS project configuration does not match its latest saved version.");
   }
 
+  let releases: OsRelease[] = [];
+  if (value.releases !== undefined || options.allowMissingReleases !== true) {
+    if (!Array.isArray(value.releases)) {
+      throw new InvalidOsDataError("OS project releases are invalid.");
+    }
+
+    releases = value.releases
+      .map((entry) => parseOsRelease(entry, currentYear, options))
+      .sort((left, right) => left.version - right.version);
+  }
+
+  if (new Set(releases.map((release) => release.id)).size !== releases.length) {
+    throw new InvalidOsDataError("OS release IDs are duplicated.");
+  }
+  if (new Set(releases.map((release) => release.version)).size !== releases.length) {
+    throw new InvalidOsDataError("OS release versions are duplicated.");
+  }
+
   return {
     id: value.id.trim(),
     name: value.name.trim(),
     configuration,
     versions,
+    releases,
+  };
+}
+
+function parseOsRelease(
+  value: unknown,
+  currentYear: number,
+  options: { allowMissingSystems?: boolean; allowMissingEcosystem?: boolean },
+): OsRelease {
+  if (
+    !isRecord(value)
+    || typeof value.id !== "string"
+    || value.id.trim().length === 0
+    || typeof value.version !== "number"
+    || !Number.isInteger(value.version)
+    || value.version < 1
+    || typeof value.stage !== "string"
+    || !isOsReleaseStage(value.stage)
+    || typeof value.createdOn !== "string"
+    || !isValidDateOnly(value.createdOn)
+    || typeof value.qualityScore !== "number"
+    || !Number.isFinite(value.qualityScore)
+    || value.qualityScore < 0
+    || value.qualityScore > 100
+    || typeof value.appealScore !== "number"
+    || !Number.isFinite(value.appealScore)
+    || value.appealScore < 0
+    || value.appealScore > 100
+    || typeof value.costUsd !== "number"
+    || !Number.isFinite(value.costUsd)
+    || value.costUsd < 0
+  ) {
+    throw new InvalidOsDataError("OS release is invalid.");
+  }
+
+  const configuration = parseOsConfiguration(value.configuration, options);
+  assertConfiguration(configuration, currentYear);
+
+  return {
+    id: value.id.trim(),
+    version: value.version,
+    stage: value.stage,
+    createdOn: value.createdOn,
+    configuration: cloneOsConfiguration(configuration),
+    qualityScore: value.qualityScore,
+    appealScore: value.appealScore,
+    costUsd: value.costUsd,
   };
 }
 
@@ -710,6 +970,30 @@ export function isOsPackageManager(value: unknown): value is OsPackageManager {
 
 export function isOsDiagnostics(value: unknown): value is OsDiagnostics {
   return typeof value === "string" && OS_DIAGNOSTICS_OPTIONS.includes(value as OsDiagnostics);
+}
+
+export function isOsGui(value: unknown): value is OsGui {
+  return typeof value === "string" && OS_GUI_OPTIONS.includes(value as OsGui);
+}
+
+export function isOsSdk(value: unknown): value is OsSdk {
+  return typeof value === "string" && OS_SDK_OPTIONS.includes(value as OsSdk);
+}
+
+export function isOsApi(value: unknown): value is OsApi {
+  return typeof value === "string" && OS_API_OPTIONS.includes(value as OsApi);
+}
+
+export function isOsDeveloperTools(value: unknown): value is OsDeveloperTools {
+  return typeof value === "string" && OS_DEVELOPER_TOOLS_OPTIONS.includes(value as OsDeveloperTools);
+}
+
+export function isOsAppStore(value: unknown): value is OsAppStore {
+  return typeof value === "string" && OS_APP_STORE_OPTIONS.includes(value as OsAppStore);
+}
+
+export function isOsReleaseStage(value: unknown): value is OsReleaseStage {
+  return typeof value === "string" && OS_RELEASE_STAGE_OPTIONS.includes(value as OsReleaseStage);
 }
 
 export type OsHardwareKind = "cpu" | ComponentType;

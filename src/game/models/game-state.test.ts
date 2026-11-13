@@ -14,7 +14,7 @@ describe("game state validation", () => {
     const state = createInitialGameState();
 
     expect(() => parseGameState({ ...state, gameDate: "1995-02-30" })).toThrow(InvalidGameStateError);
-    expect(() => parseGameState({ ...state, schemaVersion: 8 })).toThrow(InvalidGameStateError);
+    expect(() => parseGameState({ ...state, schemaVersion: 9 })).toThrow(InvalidGameStateError);
   });
 
   it("migrates a Stage 1 save without losing company, date, or settings", () => {
@@ -28,7 +28,7 @@ describe("game state validation", () => {
 
     const migrated = parseGameState(legacyStageOneSave);
 
-    expect(migrated.schemaVersion).toBe(7);
+    expect(migrated.schemaVersion).toBe(8);
     expect(migrated.gameDate).toBe(current.gameDate);
     expect(migrated.company).toEqual(current.company);
     expect(migrated.settings).toEqual(current.settings);
@@ -57,7 +57,7 @@ describe("game state validation", () => {
       settings: current.settings,
     });
 
-    expect(migrated.schemaVersion).toBe(7);
+    expect(migrated.schemaVersion).toBe(8);
     expect(migrated.cpuProjects).toEqual([cpuProject]);
     expect(migrated.componentProjects).toEqual([]);
     expect(migrated.osProjects).toEqual([]);
@@ -82,7 +82,7 @@ describe("game state validation", () => {
 
     const migrated = parseGameState(legacySave);
 
-    expect(migrated.schemaVersion).toBe(7);
+    expect(migrated.schemaVersion).toBe(8);
     expect(migrated.gameDate).toBe("1998-06-15");
     expect(migrated.osProjects).toEqual([]);
     expect(migrated.finance).toEqual(current.finance);
@@ -121,7 +121,7 @@ describe("game state validation", () => {
 
     const migrated = parseGameState(legacySave);
 
-    expect(migrated.schemaVersion).toBe(7);
+    expect(migrated.schemaVersion).toBe(8);
     expect(migrated.company.balance).toBe(123_456);
     expect(migrated.componentProjects).toEqual([]);
     expect(migrated.osProjects).toEqual([]);
@@ -151,12 +151,12 @@ describe("game state validation", () => {
     };
     const migrated = parseGameState(stageFiveState);
 
-    expect(migrated.schemaVersion).toBe(7);
+    expect(migrated.schemaVersion).toBe(8);
     expect(migrated.osProjects).toEqual([]);
     expect(migrated.componentProjects).toEqual(state.componentProjects);
   });
 
-  it("migrates schema-6 OS projects by filling the system-service defaults", () => {
+  it("migrates schema-6 OS projects by filling system-service and ecosystem defaults", () => {
     const state = createInitialGameState();
     const modern = createDefaultOsConfiguration();
     const legacyConfiguration = {
@@ -186,7 +186,7 @@ describe("game state validation", () => {
       osProjects: [project],
     });
 
-    expect(migrated.schemaVersion).toBe(7);
+    expect(migrated.schemaVersion).toBe(8);
     expect(migrated.osProjects[0]?.configuration).toEqual(
       expect.objectContaining({
         filesystem: "fat",
@@ -197,8 +197,55 @@ describe("game state validation", () => {
         updateModel: "manual",
         packageManager: "none",
         diagnostics: "logs",
+        gui: "cli",
+        sdk: "basic",
+        api: "proprietary",
+        developerTools: "compiler",
+        appStore: "none",
       }),
     );
+    expect(migrated.osProjects[0]?.releases).toEqual([]);
+  });
+
+  it("migrates schema-7 OS projects by filling ecosystem defaults and empty releases", () => {
+    const state = createInitialGameState();
+    const modern = createDefaultOsConfiguration();
+    const {
+      gui,
+      sdk,
+      api,
+      developerTools,
+      appStore,
+      ...legacyConfiguration
+    } = modern;
+    expect([gui, sdk, api, developerTools, appStore]).toEqual([
+      "cli",
+      "basic",
+      "proprietary",
+      "compiler",
+      "none",
+    ]);
+    const project = {
+      id: "os-1",
+      name: "Legacy Systems OS",
+      configuration: legacyConfiguration,
+      versions: [{ version: 1, savedOn: state.gameDate, configuration: legacyConfiguration }],
+    };
+    const migrated = parseGameState({
+      ...state,
+      schemaVersion: 7,
+      osProjects: [project],
+    });
+
+    expect(migrated.schemaVersion).toBe(8);
+    expect(migrated.osProjects[0]?.configuration).toEqual(expect.objectContaining({
+      gui: "cli",
+      sdk: "basic",
+      api: "proprietary",
+      developerTools: "compiler",
+      appStore: "none",
+    }));
+    expect(migrated.osProjects[0]?.releases).toEqual([]);
   });
 
   it("preserves valid OS projects in current saves", () => {

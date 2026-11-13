@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { createDefaultOsConfiguration, type OsConfiguration } from "../models/os";
-import { calculateOsKernelMetrics, evaluateOsRequirements } from "./os";
+import { checkOsApplicationCompatibility } from "../models/os-applications";
+import {
+  calculateOsEcosystemMetrics,
+  calculateOsKernelMetrics,
+  calculateOsReleaseMetrics,
+  evaluateOsRequirements,
+  getNextOsReleaseStage,
+  getOsReleaseStageCost,
+  OS_RELEASE_STAGE_COSTS_USD,
+} from "./os";
 
 function configuration(overrides: Partial<OsConfiguration> = {}): OsConfiguration {
   return { ...createDefaultOsConfiguration(), ...overrides };
@@ -107,5 +116,80 @@ describe("OS kernel metrics", () => {
 
     expect(sixtyFourBit.processCapacity).toBe(800_000);
     expect(capped.processCapacity).toBe(100_000);
+  });
+
+  it("models ecosystem scores, application coverage, and platform appeal", () => {
+    const initial = createDefaultOsConfiguration();
+    const initialEcosystem = calculateOsEcosystemMetrics(
+      initial,
+      calculateOsKernelMetrics(initial),
+    );
+    const expandedConfiguration = configuration({
+      filesystem: "zfs",
+      driverFramework: "certified",
+      networkStack: "advanced",
+      permissions: "capability",
+      encryption: "hardware",
+      updateModel: "rolling",
+      packageManager: "signed",
+      diagnostics: "telemetry",
+      addressBits: 64,
+      supportedArchitectures: ["x86"],
+      gui: "modern-desktop",
+      sdk: "professional",
+      api: "proprietary",
+      developerTools: "suite",
+      appStore: "open",
+    });
+    const expandedEcosystem = calculateOsEcosystemMetrics(
+      expandedConfiguration,
+      calculateOsKernelMetrics(expandedConfiguration),
+    );
+
+    expect(initialEcosystem.totalApplications).toBe(6);
+    expect(initialEcosystem.compatibleApplications).toBe(1);
+    expect(initialEcosystem.ecosystemScore).toBeGreaterThan(0);
+    expect(initialEcosystem.platformAppealScore).toBeGreaterThan(0);
+    expect(expandedEcosystem.compatibleApplications).toBe(5);
+    expect(expandedEcosystem.ecosystemScore).toBeGreaterThan(initialEcosystem.ecosystemScore);
+    expect(expandedEcosystem.platformAppealScore).toBeGreaterThan(
+      initialEcosystem.platformAppealScore,
+    );
+  });
+
+  it("checks application requirements against OS capabilities", () => {
+    const initial = createDefaultOsConfiguration();
+    const metrics = calculateOsKernelMetrics(initial);
+    const applications = checkOsApplicationCompatibility(initial, {
+      memoryFootprintMb: metrics.memoryFootprintMb,
+      securityScore: metrics.securityScore,
+    });
+
+    expect(applications.find((application) => application.applicationId === "notes")).toMatchObject({
+      compatible: true,
+      issues: [],
+    });
+    expect(
+      applications.find((application) => application.applicationId === "web-browser")?.issues,
+    ).toContain("gui-required");
+    expect(
+      applications.find((application) => application.applicationId === "enterprise-console")?.issues,
+    ).toEqual(expect.arrayContaining(["gui-required", "sdk-required", "api-unsupported"]));
+  });
+
+  it("models release stage costs and quality progression", () => {
+    const initial = createDefaultOsConfiguration();
+    const alpha = calculateOsReleaseMetrics(initial, "alpha");
+    const stable = calculateOsReleaseMetrics(initial, "stable");
+
+    expect(getNextOsReleaseStage("alpha")).toBe("beta");
+    expect(getNextOsReleaseStage("beta")).toBe("rc");
+    expect(getNextOsReleaseStage("rc")).toBe("stable");
+    expect(getNextOsReleaseStage("stable")).toBeNull();
+    expect(getOsReleaseStageCost("alpha")).toBe(OS_RELEASE_STAGE_COSTS_USD.alpha);
+    expect(getOsReleaseStageCost("stable")).toBe(OS_RELEASE_STAGE_COSTS_USD.stable);
+    expect(stable.qualityScore).toBeGreaterThan(alpha.qualityScore);
+    expect(stable.appealScore).toBeGreaterThan(alpha.appealScore);
+    expect(stable.qualityScore).toBeLessThanOrEqual(100);
   });
 });

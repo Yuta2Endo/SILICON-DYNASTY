@@ -1,13 +1,17 @@
 import {
   OS_PROCESS_LIMITS_BY_ADDRESS_BITS,
   type OsAddressBits,
+  type OsApi,
+  type OsAppStore,
   type OsBootloader,
   type OsConfiguration,
+  type OsDeveloperTools,
   type OsDiagnostics,
   type OsDriverFramework,
   type OsDriverModel,
   type OsEncryption,
   type OsFilesystem,
+  type OsGui,
   type OsIpcModel,
   type OsKernelType,
   type OsMemoryManager,
@@ -16,9 +20,14 @@ import {
   type OsPackageManager,
   type OsPermissionModel,
   type OsPlatform,
+  type OsReleaseStage,
   type OsScheduler,
+  type OsSdk,
   type OsUpdateModel,
 } from "../models/os";
+import {
+  checkOsApplicationCompatibility,
+} from "../models/os-applications";
 
 export interface OsKernelMetrics {
   bootTimeSeconds: number;
@@ -41,6 +50,24 @@ export interface OsKernelMetrics {
   annualMaintenanceCostUsd: number;
   updateLatencyDays: number;
   overallScore: number;
+}
+
+export interface OsEcosystemMetrics {
+  sdkScore: number;
+  apiScore: number;
+  guiScore: number;
+  developerToolsScore: number;
+  appStoreScore: number;
+  ecosystemScore: number;
+  compatibleApplications: number;
+  totalApplications: number;
+  applicationCoverage: number;
+  platformAppealScore: number;
+}
+
+export interface OsReleaseMetrics {
+  qualityScore: number;
+  appealScore: number;
 }
 
 export type OsRequirementMetric =
@@ -411,6 +438,136 @@ const OVERALL_WEIGHTS: Record<OsPlatform, Record<
   gaming: { performance: 0.34, stability: 0.14, security: 0.05, compatibility: 0.07, energy: 0.06, latency: 0.26, syscall: 0.08 },
   universal: { performance: 0.22, stability: 0.22, security: 0.15, compatibility: 0.2, energy: 0.09, latency: 0.07, syscall: 0.05 },
 };
+
+const GUI_PROFILES: Record<OsGui, number> = {
+  cli: 20,
+  "desktop-shell": 55,
+  "modern-desktop": 78,
+  adaptive: 92,
+};
+
+const SDK_PROFILES: Record<OsSdk, number> = {
+  none: 10,
+  basic: 45,
+  full: 75,
+  professional: 92,
+};
+
+const API_PROFILES: Record<OsApi, number> = {
+  proprietary: 35,
+  posix: 62,
+  web: 58,
+  hybrid: 82,
+};
+
+const DEVELOPER_TOOLS_PROFILES: Record<OsDeveloperTools, number> = {
+  none: 20,
+  compiler: 48,
+  ide: 72,
+  suite: 90,
+};
+
+const APP_STORE_PROFILES: Record<OsAppStore, number> = {
+  none: 10,
+  curated: 50,
+  open: 75,
+  enterprise: 68,
+};
+
+export const OS_RELEASE_STAGE_COSTS_USD: Record<OsReleaseStage, number> = {
+  alpha: 25_000,
+  beta: 35_000,
+  rc: 50_000,
+  stable: 80_000,
+};
+
+const OS_RELEASE_STAGE_ORDER = ["alpha", "beta", "rc", "stable"] as const;
+
+const RELEASE_STAGE_FACTORS: Record<OsReleaseStage, number> = {
+  alpha: 0.78,
+  beta: 0.88,
+  rc: 0.95,
+  stable: 1,
+};
+
+export function calculateOsEcosystemMetrics(
+  configuration: OsConfiguration,
+  kernelMetrics: OsKernelMetrics,
+): OsEcosystemMetrics {
+  const guiScore = GUI_PROFILES[configuration.gui];
+  const sdkScore = SDK_PROFILES[configuration.sdk];
+  const apiScore = API_PROFILES[configuration.api];
+  const developerToolsScore = DEVELOPER_TOOLS_PROFILES[configuration.developerTools];
+  const appStoreScore = APP_STORE_PROFILES[configuration.appStore];
+  const applications = checkOsApplicationCompatibility(configuration, {
+    memoryFootprintMb: kernelMetrics.memoryFootprintMb,
+    securityScore: kernelMetrics.securityScore,
+  });
+  const compatibleApplications = applications.filter((application) => application.compatible).length;
+  const totalApplications = applications.length;
+  const applicationCoverage = totalApplications === 0
+    ? 0
+    : (compatibleApplications / totalApplications) * 100;
+  const ecosystemScore = clamp(
+    sdkScore * 0.32
+      + apiScore * 0.23
+      + guiScore * 0.2
+      + developerToolsScore * 0.15
+      + appStoreScore * 0.1,
+    0,
+    100,
+  );
+  const platformAppealScore = clamp(
+    kernelMetrics.overallScore * 0.3
+      + ecosystemScore * 0.3
+      + applicationCoverage * 0.25
+      + appStoreScore * 0.15,
+    0,
+    100,
+  );
+
+  return {
+    sdkScore: round(sdkScore, 1),
+    apiScore: round(apiScore, 1),
+    guiScore: round(guiScore, 1),
+    developerToolsScore: round(developerToolsScore, 1),
+    appStoreScore: round(appStoreScore, 1),
+    ecosystemScore: round(ecosystemScore, 1),
+    compatibleApplications,
+    totalApplications,
+    applicationCoverage: round(applicationCoverage, 1),
+    platformAppealScore: round(platformAppealScore, 1),
+  };
+}
+
+export function getNextOsReleaseStage(stage: OsReleaseStage): OsReleaseStage | null {
+  const index = OS_RELEASE_STAGE_ORDER.indexOf(stage);
+  return index >= 0 && index < OS_RELEASE_STAGE_ORDER.length - 1
+    ? OS_RELEASE_STAGE_ORDER[index + 1] ?? null
+    : null;
+}
+
+export function getOsReleaseStageCost(stage: OsReleaseStage): number {
+  return OS_RELEASE_STAGE_COSTS_USD[stage];
+}
+
+export function calculateOsReleaseMetrics(
+  configuration: OsConfiguration,
+  stage: OsReleaseStage,
+): OsReleaseMetrics {
+  const kernelMetrics = calculateOsKernelMetrics(configuration);
+  const ecosystemMetrics = calculateOsEcosystemMetrics(configuration, kernelMetrics);
+  const factor = RELEASE_STAGE_FACTORS[stage];
+
+  return {
+    qualityScore: round(clamp(
+      (kernelMetrics.overallScore * 0.4 + ecosystemMetrics.platformAppealScore * 0.6) * factor,
+      0,
+      100,
+    ), 1),
+    appealScore: round(clamp(ecosystemMetrics.platformAppealScore * factor, 0, 100), 1),
+  };
+}
 
 export function calculateOsKernelMetrics(configuration: OsConfiguration): OsKernelMetrics {
   const kernel = KERNEL_PROFILES[configuration.kernelType];

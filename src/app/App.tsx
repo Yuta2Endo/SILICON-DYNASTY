@@ -202,6 +202,12 @@ export function App({ application }: AppProps = {}) {
           onSaveVersion={async (projectId, name, configuration) =>
             (await runCommand(() => gameApplication.saveOsVersion(projectId, name, configuration))) !== null
           }
+          onStartRelease={async (projectId) =>
+            (await runCommand(() => gameApplication.startOsRelease(projectId))) !== null
+          }
+          onAdvanceRelease={async (projectId, releaseId) =>
+            (await runCommand(() => gameApplication.advanceOsRelease(projectId, releaseId))) !== null
+          }
           state={state}
         />
       )}

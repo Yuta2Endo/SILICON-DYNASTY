@@ -45,6 +45,7 @@ import {
   updateComponentProductPrice,
   type ReleaseComponentProductInput,
 } from "../engine/component-market";
+import { advanceOsRelease, startOsRelease } from "../engine/os-release";
 import { advanceGameDay } from "../engine/time";
 import type { GameStateRepository } from "../../storage/repositories/GameStateRepository";
 
@@ -68,6 +69,8 @@ export interface GameApplication {
   ): Promise<GameState>;
   createOsProject(name: string, configuration: OsConfiguration): Promise<GameState>;
   saveOsVersion(projectId: string, name: string, configuration: OsConfiguration): Promise<GameState>;
+  startOsRelease(projectId: string): Promise<GameState>;
+  advanceOsRelease(projectId: string, releaseId: string): Promise<GameState>;
   releaseProduct(input: ReleaseProductInput): Promise<GameState>;
   releaseComponentProduct(input: ReleaseComponentProductInput): Promise<GameState>;
   updateComponentProductPrice(productId: string, priceUsd: number): Promise<GameState>;
@@ -254,6 +257,14 @@ export function createGameApplication(repository: GameStateRepository): GameAppl
       );
 
       return commit({ ...state, osProjects });
+    },
+
+    async startOsRelease(projectId) {
+      return commit(startOsRelease(await ensureLoaded(), projectId));
+    },
+
+    async advanceOsRelease(projectId, releaseId) {
+      return commit(advanceOsRelease(await ensureLoaded(), projectId, releaseId));
     },
 
     async updateProductPrice(productId, priceUsd) {

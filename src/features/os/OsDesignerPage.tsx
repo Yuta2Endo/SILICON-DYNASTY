@@ -18,13 +18,17 @@ import { MetricCard } from "../../components/MetricCard";
 import { ProductWorkspaceTabs } from "../../components/ProductWorkspaceTabs";
 import {
   OS_ADDRESS_BIT_OPTIONS,
+  OS_API_OPTIONS,
+  OS_APP_STORE_OPTIONS,
   OS_ARCHITECTURE_OPTIONS,
   OS_BOOTLOADER_OPTIONS,
+  OS_DEVELOPER_TOOLS_OPTIONS,
   OS_DIAGNOSTICS_OPTIONS,
   OS_DRIVER_FRAMEWORK_OPTIONS,
   OS_DRIVER_MODEL_OPTIONS,
   OS_ENCRYPTION_OPTIONS,
   OS_FILESYSTEM_OPTIONS,
+  OS_GUI_OPTIONS,
   OS_IPC_OPTIONS,
   OS_KERNEL_OPTIONS,
   OS_LIMITS,
@@ -34,24 +38,31 @@ import {
   OS_PACKAGE_MANAGER_OPTIONS,
   OS_PERMISSION_MODEL_OPTIONS,
   OS_PLATFORM_OPTIONS,
+  OS_PLATFORM_PROFILE_OPTIONS,
   OS_PROCESS_LIMITS_BY_ADDRESS_BITS,
   OS_SCHEDULER_OPTIONS,
+  OS_SDK_OPTIONS,
   OS_UPDATE_MODEL_OPTIONS,
   checkOsHardwareCompatibility,
   cloneOsConfiguration,
   createDefaultOsConfiguration,
+  createOsPlatformProfileConfiguration,
   osConfigurationsEqual,
   validateOsConfiguration,
   validateOsProjectName,
   type OsAddressBits,
+  type OsApi,
+  type OsAppStore,
   type OsBootloader,
   type OsConfiguration,
   type OsConfigurationField,
+  type OsDeveloperTools,
   type OsDiagnostics,
   type OsDriverFramework,
   type OsDriverModel,
   type OsEncryption,
   type OsFilesystem,
+  type OsGui,
   type OsHardwareTarget,
   type OsIpcModel,
   type OsKernelType,
@@ -61,18 +72,29 @@ import {
   type OsPackageManager,
   type OsPermissionModel,
   type OsPlatform,
+  type OsPlatformProfile,
   type OsScheduler,
+  type OsSdk,
   type OsUpdateModel,
   type OsValidationIssue,
 } from "../../game/models/os";
 import {
+  calculateOsEcosystemMetrics,
   calculateOsKernelMetrics,
   evaluateOsRequirements,
+  getNextOsReleaseStage,
+  type OsEcosystemMetrics,
   type OsKernelMetrics,
   type OsRequirementMetric,
   type OsRequirementResult,
 } from "../../game/formulas/os";
+import {
+  OS_APPLICATION_CATALOG,
+  checkOsApplicationCompatibility,
+  type OsApplicationCompatibility,
+} from "../../game/models/os-applications";
 import type { GameState } from "../../game/models/game-state";
+import type { OsProject } from "../../game/models/os";
 import { formatCurrency, formatDecimal, formatNumber } from "../../localization/formatters";
 import { translations } from "../../localization/messages";
 
@@ -82,6 +104,8 @@ interface OsDesignerPageProps {
   onDirtyChange: (isDirty: boolean) => void;
   onCreateProject: (name: string, configuration: OsConfiguration) => Promise<string | null>;
   onSaveVersion: (projectId: string, name: string, configuration: OsConfiguration) => Promise<boolean>;
+  onStartRelease?: (projectId: string) => Promise<boolean>;
+  onAdvanceRelease?: (projectId: string, releaseId: string) => Promise<boolean>;
   onOpenCpu: () => void;
   onOpenComponents: () => void;
 }
@@ -107,7 +131,12 @@ type SelectFieldKey =
   | "encryption"
   | "updateModel"
   | "packageManager"
-  | "diagnostics";
+  | "diagnostics"
+  | "gui"
+  | "sdk"
+  | "api"
+  | "developerTools"
+  | "appStore";
 
 interface SelectOption {
   value: string;
@@ -120,6 +149,8 @@ export function OsDesignerPage({
   onDirtyChange,
   onCreateProject,
   onSaveVersion,
+  onStartRelease,
+  onAdvanceRelease,
   onOpenCpu,
   onOpenComponents,
 }: OsDesignerPageProps) {
@@ -138,6 +169,7 @@ export function OsDesignerPage({
   const [showCreateValidation, setShowCreateValidation] = useState(false);
   const [showEditorValidation, setShowEditorValidation] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+  const [releaseError, setReleaseError] = useState<string | null>(null);
 
   const draftIsDirty = Boolean(
     selectedProject
@@ -157,6 +189,15 @@ export function OsDesignerPage({
   })();
   const requirements = metrics
     ? evaluateOsRequirements(draftConfiguration, metrics)
+    : [];
+  const ecosystemMetrics = metrics
+    ? calculateOsEcosystemMetrics(draftConfiguration, metrics)
+    : null;
+  const applicationCompatibility = metrics
+    ? checkOsApplicationCompatibility(draftConfiguration, {
+        memoryFootprintMb: metrics.memoryFootprintMb,
+        securityScore: metrics.securityScore,
+      })
     : [];
   const compatibilityTargets = buildHardwareTargets(state);
 
@@ -250,6 +291,34 @@ export function OsDesignerPage({
       return;
     }
     loadVersion(pendingAction.version);
+  }
+
+  function applyPlatformProfile(profile: OsPlatformProfile) {
+    setDraftConfiguration(createOsPlatformProfileConfiguration(profile));
+    setShowEditorValidation(false);
+    setReleaseError(null);
+  }
+
+  async function handleStartRelease() {
+    if (!selectedProject || !onStartRelease) {
+      return;
+    }
+    setReleaseError(null);
+    const succeeded = await onStartRelease(selectedProject.id);
+    if (!succeeded) {
+      setReleaseError(copy.releases.error);
+    }
+  }
+
+  async function handleAdvanceRelease(releaseId: string) {
+    if (!selectedProject || !onAdvanceRelease) {
+      return;
+    }
+    setReleaseError(null);
+    const succeeded = await onAdvanceRelease(selectedProject.id, releaseId);
+    if (!succeeded) {
+      setReleaseError(copy.releases.error);
+    }
   }
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {
@@ -350,6 +419,31 @@ export function OsDesignerPage({
           value,
           label: copy.options.diagnostics[value],
         }));
+      case "gui":
+        return OS_GUI_OPTIONS.map((value) => ({
+          value,
+          label: copy.options.gui[value],
+        }));
+      case "sdk":
+        return OS_SDK_OPTIONS.map((value) => ({
+          value,
+          label: copy.options.sdk[value],
+        }));
+      case "api":
+        return OS_API_OPTIONS.map((value) => ({
+          value,
+          label: copy.options.api[value],
+        }));
+      case "developerTools":
+        return OS_DEVELOPER_TOOLS_OPTIONS.map((value) => ({
+          value,
+          label: copy.options.developerTools[value],
+        }));
+      case "appStore":
+        return OS_APP_STORE_OPTIONS.map((value) => ({
+          value,
+          label: copy.options.appStore[value],
+        }));
       case "addressBits":
         return OS_ADDRESS_BIT_OPTIONS.map((value) => ({
           value: String(value),
@@ -415,6 +509,21 @@ export function OsDesignerPage({
       case "diagnostics":
         updateField("diagnostics", value as OsDiagnostics);
         return;
+      case "gui":
+        updateField("gui", value as OsGui);
+        return;
+      case "sdk":
+        updateField("sdk", value as OsSdk);
+        return;
+      case "api":
+        updateField("api", value as OsApi);
+        return;
+      case "developerTools":
+        updateField("developerTools", value as OsDeveloperTools);
+        return;
+      case "appStore":
+        updateField("appStore", value as OsAppStore);
+        return;
       case "addressBits":
         updateField("addressBits", Number(value) as OsAddressBits);
         return;
@@ -457,6 +566,14 @@ export function OsDesignerPage({
         return copy.validation.encryptionRequiresSecurity;
       case "rolling-updates-require-package-manager":
         return copy.validation.rollingUpdatesRequirePackageManager;
+      case "app-store-requires-sdk":
+        return copy.validation.appStoreRequiresSdk;
+      case "developer-tools-require-sdk":
+        return copy.validation.developerToolsRequireSdk;
+      case "suite-requires-full-sdk":
+        return copy.validation.suiteRequiresFullSdk;
+      case "web-api-requires-network":
+        return copy.validation.webApiRequiresNetwork;
     }
   }
 
@@ -581,6 +698,27 @@ export function OsDesignerPage({
               </span>
             </header>
 
+            <div className="os-profile-picker">
+              <div>
+                <strong>{copy.profiles.title}</strong>
+                <p>{copy.profiles.hint}</p>
+              </div>
+              <div className="os-profile-picker__buttons" role="group" aria-label={copy.profiles.title}>
+                {OS_PLATFORM_PROFILE_OPTIONS.map((profile) => (
+                  <button
+                    aria-pressed={draftConfiguration.targetPlatform === profile}
+                    className="segment-button"
+                    disabled={isSaving}
+                    key={profile}
+                    onClick={() => applyPlatformProfile(profile)}
+                    type="button"
+                  >
+                    {copy.profiles[profile]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="cpu-field">
               <label htmlFor="os-project-name">{copy.projectName}</label>
               <input
@@ -699,6 +837,18 @@ export function OsDesignerPage({
               </div>
             </fieldset>
 
+            <fieldset className="os-systems-fieldset os-ecosystem-fieldset">
+              <legend>{copy.ecosystemTitle}</legend>
+              <p className="os-systems-fieldset__hint">{copy.ecosystemHint}</p>
+              <div className="cpu-fields-grid">
+                {renderSelectField("gui")}
+                {renderSelectField("sdk")}
+                {renderSelectField("api")}
+                {renderSelectField("developerTools")}
+                {renderSelectField("appStore")}
+              </div>
+            </fieldset>
+
             <div className="cpu-editor-actions">
               <button
                 className="button button--primary"
@@ -718,8 +868,9 @@ export function OsDesignerPage({
             </div>
           </form>
 
-          {metrics && (
+          {metrics && ecosystemMetrics && (
             <MetricsPanel
+              ecosystem={ecosystemMetrics}
               metrics={metrics}
               locale={locale}
             />
@@ -736,6 +887,11 @@ export function OsDesignerPage({
             configuration={draftConfiguration}
             locale={locale}
             targets={compatibilityTargets}
+          />
+
+          <ApplicationCompatibilityPanel
+            locale={locale}
+            results={applicationCompatibility}
           />
 
           <section className="cpu-version-section">
@@ -762,6 +918,15 @@ export function OsDesignerPage({
               ))}
             </div>
           </section>
+
+          <ReleasePanel
+            error={releaseError}
+            isSaving={isSaving}
+            locale={locale}
+            onAdvanceRelease={onAdvanceRelease ? (releaseId) => void handleAdvanceRelease(releaseId) : undefined}
+            onStartRelease={onStartRelease ? () => void handleStartRelease() : undefined}
+            project={selectedProject}
+          />
         </>
       ) : (
         <section className="component-empty-state">
@@ -787,9 +952,11 @@ export function OsDesignerPage({
 
 function MetricsPanel({
   metrics,
+  ecosystem,
   locale,
 }: {
   metrics: OsKernelMetrics;
+  ecosystem: OsEcosystemMetrics;
   locale: GameState["settings"]["locale"];
 }) {
   const copy = translations[locale].os;
@@ -904,6 +1071,51 @@ function MetricsPanel({
       value: formatNumber(metrics.processCapacity, locale),
       icon: Boxes,
     },
+    {
+      label: copy.metrics.sdkScore,
+      value: formatDecimal(ecosystem.sdkScore, locale, 1),
+      icon: Cpu,
+    },
+    {
+      label: copy.metrics.apiScore,
+      value: formatDecimal(ecosystem.apiScore, locale, 1),
+      icon: Boxes,
+    },
+    {
+      label: copy.metrics.guiScore,
+      value: formatDecimal(ecosystem.guiScore, locale, 1),
+      icon: MonitorCog,
+    },
+    {
+      label: copy.metrics.developerToolsScore,
+      value: formatDecimal(ecosystem.developerToolsScore, locale, 1),
+      icon: Zap,
+    },
+    {
+      label: copy.metrics.appStoreScore,
+      value: formatDecimal(ecosystem.appStoreScore, locale, 1),
+      icon: Boxes,
+    },
+    {
+      label: copy.metrics.ecosystemScore,
+      value: formatDecimal(ecosystem.ecosystemScore, locale, 1),
+      icon: Activity,
+    },
+    {
+      label: copy.metrics.compatibleApplications,
+      value: `${formatNumber(ecosystem.compatibleApplications, locale)} / ${formatNumber(ecosystem.totalApplications, locale)}`,
+      icon: CheckCircle2,
+    },
+    {
+      label: copy.metrics.applicationCoverage,
+      value: `${formatDecimal(ecosystem.applicationCoverage, locale, 1)}%`,
+      icon: Boxes,
+    },
+    {
+      label: copy.metrics.platformAppealScore,
+      value: formatDecimal(ecosystem.platformAppealScore, locale, 1),
+      icon: Gamepad2,
+    },
   ];
 
   return (
@@ -990,6 +1202,163 @@ function RequirementsPanel({
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+function ApplicationCompatibilityPanel({
+  results,
+  locale,
+}: {
+  results: OsApplicationCompatibility[];
+  locale: GameState["settings"]["locale"];
+}) {
+  const copy = translations[locale].os;
+  const compatibleCount = results.filter((result) => result.compatible).length;
+
+  return (
+    <section className="os-applications-section" aria-labelledby="os-applications-title">
+      <div className="section-heading">
+        <span className="section-heading__icon" aria-hidden="true"><Boxes size={18} /></span>
+        <div>
+          <h2 id="os-applications-title">{copy.applications.title}</h2>
+          <p>{copy.applications.hint}</p>
+        </div>
+        <span className={`status-pill${compatibleCount === results.length ? " os-status-pill--ok" : ""}`}>
+          {compatibleCount}/{results.length}
+        </span>
+      </div>
+
+      <div className="os-application-list">
+        {results.map((result) => {
+          const application = OS_APPLICATION_CATALOG.find((entry) => entry.id === result.applicationId);
+          if (!application) {
+            return null;
+          }
+
+          return (
+            <article
+              className={`os-application-card${result.compatible ? " os-application-card--ok" : " os-application-card--failed"}`}
+              key={result.applicationId}
+            >
+              <header>
+                <div>
+                  <span className="os-application-category">
+                    {copy.applications.categories[result.category]}
+                  </span>
+                  <strong>{copy.applications.names[result.applicationId as keyof typeof copy.applications.names]}</strong>
+                </div>
+                <span className="status-pill">
+                  {result.compatible ? copy.applications.compatible : copy.applications.incompatible}
+                </span>
+              </header>
+              {result.issues.length > 0 && (
+                <ul>
+                  {result.issues.map((issue) => (
+                    <li key={issue}>
+                      <TriangleAlert aria-hidden="true" size={15} />
+                      <span>{copy.applications.issues[issue]}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function ReleasePanel({
+  project,
+  locale,
+  isSaving,
+  error,
+  onStartRelease,
+  onAdvanceRelease,
+}: {
+  project: OsProject;
+  locale: GameState["settings"]["locale"];
+  isSaving: boolean;
+  error: string | null;
+  onStartRelease: (() => void) | undefined;
+  onAdvanceRelease: ((releaseId: string) => void) | undefined;
+}) {
+  const copy = translations[locale].os;
+  const releases = [...project.releases].sort((left, right) => left.version - right.version);
+  const latest = releases[releases.length - 1] ?? null;
+  const nextStage = latest ? getNextOsReleaseStage(latest.stage) : "alpha";
+  const canStart = !latest && Boolean(onStartRelease);
+  const canAdvance = Boolean(latest && latest.stage !== "stable" && onAdvanceRelease);
+  const nextStageLabel = nextStage ? copy.releases.stages[nextStage] : copy.releases.stages.stable;
+
+  return (
+    <section className="os-release-section" aria-labelledby="os-release-title">
+      <div className="section-heading">
+        <span className="section-heading__icon" aria-hidden="true"><Gamepad2 size={18} /></span>
+        <div>
+          <h2 id="os-release-title">{copy.releases.title}</h2>
+          <p>{copy.releases.hint}</p>
+        </div>
+        {latest && <span className="status-pill">{copy.releases.stages[latest.stage]}</span>}
+      </div>
+
+      {releases.length === 0 ? (
+        <div className="os-release-empty">
+          <Gamepad2 aria-hidden="true" size={24} />
+          <div>
+            <strong>{copy.releases.emptyTitle}</strong>
+            <p>{copy.releases.emptyHint}</p>
+          </div>
+        </div>
+      ) : (
+        <div className="os-release-list">
+          {[...releases].reverse().map((release) => (
+            <article className="os-release-card" key={release.id}>
+              <header>
+                <div>
+                  <span className="os-release-version">
+                    {copy.releases.versionLabel} {release.version}
+                  </span>
+                  <strong>{copy.releases.stages[release.stage]}</strong>
+                  <span>{release.createdOn}</span>
+                </div>
+                <span className="status-pill">
+                  {copy.releases.quality}: {formatDecimal(release.qualityScore, locale, 1)}
+                </span>
+              </header>
+              <div className="os-release-stats">
+                <span>{copy.releases.appeal}: {formatDecimal(release.appealScore, locale, 1)}</span>
+                <span>{copy.releases.cost}: {formatCurrency(release.costUsd, locale)}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+
+      {error && <p className="inline-feedback inline-feedback--error" role="alert">{error}</p>}
+
+      <div className="os-release-actions">
+        {canStart && (
+          <button className="button button--primary" disabled={isSaving} onClick={onStartRelease} type="button">
+            {copy.releases.start}
+          </button>
+        )}
+        {canAdvance && latest && (
+          <button
+            className="button button--primary"
+            disabled={isSaving}
+            onClick={() => onAdvanceRelease?.(latest.id)}
+            type="button"
+          >
+            {copy.releases.advance.replace("{stage}", nextStageLabel)}
+          </button>
+        )}
+        {latest?.stage === "stable" && (
+          <p className="field-hint">{copy.releases.final}</p>
+        )}
+      </div>
     </section>
   );
 }

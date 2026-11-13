@@ -183,6 +183,41 @@ describe("game application commands", () => {
     expect(repository.state).toEqual(initial);
   });
 
+  it("persists OS ecosystem settings and release lifecycle commands", async () => {
+    const repository = new MemoryGameStateRepository();
+    const application = createGameApplication(repository);
+    const configuration = {
+      ...createDefaultOsConfiguration(),
+      gui: "desktop-shell" as const,
+      sdk: "basic" as const,
+      api: "proprietary" as const,
+      developerTools: "compiler" as const,
+      appStore: "none" as const,
+    };
+
+    await application.load();
+    await application.createOsProject("Dynasty OS", configuration);
+    const started = await application.startOsRelease("os-1");
+    const release = started.osProjects[0]?.releases[0];
+    const advanced = await application.advanceOsRelease("os-1", release?.id ?? "");
+    const reloaded = await createGameApplication(repository).load();
+
+    expect(release?.stage).toBe("alpha");
+    expect(advanced.company.balance).toBe(40_000);
+    expect(reloaded.osProjects[0]?.configuration).toMatchObject({
+      gui: "desktop-shell",
+      sdk: "basic",
+      api: "proprietary",
+      developerTools: "compiler",
+      appStore: "none",
+    });
+    expect(reloaded.osProjects[0]?.releases[0]).toMatchObject({
+      stage: "beta",
+      costUsd: 60_000,
+    });
+    expect(getFinanceDailyRecord(reloaded.finance, "1995-01-01")?.releaseUsd).toBe(60_000);
+  });
+
   it("posts research spending to the finance ledger", async () => {
     const repository = new MemoryGameStateRepository();
     const application = createGameApplication(repository);

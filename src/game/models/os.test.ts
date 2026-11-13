@@ -5,6 +5,7 @@ import {
   checkOsHardwareCompatibility,
   cloneOsConfiguration,
   createDefaultOsConfiguration,
+  createOsPlatformProfileConfiguration,
   createOsProject,
   osConfigurationsEqual,
   parseOsConfiguration,
@@ -164,6 +165,86 @@ describe("OS configuration validation", () => {
       createDefaultOsConfiguration(),
     );
   });
+
+  it("enforces developer ecosystem constraints and era gates", () => {
+    const storeWithoutSdk = validateOsConfiguration(
+      configuration({ sdk: "none", developerTools: "none", appStore: "open" }),
+      { currentYear: 2010 },
+    );
+    const toolsWithoutSdk = validateOsConfiguration(
+      configuration({ sdk: "none", developerTools: "compiler", appStore: "none" }),
+      { currentYear: 2010 },
+    );
+    const suiteWithoutFullSdk = validateOsConfiguration(
+      configuration({ sdk: "basic", developerTools: "suite" }),
+      { currentYear: 2010 },
+    );
+    const webApiWithoutNetwork = validateOsConfiguration(
+      configuration({ api: "web", networkStack: "basic" }),
+      { currentYear: 2010 },
+    );
+    const modernGuiIn1999 = validateOsConfiguration(
+      configuration({ gui: "modern-desktop" }),
+      { currentYear: 1999 },
+    );
+    const professionalSdkIn2004 = validateOsConfiguration(
+      configuration({ sdk: "professional" }),
+      { currentYear: 2004 },
+    );
+
+    expect(storeWithoutSdk.errors.appStore?.code).toBe("app-store-requires-sdk");
+    expect(toolsWithoutSdk.errors.developerTools?.code).toBe("developer-tools-require-sdk");
+    expect(suiteWithoutFullSdk.errors.developerTools?.code).toBe("suite-requires-full-sdk");
+    expect(webApiWithoutNetwork.errors.api?.code).toBe("web-api-requires-network");
+    expect(modernGuiIn1999.errors.gui).toEqual({ code: "future-technology", minYear: 2000 });
+    expect(professionalSdkIn2004.errors.sdk).toEqual({
+      code: "future-technology",
+      minYear: 2005,
+    });
+  });
+
+  it("migrates legacy configurations without ecosystem fields", () => {
+    const legacy = { ...createDefaultOsConfiguration() } as Record<string, unknown>;
+    for (const field of ["gui", "sdk", "api", "developerTools", "appStore"]) {
+      delete legacy[field];
+    }
+
+    expect(() => parseOsConfiguration(legacy)).toThrow(InvalidOsDataError);
+    expect(parseOsConfiguration(legacy, { allowMissingEcosystem: true })).toEqual(
+      createDefaultOsConfiguration(),
+    );
+  });
+
+  it("creates valid 1995 platform profile presets", () => {
+    const mobile = createOsPlatformProfileConfiguration("mobile");
+    const server = createOsPlatformProfileConfiguration("server");
+    const gaming = createOsPlatformProfileConfiguration("gaming");
+
+    expect(validateOsConfiguration(mobile, { currentYear: 1995 }).valid).toBe(true);
+    expect(validateOsConfiguration(server, { currentYear: 1995 }).valid).toBe(true);
+    expect(validateOsConfiguration(gaming, { currentYear: 1995 }).valid).toBe(true);
+    expect(mobile).toEqual(
+      expect.objectContaining({
+        targetPlatform: "mobile",
+        kernelType: "microkernel",
+        supportedArchitectures: ["arm"],
+      }),
+    );
+    expect(server).toEqual(
+      expect.objectContaining({
+        targetPlatform: "server",
+        kernelType: "monolithic",
+        networkStack: "tcp-ip",
+      }),
+    );
+    expect(gaming).toEqual(
+      expect.objectContaining({
+        targetPlatform: "gaming",
+        kernelType: "hybrid",
+        ipcModel: "shared-memory",
+      }),
+    );
+  });
 });
 
 describe("OS projects and versions", () => {
@@ -197,6 +278,47 @@ describe("OS projects and versions", () => {
 
     expect(parsed).toEqual(project);
     expect(() => parseOsProject(mismatched, "1995-01-01")).toThrow(InvalidOsDataError);
+  });
+
+  it("parses release snapshots and migrates projects without releases", () => {
+    const project = createOsProject(
+      "os-1",
+      "Dynasty OS",
+      createDefaultOsConfiguration(),
+      "1995-01-01",
+    );
+    const release = {
+      id: "os-release-1",
+      version: 1,
+      stage: "alpha" as const,
+      createdOn: "1995-01-01",
+      configuration: createDefaultOsConfiguration(),
+      qualityScore: 42,
+      appealScore: 48,
+      costUsd: 25_000,
+    };
+    const withRelease = { ...project, releases: [release] };
+    const projectWithoutReleases = {
+      id: project.id,
+      name: project.name,
+      configuration: project.configuration,
+      versions: project.versions,
+    };
+    const duplicateVersion = {
+      ...withRelease,
+      releases: [release, { ...release, id: "os-release-2" }],
+    };
+
+    expect(parseOsProject(withRelease, "1995-01-01")).toEqual(withRelease);
+    expect(() => parseOsProject(projectWithoutReleases, "1995-01-01")).toThrow(
+      InvalidOsDataError,
+    );
+    expect(
+      parseOsProject(projectWithoutReleases, "1995-01-01", {
+        allowMissingReleases: true,
+      }).releases,
+    ).toEqual([]);
+    expect(() => parseOsProject(duplicateVersion, "1995-01-01")).toThrow(InvalidOsDataError);
   });
 
   it("rejects invalid names, dates, and future configurations", () => {
