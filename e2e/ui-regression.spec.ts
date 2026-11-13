@@ -217,3 +217,78 @@ test("compares two saved AI versions", async ({ page }) => {
   await expect(compare).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
+
+test("compares two saved device versions", async ({ page }) => {
+  await openGame(page);
+  await page.getByRole("button", { name: "Следующий день" }).click();
+
+  await page.evaluate(async () => {
+    const request = indexedDB.open("silicon-dynasty");
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const readRequest = database
+      .transaction("game-saves", "readonly")
+      .objectStore("game-saves")
+      .get("current");
+    const state = await new Promise<{ deviceProjects?: unknown[] }>((resolve, reject) => {
+      readRequest.onsuccess = () => resolve(readRequest.result as { deviceProjects?: unknown[] });
+      readRequest.onerror = () => reject(readRequest.error);
+    });
+    const base = {
+      type: "desktop",
+      cpuProjectId: "cpu-missing",
+      cpuVersion: 1,
+      motherboardProjectId: "component-missing",
+      ramProjectId: "component-missing",
+      storageProjectId: "component-missing",
+      gpuProjectId: null,
+      networkingProjectId: null,
+      aiAcceleratorProjectId: null,
+      osProjectId: "os-missing",
+      osReleaseId: "os-release-missing",
+      aiProjectId: null,
+      aiDeploymentId: null,
+    };
+    const next = { ...base, type: "laptop", cpuVersion: 2 };
+    state.deviceProjects = [{
+      id: "device-compare-e2e",
+      name: "Compare E2E Device",
+      configuration: next,
+      versions: [
+        { version: 1, savedOn: "1995-01-01", configuration: base },
+        { version: 2, savedOn: "1995-01-02", configuration: next },
+      ],
+    }];
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction("game-saves", "readwrite");
+      transaction.objectStore("game-saves").put(state, "current");
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+    database.close();
+  });
+
+  await page.reload();
+  const continueButton = page.getByRole("button", { name: "Продолжить" });
+  await continueButton.waitFor({ state: "visible", timeout: 10_000 });
+  await continueButton.click();
+
+  await page
+    .getByRole("navigation", { name: "Основная навигация" })
+    .getByRole("button", { name: "Процессор" })
+    .click();
+  await page.locator(".product-workspace-tabs").getByRole("button", { name: "Устройства" }).click();
+  await expect(page.getByRole("heading", { name: "Устройства и экосистема", level: 1 })).toBeVisible();
+
+  const compare = page.locator(".version-compare");
+  await expect(compare).toBeVisible();
+  await expect(compare.locator("select")).toHaveCount(2);
+  await expect(compare.locator(".version-compare__metric")).toHaveCount(6);
+  await expectNoHorizontalOverflow(page);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(compare).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});

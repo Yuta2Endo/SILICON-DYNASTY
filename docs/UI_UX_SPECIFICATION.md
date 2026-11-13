@@ -274,6 +274,14 @@ Present component specifications, compatibility, manufacturing costs and perform
 
 - Saved-version comparison with performance index, unit cost, suggested price, gross margin and power draw deltas.
 
+### Devices and Cloud Designer
+
+Present the device configurator and cloud infrastructure as separate in-page tabs.
+
+- Saved-version comparison with overall score, performance, appeal, compatibility, unit cost and power draw deltas.
+- Display changed references by project or release name, not raw identifiers.
+- Show cloud capacity, availability, operating cost and capital expenditure from the referenced server device.
+
 ### Designer interaction principles
 
 - Group related parameters.
