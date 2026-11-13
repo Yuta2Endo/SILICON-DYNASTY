@@ -156,3 +156,33 @@ test("compares two saved CPU versions", async ({ page }) => {
   await expect(compare).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
+
+test("compares two saved component versions", async ({ page }) => {
+  await openGame(page);
+
+  await page
+    .getByRole("navigation", { name: "Основная навигация" })
+    .getByRole("button", { name: "Процессор" })
+    .click();
+  await page.locator(".product-workspace-tabs").getByRole("button", { name: "Компоненты" }).click();
+
+  await page.locator("#component-new-project-name").fill("Compare E2E Component");
+  await page
+    .locator(".cpu-create-form")
+    .getByRole("button", { name: "Создать проект компонента" })
+    .click();
+  await expect(page.locator("#component-field-computeUnits")).toBeVisible();
+
+  await page.locator("#component-field-computeUnits").fill("16");
+  await page.getByRole("button", { name: "Сохранить новую версию" }).click();
+
+  const compare = page.locator(".version-compare");
+  await expect(compare).toBeVisible();
+  await expect(compare.locator("select")).toHaveCount(2);
+  await expect(compare.locator(".version-compare__metric")).toHaveCount(5);
+  await expectNoHorizontalOverflow(page);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(compare).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});

@@ -272,6 +272,8 @@ Present:
 
 Present component specifications, compatibility, manufacturing costs and performance characteristics.
 
+- Saved-version comparison with performance index, unit cost, suggested price, gross margin and power draw deltas.
+
 ### Designer interaction principles
 
 - Group related parameters.

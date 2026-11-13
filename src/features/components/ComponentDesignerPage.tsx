@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Boxes, CheckCircle2, Save, ShieldCheck, TriangleAlert } from "lucide-react";
 import { ProductWorkspaceTabs } from "../../components/ProductWorkspaceTabs";
 import { ConfirmationBottomSheet } from "../../components/ConfirmationBottomSheet";
+import { ComponentVersionCompare } from "./ComponentVersionCompare";
 import {
   COMPONENT_FIELD_SCHEMAS,
   COMPONENT_LIMITS,
@@ -377,6 +378,8 @@ export function ComponentDesignerPage({
               </p>
             </div>
           </form>
+
+          <ComponentVersionCompare locale={locale} project={selectedProject} />
 
           <section className="cpu-version-section">
             <header className="cpu-version-section__heading">
