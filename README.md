@@ -40,8 +40,9 @@ npm run build
 
 ## Current implementation
 
-Stages 1–13 are implemented. Stage 14 provides the Android release candidate and
-remains partially completed pending real-device QA. The game includes the company
+Stages 1-14 are implemented. Stage 14 provides the Android release candidate;
+the debug APK passed real-device install, launch and save-lifecycle QA, while
+signed release artifacts and Android profiling remain release-gate tasks. The game includes the company
 dashboard, research, finance and CPU market; CPU and component designers; OS
 architecture, system services, drivers, security, updates and Alpha/Beta/RC/Stable
 releases; software ecosystem and app compatibility; AI model/data lab with
@@ -77,5 +78,6 @@ Set-Location android
 
 The debug APK is written to
 `android/app/build/outputs/apk/debug/app-debug.apk`. Release APK/AAB builds are
-unsigned until a private upload key is configured. Real-device install and
-lifecycle QA remain outstanding.
+unsigned until a private upload key is configured. The debug APK passed
+real-device install, launch and save-lifecycle QA; the signed release artifact
+still needs device verification.

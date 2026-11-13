@@ -8,7 +8,8 @@
 **Target Android:** API 36
 
 This is a local release candidate. It has not been published to Google Play.
-The release APK/AAB are unsigned and the real-device QA gate is still open.
+The release APK/AAB are unsigned; the debug APK passed real-device install,
+launch and save-lifecycle checks.
 
 ### Included systems
 
@@ -42,13 +43,16 @@ Build and signing instructions are in `docs/ANDROID_RELEASE.md`.
 - Production preview: Lighthouse accessibility 100, best practices 100,
   SEO 100.
 - Web save survived reload, tab close and a new tab.
+- Debug APK installed and launched on a vivo I2405 (Android 16, API 36,
+  arm64-v8a). The save survived background/resume and a force-stop/cold restart
+  after advancing to 1995-01-03.
 - Full test suite, lint and build results are recorded in
   `docs/stages/STAGE_14_REPORT.md`.
 
 ### Known limitations
 
-- Not installed or launched on a real Android device; lifecycle and device
-  performance QA are blocked.
+- The signed release APK/AAB has not yet been installed on a device; only the
+  debug APK passed real-device QA.
 - Release artifacts are unsigned until a private upload key is configured.
 - No Android profiling, Play Console internal testing or native crash reporting.
 - Default Capacitor icon/splash; store branding is not final.

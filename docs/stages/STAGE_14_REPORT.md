@@ -1,16 +1,15 @@
 # Stage 14 — Android Release & Final QA Report
 
 **Date:** 2026-11-13
-**Status:** PARTIALLY COMPLETED
+**Status:** COMPLETED WITH KNOWN ISSUES
 
 ## Git state
 
 - **Branch before/after:** `main`
-- **HEAD before/after:** `414174bf7e47cc477e5bebe03d2d6071c76eec25` (unchanged)
-- Stage 14 work remains uncommitted. No commit or push was performed.
-- The generated `android/` project, `public/robots.txt` and the new release
-  documentation are untracked. Build outputs, copied web assets and signing
-  secrets are ignored.
+- **HEAD before:** `414174bf7e47cc477e5bebe03d2d6071c76eec25`
+- **Stage 14 implementation checkpoint:** `b1ba657` — “Complete stage 14: Android release and final QA” (60 files, +1,430 / −27)
+- The device-QA documentation update is committed separately after that checkpoint.
+- Build outputs, copied web assets and signing secrets are ignored.
 
 ## Initial repository audit
 
@@ -24,7 +23,9 @@
   `SILICON DYNASTY`, `webDir: dist` and the HTTPS Android scheme.
 - Java 21.0.13, Node 26.13.0 and Capacitor CLI 8.6.2 were available. The Android
   SDK was installed at `C:\Users\sasha\AppData\Local\Android\Sdk`.
-- `adb devices` was empty: no physical Android device or emulator was attached.
+- `adb devices` was empty at the start: no physical Android device or emulator
+  was attached. A real device was connected after the initial build and web QA;
+  see “Android device QA” below.
 
 ## Completed work
 
@@ -46,8 +47,12 @@
 - Added `public/robots.txt`, which resolved the only Lighthouse SEO failure.
 - Verified production-web save persistence across reload, tab close and a new
   tab. Background-tab resume retained the same state.
+- Installed and launched the debug APK on a real vivo I2405 (Android 16/API 36,
+  arm64-v8a) after the device was connected. Advanced the game by one day,
+  backgrounded/resumed the app, force-stopped and relaunched it, and confirmed
+  the saved date and balance persisted.
 - Ran desktop Lighthouse and a reload trace on the production preview. Android
-  device profiling could not be performed because no device was attached.
+  profiler/device-performance measurements were not performed.
 
 ## Files added or updated for Stage 14
 
@@ -118,23 +123,39 @@ generated dynamic-receiver permission.
 - Desktop reload trace: 715 events, one long task of 60.35 ms, JavaScript parse
   18.56 ms, layout 2.43 ms.
 - Desktop heap after load: 6.9 MB used / 13.5 MB total, 268 DOM nodes.
-- `adb install -r app-debug.apk` failed with `adb.exe: no devices/emulators found`.
-  Real-device install, launch, background/resume and process-death QA were not
-  performed.
+
+### Android device QA
+
+- Device: vivo I2405 (`10AFAB1AD60032K`), Android 16, API 36, arm64-v8a.
+- `adb devices -l` reported the device as `device`.
+- `adb install -r android\app\build\outputs\apk\debug\app-debug.apk`:
+  **Success**.
+- `adb shell am start -W -n com.silicondynasty.game/.MainActivity`:
+  **Status: ok**, `LaunchState: COLD`, `TotalTime: 510 ms`.
+- The app opened on the dashboard with the persisted save (1995-01-02,
+  balance $87,800).
+- Pressed “Следующий день”: date became 1995-01-03 and balance $87,600; the UI
+  showed “Изменения сохранены”.
+- Pressed Home, then brought the task back to the foreground: the app resumed
+  with the saved state intact.
+- `adb shell am force-stop com.silicondynasty.game` followed by a cold relaunch:
+  the dashboard reopened at 1995-01-03 with balance $87,600.
+- `adb logcat` contained no `FATAL EXCEPTION` or app ANR entries during the
+  launch, save, background/resume and restart checks.
+- Android startup, memory, battery, thermal and long-session profiling were not
+  performed. The desktop Lighthouse/trace numbers are not Android measurements.
 
 ## Acceptance criteria
 
 | Criterion | Result |
 | --- | --- |
 | Production and Android builds pass. | **PASS** — production Vite build, Android debug APK, release APK and release AAB all build successfully; manifest verified. |
-| Install and launch are verified on a real device. | **BLOCKED** — no physical Android device was attached (`adb devices` empty); `adb install` failed with no devices. No emulator was substituted. |
-| Saves survive background/resume and restart. | **BLOCKED for Android** — production-web restart, tab close, new tab and background-tab resume were verified, but Android WebView background/resume and process-death behavior require the real device. |
+| Install and launch are verified on a real device. | **PASS** — debug APK installed with `adb install` and launched on a vivo I2405 (Android 16, API 36, arm64-v8a); cold launch completed in 510 ms and the dashboard rendered. |
+| Saves survive background/resume and restart. | **PASS** — advanced to 1995-01-03, backgrounded/resumed the app, then force-stopped and cold-relaunched it; the date and balance ($87,600) persisted. |
 | Release notes and known limitations are documented. | **PASS** — `docs/RELEASE_NOTES.md` and `docs/ANDROID_RELEASE.md` document scope, artifacts, signing, QA, save behavior and limitations. |
 
 ## Known issues and risks
 
-- No physical Android device or emulator was available, so the mandatory
-  real-device criterion and Android lifecycle QA remain unverified.
 - Release APK/AAB are unsigned. Publication requires a private upload key,
   signed-artifact verification and, for Play, Play App Signing.
 - No Android startup, memory, battery, thermal or long-session profiling was
@@ -145,22 +166,22 @@ generated dynamic-receiver permission.
 - `test:e2e` is unavailable; there is no automated install/launch test.
 - There is no cloud save sync. Clearing Android app data or uninstalling the app
   deletes local saves.
-- Stage 14 work is uncommitted; a checkpoint commit should be made after review.
+- The real-device QA used a debug APK; the signed release artifact has not yet
+  been installed and verified.
 
 ## Incomplete requirements
 
-- Real-device install and launch verification is incomplete and blocked by the
-  missing device.
-- Android background/resume and process-death save verification is incomplete
-  for the same reason.
+- No mandatory Stage 14 acceptance criterion remains incomplete; all four pass.
 - Signed release artifacts and Play Console internal testing were not performed;
   these are release-gate steps beyond the local build.
+- Android profiler/device-performance measurements remain outstanding.
 
 ## Recommendation
 
-Stage 14 is the final roadmap stage. Connect a real Android device with USB
-debugging enabled, run the device checklist in `docs/ANDROID_RELEASE.md`, sign
-the release artifacts with a private upload key, and then re-evaluate the
-acceptance criteria. The stage should remain **PARTIALLY COMPLETED** until
-real-device install/launch and lifecycle save verification pass. No commit or
-push was performed.
+Stage 14 is complete with known release issues. The local debug APK has passed
+real-device install, launch, background/resume and process-restart save checks.
+Before publication, sign the release APK/AAB with a private upload key, install
+the signed artifact on a device, run the Android profiler and complete Play
+Console internal testing. Stage 14 was the final roadmap stage; no next stage is
+started. The device-QA documentation update is committed after the Stage 14
+checkpoint.

@@ -156,15 +156,16 @@ Production web build:
 - Vite reports the existing warning that the JavaScript chunk exceeds 500 kB.
 
 Android startup time, frame pacing, heap growth, battery use, thermal behavior
-and long-session memory were **not measured** because no Android device or
-emulator was attached. Do not treat desktop numbers as Android profiling.
+and long-session memory were **not measured** on the vivo I2405 used for the
+install/lifecycle check. Do not treat desktop numbers as Android profiling.
 
 ## Device QA checklist
 
-- [ ] Install and launch the signed APK on a real device.
+- [x] Install and launch the debug APK on a real device (vivo I2405, Android 16).
+- [ ] Install and launch the signed release APK.
 - [ ] Verify the app starts without a network connection after the first load.
-- [ ] Advance a day, background the app, resume and confirm the date/balance.
-- [ ] Force-stop the app, relaunch and confirm the save survives.
+- [x] Advance a day, background the app, resume and confirm the date/balance.
+- [x] Force-stop the app, relaunch and confirm the save survives.
 - [ ] Test a manual slot save/load and backup restore.
 - [ ] Test export and import, including an invalid file.
 - [ ] Test Back navigation and the unsaved-draft warning.
@@ -175,8 +176,8 @@ emulator was attached. Do not treat desktop numbers as Android profiling.
 
 ## Known limitations
 
-- No physical Android device was available; install/launch and lifecycle QA
-  remain blocked.
+- The debug APK passed real-device install/launch and save-lifecycle checks;
+  the signed release artifact has not yet been installed and verified.
 - Release APK/AAB are unsigned until a private upload key is configured.
 - No Android Studio/device profiler data, native crash reporting or Play
   Console internal testing was performed.

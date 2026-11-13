@@ -1,7 +1,7 @@
 # STAGE 14 — Android Release & Final QA
 
 **Project:** SILICON DYNASTY
-**Status:** PARTIALLY COMPLETED
+**Status:** COMPLETED WITH KNOWN ISSUES
 **Execution rule:** complete this stage only, then stop for approval.
 
 ## Objective
@@ -20,14 +20,16 @@ Prepare Capacitor Android release, optimization, device testing, performance/mem
 
 ## Acceptance criteria
 - [x] Production and Android builds pass.
-- [ ] Install and launch are verified on a real device.
-- [ ] Saves survive background/resume and restart.
+- [x] Install and launch are verified on a real device.
+- [x] Saves survive background/resume and restart.
 - [x] Release notes and known limitations are documented.
 
-**Status note:** Android debug/release APK and AAB builds pass, and production-web
-save persistence across reload/restart was verified. No physical Android device
-was attached (`adb devices` empty), so real-device install/launch and Android
-background/resume verification remain blocked. See `STAGE_14_REPORT.md`.
+**Status note:** Android debug/release APK and AAB builds pass. The debug APK was
+installed and launched on a real vivo I2405 (Android 16, API 36, arm64-v8a).
+Gameplay advanced from 1995-01-02 to 1995-01-03, the app was backgrounded and
+resumed, then force-stopped and relaunched; the saved date and balance persisted.
+The release APK/AAB remain unsigned and Android profiler/device-performance
+measurements were not performed. See `STAGE_14_REPORT.md`.
 
 ## Engineering constraints
 - React + TypeScript strict + Vite + Capacitor.
