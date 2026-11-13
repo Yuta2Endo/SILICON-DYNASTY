@@ -53,6 +53,7 @@ describe("OsPreviewPanel", () => {
 
     expect(screen.getByRole("dialog", { name: "Заметки" })).toBeTruthy();
     expect(screen.getByText(ru.running)).toBeTruthy();
+    expect(screen.getByText(ru.windowContent.notes.title)).toBeTruthy();
   });
 
   it("switches the preview to a saved release from the history selector", async () => {

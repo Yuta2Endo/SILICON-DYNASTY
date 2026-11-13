@@ -219,6 +219,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                       issues={activeApp.issues.map((issue) =>
                         appCopy.issues[issue as keyof typeof appCopy.issues] ?? issue,
                       )}
+                      locale={locale}
                       onClose={() => setActiveAppId(null)}
                     />
                   )}
@@ -307,6 +308,90 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
   );
 }
 
+function AppWindowContent({
+  appId,
+  fallbackRows,
+  locale,
+}: {
+  appId: string;
+  fallbackRows: readonly string[];
+  locale: GameState["settings"]["locale"];
+}) {
+  const content = translations[locale].os.preview.windowContent;
+
+  switch (appId) {
+    case "notes":
+      return (
+        <div aria-hidden="true" className="os-preview-notes">
+          <strong>{content.notes.title}</strong>
+          {content.notes.lines.map((line) => <span key={line}>{line}</span>)}
+        </div>
+      );
+    case "web-browser":
+      return (
+        <div aria-hidden="true" className="os-preview-browser">
+          <span className="os-preview-browser__address">{content["web-browser"].address}</span>
+          <strong>{content["web-browser"].headline}</strong>
+          {content["web-browser"].lines.map((line) => <span key={line}>{line}</span>)}
+        </div>
+      );
+    case "office-suite":
+      return (
+        <div aria-hidden="true" className="os-preview-office">
+          <strong>{content["office-suite"].title}</strong>
+          <div className="os-preview-office__grid">
+            {content["office-suite"].cells.map((cell, index) => (
+              <span className={index % 2 === 0 ? "is-label" : ""} key={`${cell}-${index}`}>{cell}</span>
+            ))}
+          </div>
+        </div>
+      );
+    case "developer-studio":
+      return (
+        <div aria-hidden="true" className="os-preview-code">
+          <span className="os-preview-code__file">{content["developer-studio"].file}</span>
+          <pre>
+            {content["developer-studio"].code.map((line, index) => (
+              <span key={`${line}-${index}`}><em>{index + 1}</em>{line}</span>
+            ))}
+          </pre>
+        </div>
+      );
+    case "game-runtime":
+      return (
+        <div aria-hidden="true" className="os-preview-game">
+          <span className="os-preview-game__title">{content["game-runtime"].title}</span>
+          <div className="os-preview-game__hud">
+            <span>{content["game-runtime"].scoreLabel}: <strong>{content["game-runtime"].score}</strong></span>
+            <span>{content["game-runtime"].livesLabel}: <strong>{content["game-runtime"].lives}</strong></span>
+          </div>
+          <span className="os-preview-game__ship">▲</span>
+          <p>{content["game-runtime"].hint}</p>
+        </div>
+      );
+    case "enterprise-console":
+      return (
+        <div aria-hidden="true" className="os-preview-enterprise">
+          <strong>{content["enterprise-console"].title}</strong>
+          <dl>
+            {content["enterprise-console"].labels.map((label, index) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{content["enterprise-console"].values[index]}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      );
+    default:
+      return (
+        <div className="os-preview-window__rows" aria-hidden="true">
+          {fallbackRows.map((row) => <span key={row}>{row}</span>)}
+        </div>
+      );
+  }
+}
+
 function TerminalView({
   appCount,
   bootSeconds,
@@ -378,6 +463,7 @@ function AppWindowView({
   closeLabel,
   copy,
   issues,
+  locale,
   onClose,
 }: {
   app: OsPreviewApp;
@@ -391,6 +477,7 @@ function AppWindowView({
     windowRows: readonly string[];
   };
   issues: string[];
+  locale: GameState["settings"]["locale"];
   onClose: () => void;
 }) {
   const Icon = APP_ICONS[app.id] ?? AppWindow;
@@ -413,9 +500,7 @@ function AppWindowView({
           <>
             <strong className="os-preview-window__status"><span className="os-preview-dot" aria-hidden="true" />{copy.running}</strong>
             <p>{copy.windowHint}</p>
-            <div className="os-preview-window__rows" aria-hidden="true">
-              {copy.windowRows.map((row) => <span key={row}>{row}</span>)}
-            </div>
+            <AppWindowContent appId={app.id} fallbackRows={copy.windowRows} locale={locale} />
           </>
         ) : (
           <>

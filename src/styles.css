@@ -8225,6 +8225,144 @@ textarea {
 .os-preview-window__rows span:nth-child(2) { width: 82%; }
 .os-preview-window__rows span:nth-child(3) { width: 64%; }
 
+.os-preview-notes,
+.os-preview-browser,
+.os-preview-office,
+.os-preview-code,
+.os-preview-game,
+.os-preview-enterprise {
+  display: grid;
+  gap: 3px;
+  margin-top: 2px;
+  color: #dbeafe;
+  font-size: 0.5rem;
+  line-height: 1.35;
+}
+
+.os-preview-notes strong,
+.os-preview-browser strong,
+.os-preview-office strong,
+.os-preview-game__title,
+.os-preview-enterprise strong {
+  color: #f8fafc;
+  font-size: 0.58rem;
+}
+
+.os-preview-notes span {
+  padding-bottom: 2px;
+  border-bottom: 1px solid rgb(148 163 184 / 16%);
+}
+
+.os-preview-browser__address {
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: rgb(15 23 42 / 42%);
+  color: #93c5fd;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.os-preview-office__grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 2px;
+}
+
+.os-preview-office__grid span {
+  padding: 2px 4px;
+  border-radius: 3px;
+  background: rgb(148 163 184 / 10%);
+}
+
+.os-preview-office__grid span.is-label {
+  color: #93c5fd;
+  background: rgb(59 130 246 / 14%);
+}
+
+.os-preview-code__file {
+  color: #93c5fd;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.os-preview-code pre {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.48rem;
+  white-space: pre-wrap;
+}
+
+.os-preview-code pre span {
+  display: flex;
+  gap: 5px;
+}
+
+.os-preview-code pre em {
+  min-width: 9px;
+  color: #64748b;
+  font-style: normal;
+  text-align: right;
+}
+
+.os-preview-game {
+  position: relative;
+  min-height: 82px;
+  padding: 6px;
+  border: 1px solid rgb(96 165 250 / 30%);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 30%, rgb(59 130 246 / 32%), transparent 55%),
+    #070d19;
+  overflow: hidden;
+}
+
+.os-preview-game__hud {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  color: #93c5fd;
+}
+
+.os-preview-game__ship {
+  display: block;
+  margin: 6px auto 0;
+  color: #fbbf24;
+  font-size: 1.1rem;
+  line-height: 1;
+  text-align: center;
+}
+
+.os-preview-game p {
+  margin: 4px 0 0;
+  color: #bfdbfe;
+  font-size: 0.45rem;
+  text-align: center;
+}
+
+.os-preview-enterprise dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3px;
+  margin: 0;
+}
+
+.os-preview-enterprise dl div {
+  padding: 3px;
+  border-radius: 4px;
+  background: rgb(148 163 184 / 10%);
+}
+
+.os-preview-enterprise dt {
+  color: #93c5fd;
+  font-size: 0.44rem;
+}
+
+.os-preview-enterprise dd {
+  margin: 1px 0 0;
+  color: #f8fafc;
+  font-weight: 700;
+}
+
 .os-preview-window__issues {
   display: grid;
   gap: 2px;

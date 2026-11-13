@@ -435,6 +435,51 @@ const ru = {
       running: "Работает",
       windowHint: "Демонстрационное окно приложения. Содержимое условно.",
       windowRows: ["Панель инструментов", "Рабочая область", "Строка состояния"],
+      windowContent: {
+        notes: {
+          title: "Заметки команды",
+          lines: [
+            "Идеи для следующего процессора",
+            "Проверить теплопакет и цену",
+            "Подготовить релиз ОС",
+          ],
+        },
+        "web-browser": {
+          address: "silicon.net",
+          headline: "Новости индустрии",
+          lines: [
+            "Новый техпроцесс обещает больше транзисторов",
+            "Рынок ждёт доступные устройства",
+            "Разработчики обсуждают открытые API",
+          ],
+        },
+        "office-suite": {
+          title: "Квартальный отчёт",
+          cells: ["Выручка", "$1.2M", "Прибыль", "$240K", "Доля рынка", "12%"],
+        },
+        "developer-studio": {
+          file: "kernel.c",
+          code: [
+            "void boot(void) {",
+            "  init_memory();",
+            "  start_scheduler();",
+            "}",
+          ],
+        },
+        "game-runtime": {
+          title: "STAR RAIDER",
+          scoreLabel: "Счёт",
+          score: "12 450",
+          livesLabel: "Жизни",
+          lives: "3",
+          hint: "Нажмите «Пуск», чтобы играть",
+        },
+        "enterprise-console": {
+          title: "Состояние кластера",
+          labels: ["Доступность", "Нагрузка", "Узлы"],
+          values: ["99.98%", "64%", "128"],
+        },
+      },
       next: "Следующий шаг",
       nextHints: {
         terminal: "Включите Desktop Shell, чтобы получить графический интерфейс.",
@@ -2296,6 +2341,51 @@ const en: Translation = {
       close: "Close",
       running: "Running",
       windowHint: "A demonstration application window. The content is illustrative.",
+      windowContent: {
+        notes: {
+          title: "Team notes",
+          lines: [
+            "Ideas for the next processor",
+            "Review the thermal budget and price",
+            "Prepare the OS release",
+          ],
+        },
+        "web-browser": {
+          address: "silicon.net",
+          headline: "Industry news",
+          lines: [
+            "A new process promises more transistors",
+            "The market waits for affordable devices",
+            "Developers discuss open APIs",
+          ],
+        },
+        "office-suite": {
+          title: "Quarterly report",
+          cells: ["Revenue", "$1.2M", "Profit", "$240K", "Market share", "12%"],
+        },
+        "developer-studio": {
+          file: "kernel.c",
+          code: [
+            "void boot(void) {",
+            "  init_memory();",
+            "  start_scheduler();",
+            "}",
+          ],
+        },
+        "game-runtime": {
+          title: "STAR RAIDER",
+          scoreLabel: "Score",
+          score: "12 450",
+          livesLabel: "Lives",
+          lives: "3",
+          hint: "Press Start to play",
+        },
+        "enterprise-console": {
+          title: "Cluster health",
+          labels: ["Uptime", "Load", "Nodes"],
+          values: ["99.98%", "64%", "128"],
+        },
+      },
       windowRows: ["Toolbar", "Workspace", "Status bar"],
       next: "Next step",
       nextHints: {
