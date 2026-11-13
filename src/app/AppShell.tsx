@@ -1,5 +1,5 @@
 import { ArrowRight, CalendarDays, Layers3, Menu } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import type { GameState } from "../game/models/game-state";
 import { formatGameDate, formatYear } from "../localization/formatters";
 import { translations } from "../localization/messages";
@@ -27,9 +27,29 @@ export function AppShell({
   const t = translations[state.settings.locale];
   const screenCopy = t.screens[activeScreen];
   const year = formatYear(Number(state.gameDate.slice(0, 4)), state.settings.locale);
+  const mainRef = useRef<HTMLElement>(null);
+  const previousScreen = useRef(activeScreen);
+
+  useEffect(() => {
+    if (previousScreen.current === activeScreen) {
+      return;
+    }
+    previousScreen.current = activeScreen;
+    mainRef.current?.focus({ preventScroll: true });
+  }, [activeScreen]);
 
   return (
     <div className="app-root" data-theme={state.settings.theme}>
+      <a
+        className="skip-link"
+        href="#main-content"
+        onClick={(event) => {
+          event.preventDefault();
+          mainRef.current?.focus();
+        }}
+      >
+        {t.navigation.skipToContent}
+      </a>
       <div className="app-shell">
         <aside className="app-sidebar" aria-label={t.app.name}>
           <div className="sidebar-brand">
@@ -108,7 +128,7 @@ export function AppShell({
             </div>
           </header>
 
-          <main className="main-scroll">
+          <main className="main-scroll" id="main-content" ref={mainRef} tabIndex={-1}>
             <div className="page-content mx-auto w-full max-w-7xl px-4 pb-28 pt-6 sm:px-6 lg:px-10 lg:pb-10">
               <header className="page-heading">
                 <div>
@@ -124,12 +144,12 @@ export function AppShell({
               </header>
 
               {announcement && (
-                <p className="inline-feedback" role="status">
+                <p aria-atomic="true" aria-live="polite" className="inline-feedback" role="status">
                   {announcement}
                 </p>
               )}
               {alert && (
-                <p className="inline-feedback inline-feedback--error" role="alert">
+                <p aria-atomic="true" aria-live="assertive" className="inline-feedback inline-feedback--error" role="alert">
                   {alert}
                 </p>
               )}

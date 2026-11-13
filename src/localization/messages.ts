@@ -18,6 +18,7 @@ const ru = {
     ai: "ИИ",
     devices: "Устройства",
     analytics: "Аналитика",
+    skipToContent: "Перейти к содержимому",
   },
   mainMenu: {
     open: "Главное меню",
@@ -1797,6 +1798,7 @@ const en: Translation = {
     ai: "AI",
     devices: "Devices",
     analytics: "Analytics",
+    skipToContent: "Skip to content",
   },
   mainMenu: {
     open: "Main menu",

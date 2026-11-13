@@ -2,6 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createInitialGameState } from "../../game/models/game-state";
+import { translations } from "../../localization/messages";
 import { MainMenu } from "./MainMenu";
 
 afterEach(cleanup);
@@ -75,5 +76,34 @@ describe("MainMenu", () => {
     expect(screen.getByRole("alert").textContent).toContain("Текущий прогресс не изменён");
     await user.click(screen.getByRole("button", { name: "Настройки" }));
     expect(onSettings).toHaveBeenCalledOnce();
+  });
+
+  it("keeps keyboard focus inside the menu and closes with Escape", async () => {
+    const user = userEvent.setup();
+    const onContinue = vi.fn();
+    const copy = translations.ru.mainMenu;
+
+    render(
+      <MainMenu
+        error={false}
+        isSaving={false}
+        onContinue={onContinue}
+        onNewGame={vi.fn()}
+        onSettings={vi.fn()}
+        state={createInitialGameState()}
+      />,
+    );
+
+    const continueButton = screen.getByRole("button", { name: copy.continue });
+    expect(document.activeElement).toBe(continueButton);
+
+    await user.tab({ shift: true });
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: copy.settings }));
+
+    await user.tab();
+    expect(document.activeElement).toBe(continueButton);
+
+    await user.keyboard("{Escape}");
+    expect(onContinue).toHaveBeenCalledOnce();
   });
 });

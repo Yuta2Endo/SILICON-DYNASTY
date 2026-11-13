@@ -454,6 +454,11 @@ Additional requirements:
 - Interactive elements must have accessible labels.
 - Keyboard navigation must work on Web.
 - Focus states must be visible.
+- The application shell must provide a “Skip to content” link that moves keyboard focus to the main content region.
+- After primary navigation, focus must move to the main content region without stealing focus on first load.
+- Modal dialogs and bottom sheets must trap Tab and Shift+Tab within the dialog, close on Escape when appropriate, and restore focus to the previously focused control.
+- Save, error and status feedback regions must use appropriate `aria-live` politeness and `aria-atomic` behavior.
+- Motion must be purposeful and respect `prefers-reduced-motion`; page, menu and sheet transitions must not be required to understand state.
 - Icons must not be the only source of meaning.
 - Status information must not rely exclusively on color.
 - Respect user font scaling where possible.

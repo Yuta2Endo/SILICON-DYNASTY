@@ -66,6 +66,21 @@ describe("App", () => {
     expect(await screen.findByRole("heading", { name: "Панель компании" })).toBeTruthy();
   });
 
+  it("provides a skip link that focuses the main content", async () => {
+    const user = userEvent.setup();
+    const repository = new MemoryGameStateRepository();
+    const application = createGameApplication(repository);
+
+    render(<App application={application} />);
+    await screen.findByRole("heading", { name: "Панель компании" });
+
+    const skipLink = screen.getByRole("link", { name: "Перейти к содержимому" });
+    expect(skipLink.getAttribute("href")).toBe("#main-content");
+
+    await user.click(skipLink);
+    expect(document.activeElement?.id).toBe("main-content");
+  });
+
   it("advances the game date through the dashboard action", async () => {
     const repository = new MemoryGameStateRepository();
     const application = createGameApplication(repository);

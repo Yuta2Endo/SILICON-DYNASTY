@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   ArrowRight,
   Building2,
@@ -15,6 +15,7 @@ import {
 import { ConfirmationBottomSheet } from "../../components/ConfirmationBottomSheet";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 import type { GameState } from "../../game/models/game-state";
 import { formatCurrency, formatGameDate, formatYear } from "../../localization/formatters";
 import { translations } from "../../localization/messages";
@@ -39,27 +40,18 @@ export function MainMenu({
   const t = translations[state.settings.locale];
   const copy = t.mainMenu;
   const continueButtonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [isConfirmingNewGame, setIsConfirmingNewGame] = useState(false);
   const year = formatYear(Number(state.gameDate.slice(0, 4)), state.settings.locale);
 
-  useEffect(() => {
-    continueButtonRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    if (isConfirmingNewGame) {
-      return;
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
+  useFocusTrap(menuRef, {
+    initialFocusRef: continueButtonRef,
+    onEscape: () => {
+      if (!isConfirmingNewGame) {
         onContinue();
       }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isConfirmingNewGame, onContinue]);
+    },
+  });
 
   return (
     <div className="app-root main-menu-root" data-theme={state.settings.theme}>
@@ -67,6 +59,7 @@ export function MainMenu({
         aria-labelledby="main-menu-title"
         aria-modal="true"
         className="main-menu"
+        ref={menuRef}
         role="dialog"
       >
         <div className="main-menu__shell">

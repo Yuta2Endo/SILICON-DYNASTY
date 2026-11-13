@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 
 interface ConfirmationBottomSheetProps {
   title: string;
@@ -18,19 +19,12 @@ export function ConfirmationBottomSheet({
   onCancel,
 }: ConfirmationBottomSheetProps) {
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
+  const sheetRef = useRef<HTMLElement>(null);
 
-  useEffect(() => {
-    cancelButtonRef.current?.focus();
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        onCancel();
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onCancel]);
+  useFocusTrap(sheetRef, {
+    initialFocusRef: cancelButtonRef,
+    onEscape: onCancel,
+  });
 
   return (
     <div className="sheet-backdrop">
@@ -39,6 +33,7 @@ export function ConfirmationBottomSheet({
         aria-labelledby="confirmation-sheet-title"
         aria-modal="true"
         className="confirmation-sheet"
+        ref={sheetRef}
         role="dialog"
       >
         <span className="sheet-handle" aria-hidden="true" />
