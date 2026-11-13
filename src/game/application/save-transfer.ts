@@ -2,8 +2,9 @@ import { parseGameState, type GameState } from "../models/game-state";
 
 export const SAVE_EXPORT_FORMAT = "silicon-dynasty-save";
 export const SAVE_EXPORT_FORMAT_VERSION = 1;
+export const MAX_SAVE_IMPORT_BYTES = 5 * 1024 * 1024;
 
-export type SaveImportErrorCode = "invalid-json" | "invalid-format" | "invalid-state";
+export type SaveImportErrorCode = "invalid-json" | "invalid-format" | "invalid-state" | "file-too-large";
 
 export class InvalidSaveImportError extends Error {
   constructor(readonly code: SaveImportErrorCode, message: string) {
@@ -26,6 +27,13 @@ export function exportGameState(state: GameState): string {
 }
 
 export function parseImportedGameState(serialized: string): GameState {
+  if (new TextEncoder().encode(serialized).byteLength > MAX_SAVE_IMPORT_BYTES) {
+    throw new InvalidSaveImportError(
+      "file-too-large",
+      `The imported save exceeds the ${MAX_SAVE_IMPORT_BYTES} byte limit.`,
+    );
+  }
+
   let value: unknown;
   try {
     value = JSON.parse(serialized) as unknown;

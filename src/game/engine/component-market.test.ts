@@ -129,4 +129,27 @@ describe("component market", () => {
     const simulated = simulateComponentMarketDay(discontinued, "1995-01-01");
     expect(simulated.market.componentProducts[0]?.unitsSold).toBe(0);
   });
+
+  it("rejects a component release at the product cap", () => {
+    const base = releasedGpuState().market.componentProducts[0]!;
+    const filled = {
+      ...stateWithGpuProject(),
+      market: {
+        ...stateWithGpuProject().market,
+        componentProducts: Array.from({ length: 60 }, (_, index) => ({
+          ...base,
+          id: `component-product-${index + 1}`,
+          projectId: `component-${index + 2}`,
+        })),
+      },
+    };
+
+    expect(() => releaseComponentProduct(filled, {
+      projectId: "component-1",
+      projectVersion: 1,
+      name: "Overflow GPU",
+      priceUsd: 400,
+    })).toThrowError(expect.objectContaining({ code: "product-limit" }));
+    expect(filled.company.balance).toBe(100_000);
+  });
 });

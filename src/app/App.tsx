@@ -7,13 +7,12 @@ import type { CpuConfiguration } from "../game/models/cpu";
 import type { AiConfiguration, AiDataset, AiOptimizationType } from "../game/models/ai";
 import type { DeviceConfiguration } from "../game/models/devices";
 import type { CloudConfiguration } from "../game/models/cloud";
-import type { GameSettings, GameState } from "../game/models/game-state";
+import type { GameSettings } from "../game/models/game-state";
 import { createBrowserGameStateRepository } from "../storage/repositories/BrowserGameStateRepository";
-import type { SaveOverview } from "../storage/repositories/SaveManagement";
 import { translations } from "../localization/messages";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
-import { syncStatusBar, triggerHaptic } from "../native/native-services";
 import { type ScreenId } from "./navigation";
+import { useGameSession } from "./useGameSession";
 
 const CompanyPage = lazy(() => import("../features/company/CompanyPage").then((module) => ({ default: module.CompanyPage })));
 const ResearchPage = lazy(() => import("../features/research/ResearchPage").then((module) => ({ default: module.ResearchPage })));
@@ -34,21 +33,29 @@ export function App({ application, initialMenuOpen }: AppProps = {}) {
   const [gameApplication] = useState(
     () => application ?? createGameApplication(createBrowserGameStateRepository()),
   );
-  const [state, setState] = useState<GameState | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const {
+    state,
+    isLoading,
+    isSaving,
+    hasLoadError,
+    hasCommandError,
+    showSavedFeedback,
+    saveOverview,
+    isSaveOverviewLoading,
+    saveManagementError,
+    canRestoreBackup,
+    isRestoringBackup,
+    restoreBackupError,
+    setSaveOverview,
+    setSaveManagementError,
+    loadGame,
+    refreshSaveOverview,
+    restoreBackup,
+    runCommand,
+  } = useGameSession(gameApplication);
   const [isMainMenuOpen, setIsMainMenuOpen] = useState(initialMenuOpen ?? !application);
   const [menuError, setMenuError] = useState(false);
   const [activeScreen, setActiveScreen] = useState<ScreenId>("dashboard");
-  const [hasLoadError, setHasLoadError] = useState(false);
-  const [hasCommandError, setHasCommandError] = useState(false);
-  const [showSavedFeedback, setShowSavedFeedback] = useState(false);
-  const [saveOverview, setSaveOverview] = useState<SaveOverview | null>(null);
-  const [isSaveOverviewLoading, setIsSaveOverviewLoading] = useState(false);
-  const [saveManagementError, setSaveManagementError] = useState(false);
-  const [canRestoreBackup, setCanRestoreBackup] = useState(false);
-  const [isRestoringBackup, setIsRestoringBackup] = useState(false);
-  const [restoreBackupError, setRestoreBackupError] = useState(false);
   const [hasUnsavedCpuDraft, setHasUnsavedCpuDraft] = useState(false);
   const [hasUnsavedComponentDraft, setHasUnsavedComponentDraft] = useState(false);
   const [hasUnsavedOsDraft, setHasUnsavedOsDraft] = useState(false);
@@ -56,106 +63,11 @@ export function App({ application, initialMenuOpen }: AppProps = {}) {
   const [hasUnsavedDeviceDraft, setHasUnsavedDeviceDraft] = useState(false);
   const [pendingScreen, setPendingScreen] = useState<ScreenId | null>(null);
 
-  const loadGame = useCallback(async () => {
-    setIsLoading(true);
-    setHasLoadError(false);
-    setRestoreBackupError(false);
-
-    try {
-      setState(await gameApplication.load());
-    } catch {
-      setHasLoadError(true);
-      try {
-        const overview = await gameApplication.getSaveInfo();
-        setCanRestoreBackup(overview.backup !== null);
-        setSaveOverview(overview);
-      } catch {
-        setCanRestoreBackup(false);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [gameApplication]);
-
-  const refreshSaveOverview = useCallback(async () => {
-    setIsSaveOverviewLoading(true);
-    setSaveManagementError(false);
-
-    try {
-      setSaveOverview(await gameApplication.getSaveInfo());
-    } catch {
-      setSaveManagementError(true);
-    } finally {
-      setIsSaveOverviewLoading(false);
-    }
-  }, [gameApplication]);
-
   useEffect(() => {
     if (state && activeScreen === "settings") {
       void refreshSaveOverview();
     }
   }, [state, activeScreen, refreshSaveOverview]);
-
-  const restoreBackup = useCallback(async () => {
-    setIsRestoringBackup(true);
-    setRestoreBackupError(false);
-
-    try {
-      const nextState = await gameApplication.restoreBackup();
-      setState(nextState);
-      setHasLoadError(false);
-      setCanRestoreBackup(false);
-      setShowSavedFeedback(true);
-      await refreshSaveOverview();
-    } catch {
-      setRestoreBackupError(true);
-    } finally {
-      setIsRestoringBackup(false);
-    }
-  }, [gameApplication, refreshSaveOverview]);
-
-  useEffect(() => {
-    void loadGame();
-  }, [loadGame]);
-
-  useEffect(() => {
-    if (state) {
-      document.documentElement.lang = state.settings.locale;
-    }
-  }, [state?.settings.locale]);
-
-  const theme = state?.settings.theme;
-
-  useEffect(() => {
-    if (theme) {
-      void syncStatusBar(theme);
-    }
-  }, [theme]);
-
-  const runCommand = useCallback(async (
-    command: () => Promise<GameState>,
-    options: { suppressErrorAlert?: boolean } = {},
-  ): Promise<GameState | null> => {
-    setIsSaving(true);
-    setHasCommandError(false);
-    setShowSavedFeedback(false);
-
-    try {
-      const nextState = await command();
-      setState(nextState);
-      setShowSavedFeedback(true);
-      void triggerHaptic("light");
-      return nextState;
-    } catch {
-      if (!options.suppressErrorAlert) {
-        setHasCommandError(true);
-        void triggerHaptic("warning");
-      }
-      return null;
-    } finally {
-      setIsSaving(false);
-    }
-  }, []);
 
   const startNewGame = useCallback(async () => {
     setMenuError(false);

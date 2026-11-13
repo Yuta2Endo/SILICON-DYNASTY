@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createInitialGameState } from "../../game/models/game-state";
+import { MAX_SAVE_IMPORT_BYTES } from "../../game/application/save-transfer";
 import { translations } from "../../localization/messages";
 import type { SaveOverview } from "../../storage/repositories/SaveManagement";
 import { SettingsPage } from "./SettingsPage";
@@ -108,6 +109,39 @@ describe("SettingsPage save management", () => {
 
     expect(await screen.findByText(copy.importError)).toBeTruthy();
     expect(screen.queryByText(copy.importSuccess)).toBeNull();
+  });
+
+  it("rejects an oversized import file without reading it", async () => {
+    const onImportSave = vi.fn(async () => true);
+    const { container } = render(
+      <SettingsPage
+        state={createInitialGameState()}
+        onUpdate={vi.fn()}
+        saveOverview={overviewWithData()}
+        isSaveBusy={false}
+        saveManagementError={false}
+        onRefreshSaves={vi.fn()}
+        onSaveToSlot={vi.fn(async () => true)}
+        onLoadSlot={vi.fn(async () => true)}
+        onDeleteSlot={vi.fn(async () => true)}
+        onExportSave={vi.fn(async () => "{}")}
+        onImportSave={onImportSave}
+        onRestoreBackup={vi.fn(async () => true)}
+      />,
+    );
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File([""], "oversized.json", { type: "application/json" });
+    const text = vi.fn(async () => "{}");
+    Object.defineProperty(file, "size", { value: MAX_SAVE_IMPORT_BYTES + 1 });
+    Object.defineProperty(file, "text", { value: text });
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(await screen.findByText(
+      copy.importTooLarge.replace("{max}", String(MAX_SAVE_IMPORT_BYTES / (1024 * 1024))),
+    )).toBeTruthy();
+    expect(text).not.toHaveBeenCalled();
+    expect(onImportSave).not.toHaveBeenCalled();
   });
 
   it("asks for confirmation before loading a filled slot", async () => {

@@ -9,6 +9,7 @@ import type {
   SsdInterface,
 } from "./components";
 import { isValidDateOnly } from "./date";
+import { isProjectVersionLimitReached } from "./project-limits";
 
 export const OS_PLATFORM_OPTIONS = ["desktop", "mobile", "server", "gaming", "universal"] as const;
 export const OS_KERNEL_OPTIONS = ["monolithic", "microkernel", "hybrid", "modular"] as const;
@@ -643,6 +644,9 @@ export function saveOsVersion(
   assertName(name);
   const year = getYear(savedOn);
   assertConfiguration(configuration, year);
+  if (isProjectVersionLimitReached(project.versions)) {
+    throw new InvalidOsDataError("OS project version limit reached.");
+  }
   const nextVersion = Math.max(0, ...project.versions.map((version) => version.version)) + 1;
 
   return {

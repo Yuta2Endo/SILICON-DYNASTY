@@ -27,7 +27,8 @@ export type ComponentMarketOperationCode =
   | "duplicate-product"
   | "product-not-found"
   | "product-inactive"
-  | "insufficient-funds";
+  | "insufficient-funds"
+  | "product-limit";
 
 export class ComponentMarketOperationError extends Error {
   constructor(
@@ -71,6 +72,12 @@ export function releaseComponentProduct(
     throw new ComponentMarketOperationError(
       "duplicate-product",
       "This component version is already on the market.",
+    );
+  }
+  if (state.market.componentProducts.length >= MARKET_LIMITS.maxComponentProducts) {
+    throw new ComponentMarketOperationError(
+      "product-limit",
+      "The component product limit has been reached.",
     );
   }
 

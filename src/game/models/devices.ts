@@ -7,6 +7,7 @@ import {
 } from "./components";
 import type { CpuProject } from "./cpu";
 import { isValidDateOnly } from "./date";
+import { isProjectVersionLimitReached } from "./project-limits";
 import {
   checkOsHardwareCompatibility,
   type OsHardwareTarget,
@@ -446,6 +447,9 @@ export function saveDeviceVersion(
   assertConfigurationStructure(configuration);
   if (!isValidDateOnly(savedOn)) {
     throw new InvalidDeviceDataError("Device project save date is invalid.");
+  }
+  if (isProjectVersionLimitReached(project.versions)) {
+    throw new InvalidDeviceDataError("Device project version limit reached.");
   }
   const nextVersion = Math.max(0, ...project.versions.map((version) => version.version)) + 1;
 

@@ -45,6 +45,10 @@ Devices and cloud are the fifth product-development tab. `src/game/models/device
 
 `src/storage/repositories/SaveManagement.ts` defines the optional save-management contract on top of `GameStateRepository`: overview, manual slots, slot deletion and backup restore. Both the IndexedDB and localStorage repositories implement it with separate autosave, recovery-backup, slot and metadata records. `src/game/application/save-transfer.ts` owns the versioned JSON export/import format; imports are validated with `parseGameState` before any commit. `src/game/application/game-application.ts` exposes save-management commands and never overwrites the current save with an invalid import. Tutorial and achievement progress is derived from existing state in `src/game/models/game-experience.ts`, not persisted separately. Stage 13 details are in [`SAVE_GAME_EXPERIENCE.md`](SAVE_GAME_EXPERIENCE.md).
 
+## UI resilience and limits
+
+`src/app/useGameSession.ts` owns game-state loading, command execution, save overview, backup restore, command feedback and native status-bar synchronization; `App.tsx` keeps navigation, draft guards and menu state. `src/components/AppErrorBoundary.tsx` wraps the application and renders a localized reload screen after an uncaught render error. Project version histories are capped at 100 new versions, CPU market products at 100 and component products at 60. Imported save payloads are capped at 5 MiB before parsing. These caps are enforced on new writes and releases, not in save parsers, so existing saves remain loadable. Every application command autosaves; native Back-button and app-state lifecycle handling is deferred to the Android integration stage with `@capacitor/app`. Stage 02 details are in [`stages/PLUGIN_STAGE_02_REPORT.md`](stages/PLUGIN_STAGE_02_REPORT.md).
+
 ## Worker boundary
 Workers receive serializable snapshots and explicit commands. They must not access React state or mutate the database outside a documented protocol.
 

@@ -205,6 +205,7 @@ export const MARKET_LIMITS = {
   maxActionHistory: 60,
   maxDailySummaries: 180,
   maxProductionOrders: 40,
+  maxCpuProducts: 100,
   maxComponentProducts: 60,
 } as const;
 

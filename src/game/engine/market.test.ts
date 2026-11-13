@@ -182,6 +182,32 @@ describe("market engine", () => {
     expect(rewarded.company.reputation).toBeGreaterThan(state.company.reputation);
     expect(stockedOut.company.reputation).toBeLessThan(state.company.reputation);
   });
+
+  it("rejects a CPU product release at the market product cap", () => {
+    const base = stateWithProduct().market.products[0]!;
+    const filled = {
+      ...stateWithProject(),
+      market: {
+        ...stateWithProject().market,
+        products: Array.from({ length: 100 }, (_, index) => ({
+          ...base,
+          id: `product-${index + 1}`,
+          projectId: `cpu-${index + 2}`,
+        })),
+      },
+    };
+
+    expect(() =>
+      releaseProduct(filled, {
+        projectId: "cpu-1",
+        projectVersion: 1,
+        name: "Overflow",
+        segmentId: "budget",
+        priceUsd: 300,
+      }),
+    ).toThrowError(expect.objectContaining({ code: "product-limit" }));
+    expect(filled.company.balance).toBe(100_000);
+  });
 });
 
 function stateWithProject(): GameState {

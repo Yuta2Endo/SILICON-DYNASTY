@@ -1,3 +1,5 @@
+import { isProjectVersionLimitReached } from "./project-limits";
+
 export const CPU_ISA_OPTIONS = ["x86", "arm", "risc-v"] as const;
 export const CPU_ARCHITECTURE_OPTIONS = ["monolithic", "chiplet"] as const;
 export const CPU_MICROARCHITECTURE_OPTIONS = ["in-order", "out-of-order", "hybrid"] as const;
@@ -281,6 +283,9 @@ export function saveCpuProjectVersion(
   assertValidConfiguration(configuration);
   if (!isDateOnly(savedOn)) {
     throw new InvalidCpuDataError("CPU project save date is invalid.");
+  }
+  if (isProjectVersionLimitReached(project.versions)) {
+    throw new InvalidCpuDataError("CPU project version limit reached.");
   }
 
   const snapshot = cloneCpuConfiguration(configuration);

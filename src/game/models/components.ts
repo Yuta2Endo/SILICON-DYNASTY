@@ -5,6 +5,7 @@ import {
   type CpuIsa,
   type CpuMemoryStandard,
 } from "./cpu";
+import { isProjectVersionLimitReached } from "./project-limits";
 
 export const COMPONENT_TYPES = [
   "gpu",
@@ -512,6 +513,9 @@ export function saveComponentVersion(
   assertConfiguration(configuration);
   if (!isValidDate(savedOn)) {
     throw new InvalidComponentDataError("Component project save date is invalid.");
+  }
+  if (isProjectVersionLimitReached(project.versions)) {
+    throw new InvalidComponentDataError("Component project version limit reached.");
   }
   const nextVersion = Math.max(0, ...project.versions.map((version) => version.version)) + 1;
 

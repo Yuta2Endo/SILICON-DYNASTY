@@ -23,6 +23,7 @@ import {
   type SaveSlotInfo,
 } from "../../storage/repositories/SaveManagement";
 import { GameJourney } from "./GameJourney";
+import { MAX_SAVE_IMPORT_BYTES } from "../../game/application/save-transfer";
 
 interface SettingsPageProps {
   state: GameState;
@@ -177,6 +178,20 @@ export function SettingsPage({
 
     setBusyAction("import");
     setFeedback(null);
+    if (file.size > MAX_SAVE_IMPORT_BYTES) {
+      setFeedback({
+        tone: "error",
+        text: copy.importTooLarge.replace(
+          "{max}",
+          String(Math.round(MAX_SAVE_IMPORT_BYTES / (1024 * 1024))),
+        ),
+      });
+      setBusyAction(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
     try {
       const serialized = await file.text();
       const succeeded = await onImportSave(serialized);

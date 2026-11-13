@@ -3,6 +3,7 @@ import { createInitialGameState } from "../models/game-state";
 import {
   exportGameState,
   InvalidSaveImportError,
+  MAX_SAVE_IMPORT_BYTES,
   parseImportedGameState,
   SAVE_EXPORT_FORMAT,
   SAVE_EXPORT_FORMAT_VERSION,
@@ -58,5 +59,10 @@ describe("save transfer", () => {
       gameDate: "1995-01-01",
     }))).toThrowError(expect.objectContaining({ code: "invalid-state" }));
     expect(new InvalidSaveImportError("invalid-state", "bad").name).toBe("InvalidSaveImportError");
+  });
+
+  it("rejects oversized import payloads before parsing", () => {
+    expect(() => parseImportedGameState("x".repeat(MAX_SAVE_IMPORT_BYTES + 1)))
+      .toThrowError(expect.objectContaining({ code: "file-too-large" }));
   });
 });

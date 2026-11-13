@@ -47,7 +47,8 @@ Build and signing instructions are in `docs/ANDROID_RELEASE.md`.
   arm64-v8a). The save survived background/resume and a force-stop/cold restart
   after advancing to 1995-01-03.
 - Full test suite, lint and build results are recorded in
-  `docs/stages/STAGE_14_REPORT.md`.
+  `docs/stages/STAGE_14_REPORT.md`; current dependency and core-improvement
+  checks are in `docs/stages/PLUGIN_STAGE_02_REPORT.md`.
 
 ### Known limitations
 
@@ -58,4 +59,3 @@ Build and signing instructions are in `docs/ANDROID_RELEASE.md`.
 - Default Capacitor icon/splash; store branding is not final.
 - No cloud save sync; clearing app data deletes local saves.
 - `test:e2e` is not available.
-- JavaScript bundle exceeds Vite's 500 kB advisory threshold.

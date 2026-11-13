@@ -1,4 +1,5 @@
 import { isValidDateOnly } from "./date";
+import { isProjectVersionLimitReached } from "./project-limits";
 
 export const AI_ARCHITECTURE_OPTIONS = [
   "transformer",
@@ -574,6 +575,9 @@ export function saveAiVersion(
   const year = getYear(savedOn);
   assertConfiguration(configuration, year);
   assertDatasets(datasets, year);
+  if (isProjectVersionLimitReached(project.versions)) {
+    throw new InvalidAiDataError("AI project version limit reached.");
+  }
   const nextVersion = Math.max(0, ...project.versions.map((version) => version.version)) + 1;
 
   return {

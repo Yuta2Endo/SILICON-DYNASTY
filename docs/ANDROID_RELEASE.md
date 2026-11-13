@@ -147,13 +147,16 @@ process-death behavior still require verification on a device.
 
 Production web build:
 
-- JavaScript 748.85 kB (198.90 kB gzip), CSS 95.49 kB (15.03 kB gzip).
+- Production build is code-split: main entry 364.94 kB (99.26 kB gzip),
+  React vendor 218.77 kB (68.25 kB gzip), CSS 121.57 kB (22.86 kB gzip).
+- Feature screens are lazy-loaded; the production build has no Vite chunk-size
+  warning.
 - Lighthouse on the production preview: accessibility 100, best practices 100,
   SEO 100.
 - Desktop reload trace: 715 events, one long task of 60.35 ms, JavaScript parse
   18.56 ms, layout 2.43 ms.
 - Desktop heap after load: 6.9 MB used / 13.5 MB total, 268 DOM nodes.
-- Vite reports the existing warning that the JavaScript chunk exceeds 500 kB.
+- Vite chunk-size warning: none in the current split production build.
 
 Android startup time, frame pacing, heap growth, battery use, thermal behavior
 and long-session memory were **not measured** on the vivo I2405 used for the
@@ -185,4 +188,3 @@ install/lifecycle check. Do not treat desktop numbers as Android profiling.
   is a separate release-polish task.
 - No end-to-end test script exists; `test:e2e` is NOT AVAILABLE.
 - There is no cloud save sync; local data is lost if app storage is cleared.
-- The web bundle exceeds Vite's 500 kB advisory threshold.

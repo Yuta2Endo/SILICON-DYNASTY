@@ -40,7 +40,8 @@ export type MarketOperationCode =
   | "insufficient-funds"
   | "pending-orders"
   | "invalid-budget"
-  | "too-many-orders";
+  | "too-many-orders"
+  | "product-limit";
 
 export class MarketOperationError extends Error {
   constructor(
@@ -90,6 +91,9 @@ export function releaseProduct(state: GameState, input: ReleaseProductInput): Ga
     )
   ) {
     throw new MarketOperationError("duplicate-product", "This CPU version is already on the market.");
+  }
+  if (state.market.products.length >= MARKET_LIMITS.maxCpuProducts) {
+    throw new MarketOperationError("product-limit", "The CPU product limit has been reached.");
   }
 
   const withFee = postFinanceTransaction(

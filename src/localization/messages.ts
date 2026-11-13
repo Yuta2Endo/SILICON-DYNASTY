@@ -1583,6 +1583,7 @@ const ru = {
       exportSuccess: "Файл сохранения подготовлен.",
       importSuccess: "Сохранение импортировано.",
       importError: "Импорт отклонён: файл повреждён или несовместим. Текущее сохранение не изменено.",
+      importTooLarge: "Импорт отклонён: файл больше {max} МБ. Текущее сохранение не изменено.",
       actionError: "Не удалось выполнить действие с сохранением. Текущий прогресс не изменён.",
       confirmTitle: "Подтвердите действие",
       confirm: "Подтвердить",
@@ -1634,6 +1635,9 @@ const ru = {
   errors: {
     load: "Не удалось загрузить сохранение. Проверьте доступность хранилища и попробуйте ещё раз.",
     save: "Не удалось сохранить изменения. Проверьте свободное место на устройстве.",
+    crashTitle: "Игра столкнулась с непредвиденной ошибкой",
+    crashBody: "Прогресс сохранён. Перезагрузите игру, чтобы продолжить с последнего сохранения.",
+    crashReload: "Перезагрузить игру",
   },
 } as const;
 
@@ -3230,6 +3234,7 @@ const en: Translation = {
       exportSuccess: "The save file is ready.",
       importSuccess: "Save imported.",
       importError: "Import rejected: the file is damaged or incompatible. The current save is unchanged.",
+      importTooLarge: "Import rejected: the file is larger than {max} MB. The current save is unchanged.",
       actionError: "The save action could not be completed. Current progress is unchanged.",
       confirmTitle: "Confirm action",
       confirm: "Confirm",
@@ -3281,6 +3286,9 @@ const en: Translation = {
   errors: {
     load: "The save could not be loaded. Check storage availability and try again.",
     save: "Changes could not be saved. Check the available space on your device.",
+    crashTitle: "The game hit an unexpected error",
+    crashBody: "Your progress is saved. Reload the game to continue from the last save.",
+    crashReload: "Reload the game",
   },
 };
 

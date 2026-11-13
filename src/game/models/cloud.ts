@@ -1,4 +1,5 @@
 import { isValidDateOnly } from "./date";
+import { isProjectVersionLimitReached } from "./project-limits";
 import {
   type DeviceProject,
   type DeviceReferenceContext,
@@ -177,6 +178,9 @@ export function saveCloudVersion(
   assertConfiguration(configuration);
   if (!isValidDateOnly(savedOn)) {
     throw new InvalidCloudDataError("Cloud project save date is invalid.");
+  }
+  if (isProjectVersionLimitReached(project.versions)) {
+    throw new InvalidCloudDataError("Cloud project version limit reached.");
   }
   const nextVersion = Math.max(0, ...project.versions.map((version) => version.version)) + 1;
 
