@@ -3,9 +3,8 @@ import { expect, test } from "@playwright/test";
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
   const continueButton = page.getByRole("button", { name: "Продолжить" });
-  if (await continueButton.isVisible()) {
-    await continueButton.click();
-  }
+  await continueButton.waitFor({ state: "visible", timeout: 10_000 });
+  await continueButton.click();
   await expect(page.getByRole("heading", { name: "Панель компании", level: 1 })).toBeVisible();
 });
 
