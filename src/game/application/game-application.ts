@@ -16,7 +16,13 @@ import {
   type GameSettings,
   type GameState,
 } from "../models/game-state";
-import { advanceGameDay } from "../engine/time";
+import {
+  createComponentProject as buildComponentProject,
+  saveComponentVersion as buildComponentVersion,
+  type ComponentConfiguration,
+  type ComponentProject,
+  type ComponentType,
+} from "../models/components";
 import { startResearchProject } from "../engine/research";
 import {
   discontinueProduct,
@@ -27,6 +33,13 @@ import {
   type ReleaseProductInput,
 } from "../engine/market";
 import { postFinanceTransaction, repayLoan, takeLoan } from "../engine/finance";
+import {
+  discontinueComponentProduct,
+  releaseComponentProduct,
+  updateComponentProductPrice,
+  type ReleaseComponentProductInput,
+} from "../engine/component-market";
+import { advanceGameDay } from "../engine/time";
 import type { GameStateRepository } from "../../storage/repositories/GameStateRepository";
 
 export interface GameApplication {
@@ -37,7 +50,20 @@ export interface GameApplication {
   updateSettings(settings: Partial<GameSettings>): Promise<GameState>;
   createCpuProject(name: string, configuration: CpuConfiguration): Promise<GameState>;
   saveCpuVersion(projectId: string, name: string, configuration: CpuConfiguration): Promise<GameState>;
+  createComponentProject(
+    type: ComponentType,
+    name: string,
+    configuration: ComponentConfiguration,
+  ): Promise<GameState>;
+  saveComponentVersion(
+    projectId: string,
+    name: string,
+    configuration: ComponentConfiguration,
+  ): Promise<GameState>;
   releaseProduct(input: ReleaseProductInput): Promise<GameState>;
+  releaseComponentProduct(input: ReleaseComponentProductInput): Promise<GameState>;
+  updateComponentProductPrice(productId: string, priceUsd: number): Promise<GameState>;
+  discontinueComponentProduct(productId: string): Promise<GameState>;
   updateProductPrice(productId: string, priceUsd: number): Promise<GameState>;
   orderProduction(productId: string, quantity: number): Promise<GameState>;
   discontinueProduct(productId: string): Promise<GameState>;
@@ -152,6 +178,50 @@ export function createGameApplication(repository: GameStateRepository): GameAppl
       return commit(releaseProduct(await ensureLoaded(), input));
     },
 
+    async createComponentProject(type, name, configuration) {
+      const state = await ensureLoaded();
+      const project = buildComponentProject(
+        nextComponentProjectId(state.componentProjects),
+        name,
+        type,
+        configuration,
+        state.gameDate,
+      );
+      return commit({ ...state, componentProjects: [...state.componentProjects, project] });
+    },
+
+    async saveComponentVersion(projectId, name, configuration) {
+      const state = await ensureLoaded();
+      const projectIndex = state.componentProjects.findIndex((project) => project.id === projectId);
+      if (projectIndex < 0) {
+        throw new Error("Component project was not found.");
+      }
+
+      const project = state.componentProjects[projectIndex];
+      if (!project) {
+        throw new Error("Component project was not found.");
+      }
+
+      const updatedProject = buildComponentVersion(project, name, configuration, state.gameDate);
+      const componentProjects = state.componentProjects.map((currentProject) =>
+        currentProject.id === projectId ? updatedProject : currentProject,
+      );
+
+      return commit({ ...state, componentProjects });
+    },
+
+    async releaseComponentProduct(input) {
+      return commit(releaseComponentProduct(await ensureLoaded(), input));
+    },
+
+    async updateComponentProductPrice(productId, priceUsd) {
+      return commit(updateComponentProductPrice(await ensureLoaded(), productId, priceUsd));
+    },
+
+    async discontinueComponentProduct(productId) {
+      return commit(discontinueComponentProduct(await ensureLoaded(), productId));
+    },
+
     async updateProductPrice(productId, priceUsd) {
       return commit(updateProductPrice(await ensureLoaded(), productId, priceUsd));
     },
@@ -184,6 +254,14 @@ function nextCpuProjectId(projects: GameState["cpuProjects"]): string {
     sequence += 1;
   }
   return `cpu-${sequence}`;
+}
+
+function nextComponentProjectId(projects: ComponentProject[]): string {
+  let sequence = 1;
+  while (projects.some((project) => project.id === `component-${sequence}`)) {
+    sequence += 1;
+  }
+  return `component-${sequence}`;
 }
 
 function assertCpuConfigurationUnlocked(configuration: CpuConfiguration, state: GameState): void {

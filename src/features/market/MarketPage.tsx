@@ -20,6 +20,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { GameState } from "../../game/models/game-state";
+import { validateComponentName } from "../../game/models/components";
 import {
   COMPETITORS,
   MARKET_LIMITS,
@@ -27,6 +28,7 @@ import {
   MARKET_SEGMENTS,
   getMarketSegment,
   validateProductName,
+  type ComponentMarketProduct,
   type MarketProduct,
   type MarketSegmentId,
   type ProductionOrder,
@@ -41,7 +43,17 @@ import {
   estimateManufacturingCost,
   getSegmentDailyDemand,
 } from "../../game/formulas/market";
+import {
+  calculateComponentPerformanceScore,
+  calculateSuggestedComponentPrice,
+  estimateComponentManufacturingCost,
+  getComponentMarketProfile,
+} from "../../game/formulas/components";
 import { estimateProductDailyDemand } from "../../game/engine/market";
+import {
+  estimateComponentProductDailyDemand,
+  type ReleaseComponentProductInput,
+} from "../../game/engine/component-market";
 import { getLoanDailyInterest, getRemainingLoanCapacity } from "../../game/engine/finance";
 import type { ReleaseProductInput } from "../../game/engine/market";
 import {
@@ -64,9 +76,12 @@ interface MarketPageProps {
   activeView: MarketView;
   onViewChange: (view: MarketView) => void;
   onReleaseProduct: (input: ReleaseProductInput) => Promise<boolean>;
+  onReleaseComponentProduct: (input: ReleaseComponentProductInput) => Promise<boolean>;
   onUpdatePrice: (productId: string, priceUsd: number) => Promise<boolean>;
+  onUpdateComponentPrice: (productId: string, priceUsd: number) => Promise<boolean>;
   onOrderProduction: (productId: string, quantity: number) => Promise<boolean>;
   onDiscontinueProduct: (productId: string) => Promise<boolean>;
+  onDiscontinueComponentProduct: (productId: string) => Promise<boolean>;
   onUpdateMarketingBudget: (amountUsd: number) => Promise<boolean>;
   onTakeLoan: (amountUsd: number) => Promise<boolean>;
   onRepayLoan: (amountUsd: number) => Promise<boolean>;
@@ -78,9 +93,12 @@ export function MarketPage({
   activeView,
   onViewChange,
   onReleaseProduct,
+  onReleaseComponentProduct,
   onUpdatePrice,
+  onUpdateComponentPrice,
   onOrderProduction,
   onDiscontinueProduct,
+  onDiscontinueComponentProduct,
   onUpdateMarketingBudget,
   onTakeLoan,
   onRepayLoan,
@@ -126,9 +144,12 @@ export function MarketPage({
             copy={copy}
             isSaving={isSaving}
             onDiscontinueProduct={onDiscontinueProduct}
+            onDiscontinueComponentProduct={onDiscontinueComponentProduct}
             onOrderProduction={onOrderProduction}
             onReleaseProduct={onReleaseProduct}
+            onReleaseComponentProduct={onReleaseComponentProduct}
             onUpdatePrice={onUpdatePrice}
+            onUpdateComponentPrice={onUpdateComponentPrice}
             state={state}
           />
         ) : (
@@ -152,17 +173,23 @@ function MarketOverview({
   copy,
   isSaving,
   onReleaseProduct,
+  onReleaseComponentProduct,
   onUpdatePrice,
+  onUpdateComponentPrice,
   onOrderProduction,
   onDiscontinueProduct,
+  onDiscontinueComponentProduct,
 }: {
   state: GameState;
   copy: MarketCopy;
   isSaving: boolean;
   onReleaseProduct: (input: ReleaseProductInput) => Promise<boolean>;
+  onReleaseComponentProduct: (input: ReleaseComponentProductInput) => Promise<boolean>;
   onUpdatePrice: (productId: string, priceUsd: number) => Promise<boolean>;
+  onUpdateComponentPrice: (productId: string, priceUsd: number) => Promise<boolean>;
   onOrderProduction: (productId: string, quantity: number) => Promise<boolean>;
   onDiscontinueProduct: (productId: string) => Promise<boolean>;
+  onDiscontinueComponentProduct: (productId: string) => Promise<boolean>;
 }) {
   const locale = state.settings.locale;
   const latest = state.market.dailySummaries.at(-1);
@@ -234,6 +261,15 @@ function MarketOverview({
           </div>
         )}
       </section>
+
+      <ComponentMarketSection
+        copy={copy}
+        isSaving={isSaving}
+        onDiscontinueComponentProduct={onDiscontinueComponentProduct}
+        onReleaseComponentProduct={onReleaseComponentProduct}
+        onUpdateComponentPrice={onUpdateComponentPrice}
+        state={state}
+      />
 
       <section className="market-section" aria-labelledby="market-orders-title">
         <SectionHeading
@@ -375,6 +411,382 @@ function MarketOverview({
         )}
       </section>
     </div>
+  );
+}
+
+function ComponentMarketSection({
+  state,
+  copy,
+  isSaving,
+  onReleaseComponentProduct,
+  onUpdateComponentPrice,
+  onDiscontinueComponentProduct,
+}: {
+  state: GameState;
+  copy: MarketCopy;
+  isSaving: boolean;
+  onReleaseComponentProduct: (input: ReleaseComponentProductInput) => Promise<boolean>;
+  onUpdateComponentPrice: (productId: string, priceUsd: number) => Promise<boolean>;
+  onDiscontinueComponentProduct: (productId: string) => Promise<boolean>;
+}) {
+  const locale = state.settings.locale;
+  const componentCopy = copy.componentMarket;
+  const latest = state.market.dailySummaries.at(-1);
+  const activeProducts = state.market.componentProducts.filter((product) => product.status === "active");
+
+  return (
+    <section className="market-section component-market-section" aria-labelledby="component-market-title">
+      <SectionHeading
+        copy={componentCopy.hint}
+        icon={Boxes}
+        id="component-market-title"
+        title={componentCopy.title}
+      />
+      <div className="market-release-summary component-market-summary">
+        <SummaryStat label={componentCopy.dailyDemand} value={formatNumber(latest?.componentDemandUnits ?? 0, locale)} />
+        <SummaryStat label={componentCopy.dailyUnits} value={formatNumber(latest?.componentUnits ?? 0, locale)} />
+        <SummaryStat label={componentCopy.dailyRevenue} value={formatCurrency(latest?.componentRevenueUsd ?? 0, locale)} />
+        <SummaryStat label={componentCopy.activeProducts} value={formatNumber(activeProducts.length, locale)} />
+      </div>
+
+      <ComponentReleaseForm
+        copy={copy}
+        isSaving={isSaving}
+        onReleaseComponentProduct={onReleaseComponentProduct}
+        state={state}
+      />
+
+      {state.market.componentProducts.length === 0 ? (
+        <EmptyState body={componentCopy.emptyHint} title={componentCopy.emptyTitle} />
+      ) : (
+        <div className="market-product-list">
+          {state.market.componentProducts.map((product) => (
+            <ComponentProductCard
+              copy={copy}
+              isSaving={isSaving}
+              key={product.id}
+              onDiscontinue={onDiscontinueComponentProduct}
+              onUpdatePrice={onUpdateComponentPrice}
+              product={product}
+              state={state}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ComponentReleaseForm({
+  state,
+  copy,
+  isSaving,
+  onReleaseComponentProduct,
+}: {
+  state: GameState;
+  copy: MarketCopy;
+  isSaving: boolean;
+  onReleaseComponentProduct: (input: ReleaseComponentProductInput) => Promise<boolean>;
+}) {
+  const formCopy = copy.componentMarket.release;
+  const firstProject = state.componentProjects[0];
+  const firstVersion = firstProject?.versions.at(-1);
+  const [projectId, setProjectId] = useState(firstProject?.id ?? "");
+  const [versionNumber, setVersionNumber] = useState(firstVersion?.version ?? 0);
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState(() => {
+    if (!firstVersion) {
+      return "250";
+    }
+    const cost = estimateComponentManufacturingCost(firstVersion.configuration).unitCostUsd;
+    return String(calculateSuggestedComponentPrice(
+      cost,
+      getComponentMarketProfile(firstVersion.configuration.type),
+    ));
+  });
+  const [error, setError] = useState<string | null>(null);
+
+  const selectedProject = state.componentProjects.find((project) => project.id === projectId) ?? firstProject;
+  const selectedVersion = selectedProject?.versions.find((version) => version.version === versionNumber)
+    ?? selectedProject?.versions.at(-1);
+  const estimate = selectedVersion ? estimateComponentManufacturingCost(selectedVersion.configuration) : null;
+  const performance = selectedVersion
+    ? calculateComponentPerformanceScore(selectedVersion.configuration)
+    : null;
+  const suggestedPrice = estimate && selectedVersion
+    ? calculateSuggestedComponentPrice(
+      estimate.unitCostUsd,
+      getComponentMarketProfile(selectedVersion.configuration.type),
+    )
+    : null;
+  const priceNumber = Number(price);
+  const invalidPrice = !Number.isFinite(priceNumber)
+    || priceNumber < MARKET_LIMITS.minPriceUsd
+    || priceNumber > MARKET_LIMITS.maxPriceUsd;
+  const margin = estimate && Number.isFinite(priceNumber)
+    ? (priceNumber - estimate.unitCostUsd) / priceNumber
+    : 0;
+
+  if (state.componentProjects.length === 0) {
+    return (
+      <div className="component-market-empty">
+        <p>{formCopy.noProjects}</p>
+      </div>
+    );
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedProject) {
+      setError(formCopy.errors.project);
+      return;
+    }
+    if (!selectedVersion) {
+      setError(formCopy.errors.version);
+      return;
+    }
+    if (validateComponentName(name.trim()) !== null) {
+      setError(formCopy.errors.name);
+      return;
+    }
+    if (invalidPrice) {
+      setError(formCopy.errors.price);
+      return;
+    }
+    if (state.company.balance < MARKET_RULES.launchFeeUsd) {
+      setError(formCopy.errors.funds);
+      return;
+    }
+
+    setError(null);
+    const succeeded = await onReleaseComponentProduct({
+      projectId: selectedProject.id,
+      projectVersion: selectedVersion.version,
+      name: name.trim(),
+      priceUsd: priceNumber,
+    });
+    if (succeeded) {
+      setName("");
+    }
+  }
+
+  return (
+    <div className="component-release-block">
+      <div>
+        <h3>{formCopy.title}</h3>
+        <p>{formCopy.hint}</p>
+      </div>
+      <form className="market-form-card" onSubmit={(event) => void handleSubmit(event)}>
+        <div className="market-form-grid">
+          <div className="field-group">
+            <label htmlFor="component-release-project">{formCopy.project}</label>
+            <select
+              id="component-release-project"
+              onChange={(event) => {
+                const nextProject = state.componentProjects.find((project) => project.id === event.target.value);
+                const nextVersion = nextProject?.versions.at(-1);
+                setProjectId(event.target.value);
+                setVersionNumber(nextVersion?.version ?? 0);
+                if (nextVersion) {
+                  const nextCost = estimateComponentManufacturingCost(nextVersion.configuration).unitCostUsd;
+                  setPrice(String(calculateSuggestedComponentPrice(
+                    nextCost,
+                    getComponentMarketProfile(nextVersion.configuration.type),
+                  )));
+                }
+              }}
+              value={selectedProject?.id ?? ""}
+            >
+              {state.componentProjects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {copy.componentMarket.types[project.type]} · {project.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field-group">
+            <label htmlFor="component-release-version">{copy.release.version}</label>
+            <select
+              id="component-release-version"
+              onChange={(event) => setVersionNumber(Number(event.target.value))}
+              value={selectedVersion?.version ?? ""}
+            >
+              {selectedProject?.versions.map((version) => (
+                <option key={version.version} value={version.version}>
+                  {copy.release.version} {version.version} · {formatShortGameDate(version.savedOn, state.settings.locale)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field-group">
+            <label htmlFor="component-release-name">{formCopy.name}</label>
+            <input
+              id="component-release-name"
+              maxLength={MARKET_LIMITS.maxProductNameLength}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Dynasty Graphics 100"
+              value={name}
+            />
+            <p className="field-hint">{formCopy.nameHint}</p>
+          </div>
+          <div className="field-group">
+            <label htmlFor="component-release-price">{formCopy.price}</label>
+            <input
+              id="component-release-price"
+              inputMode="decimal"
+              min={MARKET_LIMITS.minPriceUsd}
+              onChange={(event) => setPrice(event.target.value)}
+              step="1"
+              type="number"
+              value={price}
+            />
+            <p className="field-hint">{formCopy.priceHint}</p>
+          </div>
+          <div className="field-group market-suggested-price">
+            <span>{copy.release.suggested}</span>
+            <strong>{suggestedPrice === null ? "—" : formatCurrency(suggestedPrice, state.settings.locale)}</strong>
+            <button
+              className="button button--secondary"
+              disabled={suggestedPrice === null || isSaving}
+              onClick={() => suggestedPrice !== null && setPrice(String(suggestedPrice))}
+              type="button"
+            >
+              {copy.release.useSuggested}
+            </button>
+          </div>
+        </div>
+
+        <div className="market-release-summary">
+          <SummaryStat label={formCopy.unitCost} value={estimate ? formatCurrency(estimate.unitCostUsd, state.settings.locale) : "—"} />
+          <SummaryStat label={formCopy.performance} value={performance === null ? "—" : formatDecimal(performance, state.settings.locale, 2)} />
+          <SummaryStat label={copy.release.margin} value={formatShare(margin, state.settings.locale)} />
+          <SummaryStat label={copy.release.launchFee} value={formatCurrency(MARKET_RULES.launchFeeUsd, state.settings.locale)} />
+        </div>
+
+        {error && <p className="inline-feedback inline-feedback--error" role="alert">{error}</p>}
+
+        <div className="market-form-footer">
+          <p className="field-hint">{formCopy.marginNote}</p>
+          <button className="button button--primary" disabled={isSaving} type="submit">
+            {isSaving ? copy.release.submitting : formCopy.submit}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function ComponentProductCard({
+  product,
+  state,
+  copy,
+  isSaving,
+  onUpdatePrice,
+  onDiscontinue,
+}: {
+  product: ComponentMarketProduct;
+  state: GameState;
+  copy: MarketCopy;
+  isSaving: boolean;
+  onUpdatePrice: (productId: string, priceUsd: number) => Promise<boolean>;
+  onDiscontinue: (productId: string) => Promise<boolean>;
+}) {
+  const locale = state.settings.locale;
+  const productCopy = copy.componentMarket.products;
+  const [price, setPrice] = useState(String(product.priceUsd));
+  const [error, setError] = useState<string | null>(null);
+  const priceNumber = Number(price);
+  const invalidPrice = !Number.isFinite(priceNumber)
+    || priceNumber < MARKET_LIMITS.minPriceUsd
+    || priceNumber > MARKET_LIMITS.maxPriceUsd;
+  const estimate = product.status === "active"
+    ? estimateComponentProductDailyDemand(state, product.id, state.gameDate)
+    : null;
+
+  async function updatePrice(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (invalidPrice) {
+      setError(copy.release.errors.price);
+      return;
+    }
+    setError(null);
+    await onUpdatePrice(product.id, priceNumber);
+  }
+
+  return (
+    <article className={`market-product-card component-product-card${product.status === "discontinued" ? " is-discontinued" : ""}`}>
+      <div className="market-product-card__header">
+        <div>
+          <div className="market-product-card__titleline">
+            <h3>{product.name}</h3>
+            <span className={`market-status market-status--${product.status}`}>
+              {product.status === "active" ? copy.products.active : copy.products.discontinued}
+            </span>
+          </div>
+          <p>
+            {copy.componentMarket.types[product.componentType]} · v{product.projectVersion} ·{" "}
+            {formatShortGameDate(product.releaseDate, locale)}
+          </p>
+        </div>
+        <strong>{formatCurrency(product.priceUsd, locale)}</strong>
+      </div>
+
+      <div className="market-product-stats">
+        <SummaryStat label={copy.products.unitCost} value={formatCurrency(product.manufacturingCostUsd, locale)} />
+        <SummaryStat
+          label={copy.products.margin}
+          value={formatShare((product.priceUsd - product.manufacturingCostUsd) / product.priceUsd, locale)}
+        />
+        <SummaryStat label={productCopy.performance} value={formatDecimal(product.performanceScore, locale, 3)} />
+        <SummaryStat label={copy.products.sold} value={formatNumber(product.unitsSold, locale)} />
+        <SummaryStat label={copy.products.revenue} value={formatCurrency(product.revenueUsd, locale)} />
+        <SummaryStat
+          label={productCopy.estimate}
+          value={estimate
+            ? productCopy.estUnits.replace("{units}", formatNumber(estimate.unitsPerDay, locale))
+            : copy.products.estimateUnavailable}
+        />
+      </div>
+
+      {estimate && (
+        <p className="market-product-card__estimate">
+          {productCopy.estShare.replace("{share}", formatShare(estimate.share, locale))}
+        </p>
+      )}
+
+      {product.status === "active" && (
+        <>
+          <div className="market-product-actions">
+            <form className="market-inline-form" onSubmit={(event) => void updatePrice(event)}>
+              <div className="field-group">
+                <label htmlFor={`component-price-${product.id}`}>{copy.products.price}</label>
+                <input
+                  id={`component-price-${product.id}`}
+                  inputMode="decimal"
+                  min={MARKET_LIMITS.minPriceUsd}
+                  onChange={(event) => setPrice(event.target.value)}
+                  step="1"
+                  type="number"
+                  value={price}
+                />
+              </div>
+              <button className="button button--secondary" disabled={isSaving || invalidPrice} type="submit">
+                {copy.products.applyPrice}
+              </button>
+            </form>
+          </div>
+          {error && <p className="field-error">{error}</p>}
+          <button
+            className="button button--danger market-discontinue-button"
+            disabled={isSaving}
+            onClick={() => void onDiscontinue(product.id)}
+            type="button"
+          >
+            {isSaving ? copy.products.discontinuing : copy.products.discontinue}
+          </button>
+        </>
+      )}
+    </article>
   );
 }
 

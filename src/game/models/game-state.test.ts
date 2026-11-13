@@ -13,7 +13,7 @@ describe("game state validation", () => {
     const state = createInitialGameState();
 
     expect(() => parseGameState({ ...state, gameDate: "1995-02-30" })).toThrow(InvalidGameStateError);
-    expect(() => parseGameState({ ...state, schemaVersion: 5 })).toThrow(InvalidGameStateError);
+    expect(() => parseGameState({ ...state, schemaVersion: 6 })).toThrow(InvalidGameStateError);
   });
 
   it("migrates a Stage 1 save without losing company, date, or settings", () => {
@@ -27,11 +27,12 @@ describe("game state validation", () => {
 
     const migrated = parseGameState(legacyStageOneSave);
 
-    expect(migrated.schemaVersion).toBe(4);
+    expect(migrated.schemaVersion).toBe(5);
     expect(migrated.gameDate).toBe(current.gameDate);
     expect(migrated.company).toEqual(current.company);
     expect(migrated.settings).toEqual(current.settings);
     expect(migrated.cpuProjects).toEqual([]);
+    expect(migrated.componentProjects).toEqual([]);
     expect(migrated.research).toEqual(current.research);
     expect(migrated.finance).toEqual(current.finance);
     expect(migrated.market).toEqual(current.market);
@@ -54,8 +55,9 @@ describe("game state validation", () => {
       settings: current.settings,
     });
 
-    expect(migrated.schemaVersion).toBe(4);
+    expect(migrated.schemaVersion).toBe(5);
     expect(migrated.cpuProjects).toEqual([cpuProject]);
+    expect(migrated.componentProjects).toEqual([]);
     expect(migrated.finance).toEqual(current.finance);
     expect(migrated.market).toEqual(current.market);
     expect(migrated.research.completedTechnologyIds).toEqual([]);
@@ -77,13 +79,64 @@ describe("game state validation", () => {
 
     const migrated = parseGameState(legacySave);
 
-    expect(migrated.schemaVersion).toBe(4);
+    expect(migrated.schemaVersion).toBe(5);
     expect(migrated.gameDate).toBe("1998-06-15");
     expect(migrated.finance).toEqual(current.finance);
     expect(migrated.market.products).toEqual([]);
+    expect(migrated.market.componentProducts).toEqual([]);
     expect(migrated.market.dailySummaries).toEqual([]);
     expect(migrated.market.competitors).toHaveLength(6);
     expect(migrated.market.competitors[0]?.nextActionOn).toBe("1998-06-22");
+  });
+
+  it("migrates schema-4 saves without losing finance, market, or legacy summaries", () => {
+    const current = createInitialGameState();
+    const legacySummary = {
+      date: "1995-01-01",
+      totalDemandUnits: 6_000,
+      playerUnits: 120,
+      competitorUnits: 5_880,
+      playerRevenueUsd: 36_000,
+      marketShare: 0.02,
+      segments: {},
+    };
+    const legacySave = {
+      schemaVersion: 4,
+      gameDate: current.gameDate,
+      company: { ...current.company, balance: 123_456 },
+      cpuProjects: [],
+      research: current.research,
+      finance: current.finance,
+      market: {
+        ...current.market,
+        dailySummaries: [legacySummary],
+        marketingBudgetUsdPerDay: 500,
+      },
+      settings: current.settings,
+    };
+
+    const migrated = parseGameState(legacySave);
+
+    expect(migrated.schemaVersion).toBe(5);
+    expect(migrated.company.balance).toBe(123_456);
+    expect(migrated.componentProjects).toEqual([]);
+    expect(migrated.market.componentProducts).toEqual([]);
+    expect(migrated.market.marketingBudgetUsdPerDay).toBe(500);
+    expect(migrated.market.dailySummaries[0]).toEqual(expect.objectContaining({
+      playerUnits: 120,
+      componentUnits: 0,
+      componentDemandUnits: 0,
+      componentRevenueUsd: 0,
+      componentManufacturingUsd: 0,
+    }));
+  });
+
+  it("rejects invalid component projects in the current save schema", () => {
+    const state = createInitialGameState();
+
+    expect(() => parseGameState({ ...state, componentProjects: [{ id: "bad" }] })).toThrow(
+      InvalidGameStateError,
+    );
   });
 
   it("rejects invalid CPU projects in the current save schema", () => {

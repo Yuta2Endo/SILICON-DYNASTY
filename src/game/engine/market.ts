@@ -425,6 +425,10 @@ export function simulateMarketDay(state: GameState, date: string): GameState {
     playerRevenueUsd,
     marketShare: totalDemandUnits > 0 ? roundShare(playerUnits / totalDemandUnits) : 0,
     segments: segmentResults,
+    componentDemandUnits: 0,
+    componentUnits: 0,
+    componentRevenueUsd: 0,
+    componentManufacturingUsd: 0,
   };
 
   let nextState: GameState = {
@@ -454,7 +458,7 @@ export function simulateMarketDay(state: GameState, date: string): GameState {
 }
 
 export function updateMarketReputation(state: GameState, summary: MarketDaySummary): GameState {
-  const reputationGain = Math.min(0.1, summary.playerUnits / 5_000);
+  const reputationGain = Math.min(0.1, (summary.playerUnits + summary.componentUnits) / 5_000);
   const stockoutPenalty = state.market.products.some(
     (product) =>
       product.status === "active"

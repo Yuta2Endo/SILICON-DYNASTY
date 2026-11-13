@@ -1,3 +1,11 @@
+import {
+  cloneComponentConfiguration,
+  isComponentType,
+  parseComponentConfiguration,
+  validateComponentName,
+  type ComponentConfiguration,
+  type ComponentType,
+} from "./components";
 import { cloneCpuConfiguration, parseCpuConfiguration, type CpuConfiguration, type CpuIsa } from "./cpu";
 import { addDays, isValidDateOnly } from "./date";
 
@@ -197,6 +205,7 @@ export const MARKET_LIMITS = {
   maxActionHistory: 60,
   maxDailySummaries: 180,
   maxProductionOrders: 40,
+  maxComponentProducts: 60,
 } as const;
 
 export const MARKET_RULES = {
@@ -220,6 +229,22 @@ export interface MarketProduct {
   performanceScore: number;
   inventoryUnits: number;
   unitsProduced: number;
+  unitsSold: number;
+  revenueUsd: number;
+  status: MarketProductStatus;
+}
+
+export interface ComponentMarketProduct {
+  id: string;
+  name: string;
+  projectId: string;
+  projectVersion: number;
+  componentType: ComponentType;
+  configuration: ComponentConfiguration;
+  releaseDate: string;
+  priceUsd: number;
+  manufacturingCostUsd: number;
+  performanceScore: number;
   unitsSold: number;
   revenueUsd: number;
   status: MarketProductStatus;
@@ -272,10 +297,15 @@ export interface MarketDaySummary {
   playerRevenueUsd: number;
   marketShare: number;
   segments: Partial<Record<MarketSegmentId, MarketSegmentDayResult>>;
+  componentDemandUnits: number;
+  componentUnits: number;
+  componentRevenueUsd: number;
+  componentManufacturingUsd: number;
 }
 
 export interface MarketState {
   products: MarketProduct[];
+  componentProducts: ComponentMarketProduct[];
   productionOrders: ProductionOrder[];
   competitors: CompetitorMarketState[];
   actions: CompetitorAction[];
@@ -293,6 +323,7 @@ export class InvalidMarketDataError extends Error {
 export function createInitialMarketState(gameDate: string): MarketState {
   return {
     products: [],
+    componentProducts: [],
     productionOrders: [],
     competitors: COMPETITORS.map((competitor) => ({
       competitorId: competitor.id,
@@ -332,7 +363,10 @@ export function validateProductName(name: string): boolean {
     && normalized.length <= MARKET_LIMITS.maxProductNameLength;
 }
 
-export function parseMarketState(value: unknown): MarketState {
+export function parseMarketState(
+  value: unknown,
+  options: { allowMissingComponentData?: boolean } = {},
+): MarketState {
   if (!isRecord(value)) {
     throw new InvalidMarketDataError("Market data must be an object.");
   }
@@ -342,6 +376,7 @@ export function parseMarketState(value: unknown): MarketState {
     || !Array.isArray(value.competitors)
     || !Array.isArray(value.actions)
     || !Array.isArray(value.dailySummaries)
+    || (!options.allowMissingComponentData && !Array.isArray(value.componentProducts))
   ) {
     throw new InvalidMarketDataError("Market history is missing.");
   }
@@ -349,6 +384,7 @@ export function parseMarketState(value: unknown): MarketState {
     value.actions.length > MARKET_LIMITS.maxActionHistory
     || value.dailySummaries.length > MARKET_LIMITS.maxDailySummaries
     || value.productionOrders.length > MARKET_LIMITS.maxProductionOrders
+    || (Array.isArray(value.componentProducts) && value.componentProducts.length > MARKET_LIMITS.maxComponentProducts)
   ) {
     throw new InvalidMarketDataError("Market history is too long.");
   }
@@ -362,6 +398,19 @@ export function parseMarketState(value: unknown): MarketState {
     !== products.length
   ) {
     throw new InvalidMarketDataError("Market products duplicate a CPU project version.");
+  }
+
+  const componentProducts = Array.isArray(value.componentProducts)
+    ? value.componentProducts.map(parseComponentMarketProduct)
+    : [];
+  if (new Set(componentProducts.map((product) => product.id)).size !== componentProducts.length) {
+    throw new InvalidMarketDataError("Component product IDs are duplicated.");
+  }
+  if (
+    new Set(componentProducts.map((product) => `${product.projectId}:${product.projectVersion}`)).size
+    !== componentProducts.length
+  ) {
+    throw new InvalidMarketDataError("Component products duplicate a project version.");
   }
 
   const productIds = new Set(products.map((product) => product.id));
@@ -390,7 +439,9 @@ export function parseMarketState(value: unknown): MarketState {
     throw new InvalidMarketDataError("Competitor action references an unknown competitor.");
   }
 
-  const dailySummaries = value.dailySummaries.map(parseMarketDaySummary);
+  const dailySummaries = value.dailySummaries.map((summary) =>
+    parseMarketDaySummary(summary, options.allowMissingComponentData === true)
+  );
   if (new Set(dailySummaries.map((summary) => summary.date)).size !== dailySummaries.length) {
     throw new InvalidMarketDataError("Market summaries contain duplicate dates.");
   }
@@ -406,11 +457,71 @@ export function parseMarketState(value: unknown): MarketState {
 
   return {
     products,
+    componentProducts,
     productionOrders,
     competitors,
     actions,
     dailySummaries,
     marketingBudgetUsdPerDay: roundUsd(value.marketingBudgetUsdPerDay),
+  };
+}
+
+function parseComponentMarketProduct(value: unknown): ComponentMarketProduct {
+  if (!isRecord(value)) {
+    throw new InvalidMarketDataError("Component product is invalid.");
+  }
+  if (
+    typeof value.id !== "string"
+    || typeof value.name !== "string"
+    || typeof value.projectId !== "string"
+    || typeof value.projectVersion !== "number"
+    || typeof value.componentType !== "string"
+    || !isComponentType(value.componentType)
+    || typeof value.releaseDate !== "string"
+    || typeof value.priceUsd !== "number"
+    || typeof value.manufacturingCostUsd !== "number"
+    || typeof value.performanceScore !== "number"
+    || typeof value.unitsSold !== "number"
+    || typeof value.revenueUsd !== "number"
+    || (value.status !== "active" && value.status !== "discontinued")
+  ) {
+    throw new InvalidMarketDataError("Component product is incomplete.");
+  }
+  if (
+    value.id.trim().length === 0
+    || validateComponentName(value.name) !== null
+    || value.projectId.trim().length === 0
+    || !Number.isInteger(value.projectVersion)
+    || value.projectVersion < 1
+    || !isValidDateOnly(value.releaseDate)
+    || !isWithin(value.priceUsd, MARKET_LIMITS.minPriceUsd, MARKET_LIMITS.maxPriceUsd)
+    || !isPositive(value.manufacturingCostUsd)
+    || !isPositive(value.performanceScore)
+    || !isNonNegativeInteger(value.unitsSold)
+    || !isNonNegative(value.revenueUsd)
+  ) {
+    throw new InvalidMarketDataError("Component product fields are invalid.");
+  }
+
+  const configuration = parseComponentConfiguration(value.configuration);
+  if (configuration.type !== value.componentType) {
+    throw new InvalidMarketDataError("Component product type does not match its configuration.");
+  }
+
+  return {
+    id: value.id,
+    name: value.name.trim(),
+    projectId: value.projectId,
+    projectVersion: value.projectVersion,
+    componentType: value.componentType,
+    configuration: cloneComponentConfiguration(configuration),
+    releaseDate: value.releaseDate,
+    priceUsd: roundUsd(value.priceUsd),
+    manufacturingCostUsd: roundUsd(value.manufacturingCostUsd),
+    performanceScore: roundScore(value.performanceScore),
+    unitsSold: value.unitsSold,
+    revenueUsd: roundUsd(value.revenueUsd),
+    status: value.status,
   };
 }
 
@@ -578,7 +689,24 @@ function parseCompetitorAction(value: unknown): CompetitorAction {
   };
 }
 
-function parseMarketDaySummary(value: unknown): MarketDaySummary {
+function parseMarketDaySummary(
+  value: unknown,
+  allowMissingComponentData: boolean,
+): MarketDaySummary {
+  const componentDemandUnits = value && isRecord(value) && value.componentDemandUnits !== undefined
+    ? value.componentDemandUnits
+    : allowMissingComponentData ? 0 : undefined;
+  const componentUnits = value && isRecord(value) && value.componentUnits !== undefined
+    ? value.componentUnits
+    : allowMissingComponentData ? 0 : undefined;
+  const componentRevenueUsd = value && isRecord(value) && value.componentRevenueUsd !== undefined
+    ? value.componentRevenueUsd
+    : allowMissingComponentData ? 0 : undefined;
+  const componentManufacturingUsd = value && isRecord(value)
+    && value.componentManufacturingUsd !== undefined
+    ? value.componentManufacturingUsd
+    : allowMissingComponentData ? 0 : undefined;
+
   if (!isRecord(value) || typeof value.date !== "string" || !isValidDateOnly(value.date)) {
     throw new InvalidMarketDataError("Market day summary is invalid.");
   }
@@ -589,6 +717,10 @@ function parseMarketDaySummary(value: unknown): MarketDaySummary {
     || typeof value.playerRevenueUsd !== "number"
     || typeof value.marketShare !== "number"
     || !isRecord(value.segments)
+    || typeof componentDemandUnits !== "number"
+    || typeof componentUnits !== "number"
+    || typeof componentRevenueUsd !== "number"
+    || typeof componentManufacturingUsd !== "number"
   ) {
     throw new InvalidMarketDataError("Market day summary is incomplete.");
   }
@@ -599,6 +731,11 @@ function parseMarketDaySummary(value: unknown): MarketDaySummary {
     || value.playerUnits + value.competitorUnits !== value.totalDemandUnits
     || !isNonNegative(value.playerRevenueUsd)
     || !isWithin(value.marketShare, 0, 1)
+    || !isNonNegativeInteger(componentDemandUnits)
+    || !isNonNegativeInteger(componentUnits)
+    || componentUnits > componentDemandUnits
+    || !isNonNegative(componentRevenueUsd)
+    || !isNonNegative(componentManufacturingUsd)
   ) {
     throw new InvalidMarketDataError("Market day summary fields are invalid.");
   }
@@ -634,6 +771,10 @@ function parseMarketDaySummary(value: unknown): MarketDaySummary {
     playerRevenueUsd: roundUsd(value.playerRevenueUsd),
     marketShare: value.marketShare,
     segments,
+    componentDemandUnits,
+    componentUnits,
+    componentRevenueUsd: roundUsd(componentRevenueUsd),
+    componentManufacturingUsd: roundUsd(componentManufacturingUsd),
   };
 }
 

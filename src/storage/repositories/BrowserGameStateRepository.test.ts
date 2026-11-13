@@ -44,13 +44,13 @@ describe("LocalStorageGameStateRepository", () => {
     const persisted = JSON.parse(window.localStorage.getItem("silicon-dynasty:save") ?? "null") as { schemaVersion?: number };
     const legacy = JSON.parse(window.localStorage.getItem("silicon-dynasty:save:v1") ?? "null") as { schemaVersion?: number };
 
-    expect(migrated?.schemaVersion).toBe(4);
+    expect(migrated?.schemaVersion).toBe(5);
     expect(migrated?.research).toEqual(createInitialGameState().research);
     expect(migrated?.company).toEqual(current.company);
     expect(migrated?.cpuProjects).toEqual([]);
     expect(migrated?.finance).toEqual(current.finance);
     expect(migrated?.market).toEqual(current.market);
-    expect(persisted.schemaVersion).toBe(4);
+    expect(persisted.schemaVersion).toBe(5);
     expect(legacy.schemaVersion).toBe(1);
   });
 
@@ -78,7 +78,7 @@ describe("LocalStorageGameStateRepository", () => {
       schemaVersion: number;
     };
 
-    expect(migrated?.schemaVersion).toBe(4);
+    expect(migrated?.schemaVersion).toBe(5);
     expect(migrated?.cpuProjects).toEqual([project]);
     expect(migrated?.finance).toEqual(current.finance);
     expect(migrated?.market).toEqual(current.market);
@@ -88,6 +88,6 @@ describe("LocalStorageGameStateRepository", () => {
       "memory.ddr",
       "cpu.neon",
     ]));
-    expect(persisted.schemaVersion).toBe(4);
+    expect(persisted.schemaVersion).toBe(5);
   });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { GameState } from "../models/game-state";
 import { createDefaultCpuConfiguration } from "../models/cpu";
+import { createDefaultComponentConfiguration, type GpuConfiguration } from "../models/components";
 import { getFinanceDailyRecord } from "../models/finance";
 import { createGameApplication } from "./game-application";
 import type { GameStateRepository } from "../../storage/repositories/GameStateRepository";
@@ -80,6 +81,56 @@ describe("game application commands", () => {
     };
 
     await expect(application.createCpuProject("Dynasty Core", invalidConfiguration)).rejects.toThrow();
+    expect(repository.state).toEqual(initial);
+  });
+
+  it("persists component projects and component market commands", async () => {
+    const repository = new MemoryGameStateRepository();
+    const application = createGameApplication(repository);
+    const configuration = createDefaultComponentConfiguration("gpu") as GpuConfiguration;
+
+    await application.createComponentProject("gpu", "Dynasty Graphics", configuration);
+    await application.saveComponentVersion("component-1", "Dynasty Graphics", {
+      ...configuration,
+      computeUnits: 16,
+    });
+    await application.releaseComponentProduct({
+      projectId: "component-1",
+      projectVersion: 2,
+      name: "Dynasty Graphics 200",
+      priceUsd: 450,
+    });
+    await application.updateComponentProductPrice("component-product-1", 425);
+    await application.discontinueComponentProduct("component-product-1");
+
+    const reloaded = await createGameApplication(repository).load();
+    const project = reloaded.componentProjects[0];
+    const product = reloaded.market.componentProducts[0];
+
+    expect(project?.configuration.type).toBe("gpu");
+    expect(project?.versions.map((version) => version.version)).toEqual([1, 2]);
+    expect((project?.configuration as GpuConfiguration | undefined)?.computeUnits).toBe(16);
+    expect(product).toEqual(expect.objectContaining({
+      projectVersion: 2,
+      priceUsd: 425,
+      status: "discontinued",
+      componentType: "gpu",
+    }));
+    expect(reloaded.company.balance).toBe(95_000);
+  });
+
+  it("rejects invalid component configurations without persisting them", async () => {
+    const repository = new MemoryGameStateRepository();
+    const application = createGameApplication(repository);
+    const initial = await application.load();
+    const invalidConfiguration = {
+      ...createDefaultComponentConfiguration("gpu"),
+      computeUnits: 0,
+    } as GpuConfiguration;
+
+    await expect(
+      application.createComponentProject("gpu", "Broken GPU", invalidConfiguration),
+    ).rejects.toThrow();
     expect(repository.state).toEqual(initial);
   });
 

@@ -2,6 +2,7 @@ import type { GameState } from "../models/game-state";
 import { addDays } from "../models/date";
 import { advanceResearchDay } from "./research";
 import { runCompetitorDay, runProductionDay, simulateMarketDay, updateMarketReputation } from "./market";
+import { simulateComponentMarketDay } from "./component-market";
 import { settleDailyFinance } from "./finance";
 
 export function advanceGameDay(state: GameState): GameState {
@@ -15,6 +16,7 @@ export function advanceGameDay(state: GameState): GameState {
   nextState = runProductionDay(nextState, simulationDate);
   nextState = runCompetitorDay(nextState, simulationDate);
   nextState = simulateMarketDay(nextState, simulationDate);
+  nextState = simulateComponentMarketDay(nextState, simulationDate);
   nextState = settleDailyFinance(nextState, simulationDate);
 
   const summary = nextState.market.dailySummaries.at(-1);

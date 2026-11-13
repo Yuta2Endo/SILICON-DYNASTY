@@ -1,0 +1,132 @@
+import { describe, expect, it } from "vitest";
+import {
+  createDefaultComponentConfiguration,
+  createComponentProject,
+} from "../models/components";
+import { createInitialGameState } from "../models/game-state";
+import type { GameState } from "../models/game-state";
+import {
+  ComponentMarketOperationError,
+  discontinueComponentProduct,
+  releaseComponentProduct,
+  simulateComponentMarketDay,
+  updateComponentProductPrice,
+} from "./component-market";
+
+function stateWithGpuProject(): GameState {
+  const state = createInitialGameState();
+  const project = createComponentProject(
+    "component-1",
+    "Dynasty Graphics",
+    "gpu",
+    createDefaultComponentConfiguration("gpu"),
+    state.gameDate,
+  );
+  return { ...state, componentProjects: [project] };
+}
+
+function releasedGpuState(priceUsd = 400): GameState {
+  return releaseComponentProduct(stateWithGpuProject(), {
+    projectId: "component-1",
+    projectVersion: 1,
+    name: "Dynasty Graphics 100",
+    priceUsd,
+  });
+}
+
+function withMatureRelease(state: GameState): GameState {
+  return {
+    ...state,
+    market: {
+      ...state.market,
+      componentProducts: state.market.componentProducts.map((product) => ({
+        ...product,
+        releaseDate: "1994-01-01",
+      })),
+    },
+  };
+}
+
+describe("component market", () => {
+  it("charges a launch fee and creates a manufactured product", () => {
+    const state = releasedGpuState();
+    const product = state.market.componentProducts[0];
+
+    expect(state.company.balance).toBe(95_000);
+    expect(product).toEqual(expect.objectContaining({
+      id: "component-product-1",
+      projectId: "component-1",
+      projectVersion: 1,
+      componentType: "gpu",
+      priceUsd: 400,
+      status: "active",
+      unitsSold: 0,
+      revenueUsd: 0,
+    }));
+    expect(product?.manufacturingCostUsd).toBeGreaterThan(0);
+    expect(product?.performanceScore).toBe(1);
+    expect(() => releaseComponentProduct(state, {
+      projectId: "component-1",
+      projectVersion: 1,
+      name: "Duplicate",
+      priceUsd: 400,
+    })).toThrow(ComponentMarketOperationError);
+  });
+
+  it("sells components just in time and records revenue, cost, and units", () => {
+    const released = withMatureRelease(releasedGpuState());
+    const before = released.company.balance;
+    const unitCost = released.market.componentProducts[0]?.manufacturingCostUsd ?? 0;
+    const simulated = simulateComponentMarketDay(released, "1995-01-01");
+    const product = simulated.market.componentProducts[0];
+    const summary = simulated.market.dailySummaries.at(-1);
+    const units = product?.unitsSold ?? 0;
+
+    expect(units).toBeGreaterThan(0);
+    expect(product?.revenueUsd).toBe(units * 400);
+    expect(summary).toEqual(expect.objectContaining({
+      date: "1995-01-01",
+      componentUnits: units,
+      componentRevenueUsd: units * 400,
+      componentManufacturingUsd: Math.round(units * unitCost * 100) / 100,
+    }));
+    expect(summary?.componentDemandUnits).toBeGreaterThan(0);
+    expect(simulated.company.balance).toBeCloseTo(
+      before - units * unitCost + units * 400,
+      2,
+    );
+    expect(simulated.finance.dailyRecords.at(-1)?.unitsSold).toBe(units);
+    expect(simulated.finance.transactions.some((transaction) => transaction.category === "sales")).toBe(true);
+    expect(simulated.finance.transactions.some((transaction) => transaction.category === "manufacturing")).toBe(true);
+  });
+
+  it("sells fewer units at a higher price", () => {
+    const cheap = simulateComponentMarketDay(withMatureRelease(releasedGpuState(120)), "1995-01-01");
+    const expensive = simulateComponentMarketDay(withMatureRelease(releasedGpuState(900)), "1995-01-01");
+
+    expect(cheap.market.componentProducts[0]?.unitsSold ?? 0)
+      .toBeGreaterThan(expensive.market.componentProducts[0]?.unitsSold ?? 0);
+  });
+
+  it("caps just-in-time production at available cash", () => {
+    const released = withMatureRelease(releasedGpuState());
+    const poorState = { ...released, company: { ...released.company, balance: 1 } };
+    const simulated = simulateComponentMarketDay(poorState, "1995-01-01");
+
+    expect(simulated.market.componentProducts[0]?.unitsSold).toBe(0);
+    expect(simulated.market.dailySummaries.at(-1)?.componentUnits).toBe(0);
+    expect(simulated.company.balance).toBe(1);
+  });
+
+  it("updates prices and stops sales for a discontinued product", () => {
+    const released = withMatureRelease(releasedGpuState());
+    const repriced = updateComponentProductPrice(released, "component-product-1", 550);
+    expect(repriced.market.componentProducts[0]?.priceUsd).toBe(550);
+
+    const discontinued = discontinueComponentProduct(repriced, "component-product-1");
+    expect(discontinued.market.componentProducts[0]?.status).toBe("discontinued");
+
+    const simulated = simulateComponentMarketDay(discontinued, "1995-01-01");
+    expect(simulated.market.componentProducts[0]?.unitsSold).toBe(0);
+  });
+});

@@ -170,6 +170,10 @@ describe("market engine", () => {
       competitorUnits: 5_800,
       playerRevenueUsd: 60_000,
       marketShare: 200 / 6_000,
+      componentDemandUnits: 0,
+      componentUnits: 0,
+      componentRevenueUsd: 0,
+      componentManufacturingUsd: 0,
       segments: { budget: { playerUnits: 200, totalUnits: 6_000, share: 200 / 6_000 } },
     };
     const rewarded = updateMarketReputation(state, summary);

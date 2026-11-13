@@ -26,14 +26,14 @@ Feature modules: dashboard, company, CPU, GPU, components, research, benchmark, 
 - TimeEngine: game date, pause and time speed.
 - EventEngine: event conditions and effects.
 - DependencyEngine: technology and product prerequisites.
-- Domain systems: hardware, benchmark, research, economy, market, OS, AI, software, devices, cloud and ecosystem.
+- Domain systems: hardware, benchmark, research, economy, market, component compatibility, OS, AI, software, devices, cloud and ecosystem.
 
 ## Command flow
 UI action → application command → domain validation → domain system → updated state → persistence boundary → UI refresh.
 
 ## Simulation order
 
-The implemented daily pipeline is fixed and tested: advance research; deliver due production orders; apply due competitor actions; simulate market sales and market share; settle finance (operating costs, loan interest, emergency funding and profit tax); update reputation; advance the game date. Changing the order may alter balance and requires tests for the affected stage. Stage 05 details are in [`ECONOMY_MARKET.md`](ECONOMY_MARKET.md).
+The implemented daily pipeline is fixed and tested: advance research; deliver due CPU production orders; apply due competitor actions; simulate CPU sales and market share; simulate component sales against component demand, price, performance, reputation, marketing and available cash; settle finance (operating costs, loan interest, emergency funding and profit tax); update reputation; advance the game date. Changing the order may alter balance and requires tests for the affected stage. Stage 05 economy details are in [`ECONOMY_MARKET.md`](ECONOMY_MARKET.md); Stage 06 components and compatibility are in [`COMPONENTS.md`](COMPONENTS.md).
 
 ## Worker boundary
 Workers receive serializable snapshots and explicit commands. They must not access React state or mutate the database outside a documented protocol.

@@ -1,5 +1,6 @@
 import { validateCompany, type Company } from "./company";
 import { parseCpuProject, type CpuProject } from "./cpu";
+import { parseComponentProject, type ComponentProject } from "./components";
 import { isValidDateOnly } from "./date";
 import {
   createInitialFinanceState,
@@ -18,9 +19,9 @@ import {
   type ResearchState,
 } from "./research";
 
-export const SAVE_SCHEMA_VERSION = 4 as const;
+export const SAVE_SCHEMA_VERSION = 5 as const;
 
-const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, SAVE_SCHEMA_VERSION] as const;
+const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, SAVE_SCHEMA_VERSION] as const;
 
 export type Locale = "ru" | "en";
 export type Theme = "light" | "dark";
@@ -35,6 +36,7 @@ export interface GameState {
   gameDate: string;
   company: Company;
   cpuProjects: CpuProject[];
+  componentProjects: ComponentProject[];
   research: ResearchState;
   finance: FinanceState;
   market: MarketState;
@@ -55,6 +57,7 @@ export function createInitialGameState(): GameState {
     schemaVersion: SAVE_SCHEMA_VERSION,
     gameDate,
     cpuProjects: [],
+    componentProjects: [],
     research: createInitialResearchState(),
     finance: createInitialFinanceState(),
     market: createInitialMarketState(gameDate),
@@ -154,6 +157,24 @@ export function parseGameState(value: unknown): GameState {
     }
   }
 
+  let componentProjects: ComponentProject[] = [];
+  if (sourceSchemaVersion >= 5) {
+    if (!Array.isArray(value.componentProjects)) {
+      throw new InvalidGameStateError("Save data contains an invalid component project list.");
+    }
+
+    try {
+      componentProjects = value.componentProjects.map(parseComponentProject);
+    } catch {
+      throw new InvalidGameStateError("Save data contains an invalid component project.");
+    }
+
+    const componentProjectIds = new Set(componentProjects.map((project) => project.id));
+    if (componentProjectIds.size !== componentProjects.length) {
+      throw new InvalidGameStateError("Save data contains duplicate component project IDs.");
+    }
+  }
+
   let research: ResearchState;
   if (sourceSchemaVersion >= 3) {
     try {
@@ -167,7 +188,7 @@ export function parseGameState(value: unknown): GameState {
 
   let finance: FinanceState;
   let market: MarketState;
-  if (sourceSchemaVersion === SAVE_SCHEMA_VERSION) {
+  if (sourceSchemaVersion >= 4) {
     try {
       finance = parseFinanceState(value.finance);
     } catch {
@@ -175,7 +196,9 @@ export function parseGameState(value: unknown): GameState {
     }
 
     try {
-      market = parseMarketState(value.market);
+      market = parseMarketState(value.market, {
+        allowMissingComponentData: sourceSchemaVersion < 5,
+      });
     } catch {
       throw new InvalidGameStateError("Save data contains invalid market data.");
     }
@@ -189,6 +212,7 @@ export function parseGameState(value: unknown): GameState {
     gameDate: value.gameDate,
     company: { ...company },
     cpuProjects,
+    componentProjects,
     research,
     finance,
     market,

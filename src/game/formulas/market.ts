@@ -41,6 +41,14 @@ export interface ManufacturingEstimate {
   logisticsCostUsd: number;
 }
 
+export interface SiliconDieEstimate {
+  waferCostUsd: number;
+  waferDiameterMm: number;
+  grossDiesPerWafer: number;
+  dieYield: number;
+  dieCostUsd: number;
+}
+
 export interface ProductAppealInput {
   segment: MarketSegmentDefinition;
   configuration: CpuConfiguration;
@@ -57,7 +65,30 @@ export function calculateCpuMarketPerformanceScore(configuration: CpuConfigurati
 }
 
 export function estimateManufacturingCost(configuration: CpuConfiguration): ManufacturingEstimate {
-  const nodeNm = Math.max(configuration.processNodeNm, 1);
+  const silicon = estimateSiliconDie(configuration.processNodeNm, configuration.dieAreaMm2);
+  const packageCostUsd = MANUFACTURING_MODEL.packageBaseUsd
+    + Math.sqrt(configuration.dieAreaMm2) * MANUFACTURING_MODEL.packageAreaFactor;
+  const testCostUsd = MANUFACTURING_MODEL.testBaseUsd
+    + configuration.dieAreaMm2 * MANUFACTURING_MODEL.testAreaFactor;
+  const unitCostUsd = roundUsd(Math.max(
+    MANUFACTURING_MODEL.minimumUnitCostUsd,
+    silicon.dieCostUsd + packageCostUsd + testCostUsd + MANUFACTURING_MODEL.logisticsUsd,
+  ));
+
+  return {
+    unitCostUsd,
+    waferCostUsd: roundUsd(silicon.waferCostUsd),
+    waferDiameterMm: silicon.waferDiameterMm,
+    grossDiesPerWafer: silicon.grossDiesPerWafer,
+    dieYield: roundScore(silicon.dieYield),
+    packageCostUsd: roundUsd(packageCostUsd),
+    testCostUsd: roundUsd(testCostUsd),
+    logisticsCostUsd: MANUFACTURING_MODEL.logisticsUsd,
+  };
+}
+
+export function estimateSiliconDie(processNodeNm: number, dieAreaMm2: number): SiliconDieEstimate {
+  const nodeNm = Math.max(processNodeNm, 1);
   const waferCostUsd = clamp(
     MANUFACTURING_MODEL.referenceWaferCostUsd
       * Math.pow(MANUFACTURING_MODEL.referenceProcessNodeNm / nodeNm, MANUFACTURING_MODEL.waferCostExponent),
@@ -67,33 +98,21 @@ export function estimateManufacturingCost(configuration: CpuConfiguration): Manu
   const waferDiameterMm = nodeNm > 250 ? 150 : nodeNm > 90 ? 200 : 300;
   const waferAreaMm2 = Math.PI * Math.pow(waferDiameterMm / 2, 2);
   const grossDiesPerWafer = Math.max(1, Math.floor(
-    (waferAreaMm2 / configuration.dieAreaMm2) * MANUFACTURING_MODEL.diesPerWaferUtilization,
+    (waferAreaMm2 / Math.max(dieAreaMm2, 1)) * MANUFACTURING_MODEL.diesPerWaferUtilization,
   ));
   const defectFactor = nodeNm <= 65 ? MANUFACTURING_MODEL.advancedNodeDefectFactor : 1;
   const dieYield = clamp(
-    0.98 / (1 + configuration.dieAreaMm2 * MANUFACTURING_MODEL.baseDefectDensity * defectFactor),
+    0.98 / (1 + dieAreaMm2 * MANUFACTURING_MODEL.baseDefectDensity * defectFactor),
     0.12,
     0.98,
   );
-  const dieCostUsd = waferCostUsd / (grossDiesPerWafer * dieYield);
-  const packageCostUsd = MANUFACTURING_MODEL.packageBaseUsd
-    + Math.sqrt(configuration.dieAreaMm2) * MANUFACTURING_MODEL.packageAreaFactor;
-  const testCostUsd = MANUFACTURING_MODEL.testBaseUsd
-    + configuration.dieAreaMm2 * MANUFACTURING_MODEL.testAreaFactor;
-  const unitCostUsd = roundUsd(Math.max(
-    MANUFACTURING_MODEL.minimumUnitCostUsd,
-    dieCostUsd + packageCostUsd + testCostUsd + MANUFACTURING_MODEL.logisticsUsd,
-  ));
 
   return {
-    unitCostUsd,
-    waferCostUsd: roundUsd(waferCostUsd),
+    waferCostUsd,
     waferDiameterMm,
     grossDiesPerWafer,
-    dieYield: roundScore(dieYield),
-    packageCostUsd: roundUsd(packageCostUsd),
-    testCostUsd: roundUsd(testCostUsd),
-    logisticsCostUsd: MANUFACTURING_MODEL.logisticsUsd,
+    dieYield,
+    dieCostUsd: waferCostUsd / (grossDiesPerWafer * dieYield),
   };
 }
 

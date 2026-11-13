@@ -1,7 +1,7 @@
 # STAGE 06 — GPU & Components Designer
 
 **Project:** SILICON DYNASTY  
-**Status:** NOT STARTED  
+**Status:** COMPLETED
 **Execution rule:** complete this stage only, then stop for approval.
 
 ## Objective
@@ -19,10 +19,10 @@ Implement GPU, RAM, SSD, motherboard, AI accelerator and networking component de
 9. Stop. Do not begin the next stage without separate authorization.
 
 ## Acceptance criteria
-- [ ] Create and persist each product type.
-- [ ] Compatibility uses a consistent domain mechanism.
-- [ ] GPU workloads distinguish gaming, rendering, compute and AI.
-- [ ] Cost and specs influence market simulation.
+- [x] Create and persist each product type.
+- [x] Compatibility uses a consistent domain mechanism.
+- [x] GPU workloads distinguish gaming, rendering, compute and AI.
+- [x] Cost and specs influence market simulation.
 
 ## Engineering constraints
 - React + TypeScript strict + Vite + Capacitor.

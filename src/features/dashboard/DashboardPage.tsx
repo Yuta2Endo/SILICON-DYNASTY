@@ -115,7 +115,7 @@ export function DashboardPage({ state, isSaving, onAdvanceDay }: DashboardPagePr
           detail={t.dashboard.dailyUnitsHint}
           icon={ShoppingCart}
           label={t.dashboard.dailyUnits}
-          value={formatNumber(latestMarket?.playerUnits ?? 0, locale)}
+          value={formatNumber((latestMarket?.playerUnits ?? 0) + (latestMarket?.componentUnits ?? 0), locale)}
         />
       </section>
 

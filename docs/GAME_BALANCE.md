@@ -50,3 +50,32 @@ Market demand varies by segment, era and price. Daily segment demand grows from 
 Competitor strategies are deterministic and observable: volume and aggressive competitors cut price by 1.5% and 3% per action, premium and enterprise competitors alternate price/performance or performance/campaign actions, balanced competitors run campaigns, and the performance competitor refreshes performance by 2.5%. Multipliers are capped, and actions are recorded with date, type and value.
 
 The fixed daily order is research progress, production delivery, competitor actions, market sales, finance settlement, reputation update, then date advancement. This order is covered by tests. Full formulas, bounds and command validation are in [`ECONOMY_MARKET.md`](ECONOMY_MARKET.md).
+
+## Components (Stage 06)
+
+Stage 06 adds six component families: GPU, RAM, SSD, motherboard, AI
+accelerator and networking adapter. Each has versioned projects, schema-based
+bounds and a default 1995 configuration. Full field lists and formulas live in
+`docs/COMPONENTS.md`.
+
+- Performance is normalized so every default component scores exactly 1.000.
+- GPU performance is a weighted composite of the four existing GPU workloads:
+  gaming 35%, rendering 30%, compute 20%, AI 15%. Workload operation counts,
+  memory working sets and utilization remain distinct.
+- Component manufacturing cost is explicit:
+  - GPU/AI: silicon die from the Stage 05 wafer/yield model + memory + board +
+    packaging + test + logistics;
+  - RAM/SSD/motherboard/networking: bill-of-materials formulas based on capacity,
+    speed, interface, slots, lanes and ports.
+- Suggested price = max(2.5x unit cost, 0.9x segment reference), rounded to $5.
+- Component demand has type-specific base demand, annual growth, reference price,
+  price/performance elasticity and a fixed competitor appeal. Appeal also includes
+  reputation, marketing, launch ramp and freshness.
+- Component production is just-in-time: unit cost is charged before sales revenue
+  on the same day, and units are capped by available cash. There is no component
+  inventory or stockout penalty in Stage 06.
+- One compatibility engine checks ISA, memory standard/capacity/slots, PCIe
+  generation, SATA/M.2 availability, storage form factor and motherboard presence.
+  Errors block compatibility; a missing RAM module is a warning.
+- Component sales are part of the daily pipeline and post to the same finance
+  ledger and market summaries as CPU sales.

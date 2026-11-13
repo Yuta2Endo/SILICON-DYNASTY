@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "./AppShell";
 import { ConfirmationBottomSheet } from "../components/ConfirmationBottomSheet";
 import { CPUDesignerPage } from "../features/cpu/CPUDesignerPage";
+import { ComponentDesignerPage } from "../features/components/ComponentDesignerPage";
 import { MarketPage } from "../features/market/MarketPage";
 import { ResearchPage } from "../features/research/ResearchPage";
 import { createGameApplication, type GameApplication } from "../game/application/game-application";
@@ -30,6 +31,7 @@ export function App({ application }: AppProps = {}) {
   const [hasCommandError, setHasCommandError] = useState(false);
   const [showSavedFeedback, setShowSavedFeedback] = useState(false);
   const [hasUnsavedCpuDraft, setHasUnsavedCpuDraft] = useState(false);
+  const [hasUnsavedComponentDraft, setHasUnsavedComponentDraft] = useState(false);
   const [pendingScreen, setPendingScreen] = useState<ScreenId | null>(null);
 
   const loadGame = useCallback(async () => {
@@ -81,14 +83,19 @@ export function App({ application }: AppProps = {}) {
       setPendingScreen(screen);
       return;
     }
+    if (activeScreen === "components" && hasUnsavedComponentDraft) {
+      setPendingScreen(screen);
+      return;
+    }
     setActiveScreen(screen);
-  }, [activeScreen, hasUnsavedCpuDraft]);
+  }, [activeScreen, hasUnsavedCpuDraft, hasUnsavedComponentDraft]);
 
   const cancelNavigation = useCallback(() => setPendingScreen(null), []);
 
   const discardDraftAndNavigate = useCallback(() => {
     if (pendingScreen) {
       setHasUnsavedCpuDraft(false);
+      setHasUnsavedComponentDraft(false);
       setActiveScreen(pendingScreen);
       setPendingScreen(null);
     }
@@ -147,8 +154,28 @@ export function App({ application }: AppProps = {}) {
             return nextState?.cpuProjects.at(-1)?.id ?? null;
           }}
           onDirtyChange={setHasUnsavedCpuDraft}
+          onOpenComponents={() => requestNavigation("components")}
           onSaveVersion={async (projectId, name, configuration: CpuConfiguration) =>
             (await runCommand(() => gameApplication.saveCpuVersion(projectId, name, configuration))) !== null
+          }
+          state={state}
+        />
+      )}
+      {activeScreen === "components" && (
+        <ComponentDesignerPage
+          isSaving={isSaving}
+          onCreateProject={async (type, name, configuration) => {
+            const nextState = await runCommand(
+              () => gameApplication.createComponentProject(type, name, configuration),
+            );
+            return nextState?.componentProjects.at(-1)?.id ?? null;
+          }}
+          onDirtyChange={setHasUnsavedComponentDraft}
+          onOpenCpu={() => requestNavigation("cpu")}
+          onSaveVersion={async (projectId, name, configuration) =>
+            (await runCommand(
+              () => gameApplication.saveComponentVersion(projectId, name, configuration),
+            )) !== null
           }
           state={state}
         />
@@ -160,14 +187,23 @@ export function App({ application }: AppProps = {}) {
           onDiscontinueProduct={async (productId) =>
             (await runCommand(() => gameApplication.discontinueProduct(productId))) !== null
           }
+          onDiscontinueComponentProduct={async (productId) =>
+            (await runCommand(() => gameApplication.discontinueComponentProduct(productId))) !== null
+          }
           onOrderProduction={async (productId, quantity) =>
             (await runCommand(() => gameApplication.orderProduction(productId, quantity))) !== null
           }
           onReleaseProduct={async (input) =>
             (await runCommand(() => gameApplication.releaseProduct(input))) !== null
           }
+          onReleaseComponentProduct={async (input) =>
+            (await runCommand(() => gameApplication.releaseComponentProduct(input))) !== null
+          }
           onUpdatePrice={async (productId, priceUsd) =>
             (await runCommand(() => gameApplication.updateProductPrice(productId, priceUsd))) !== null
+          }
+          onUpdateComponentPrice={async (productId, priceUsd) =>
+            (await runCommand(() => gameApplication.updateComponentProductPrice(productId, priceUsd))) !== null
           }
           onUpdateMarketingBudget={async (amountUsd) =>
             (await runCommand(() => gameApplication.updateMarketingBudget(amountUsd))) !== null
@@ -188,7 +224,7 @@ export function App({ application }: AppProps = {}) {
           state={state}
         />
       )}
-      {activeScreen === "cpu" && pendingScreen && (
+      {(activeScreen === "cpu" || activeScreen === "components") && pendingScreen && (
         <ConfirmationBottomSheet
           cancelLabel={t.cpu.unsavedCancel}
           confirmLabel={t.cpu.unsavedConfirm}

@@ -1,6 +1,6 @@
 import { Building2, Cpu, FlaskConical, LayoutDashboard, Settings2, TrendingUp, type LucideIcon } from "lucide-react";
 
-export type ScreenId = "dashboard" | "research" | "company" | "cpu" | "market" | "finance" | "settings";
+export type ScreenId = "dashboard" | "research" | "company" | "cpu" | "components" | "market" | "finance" | "settings";
 
 export interface NavigationItem {
   id: ScreenId;

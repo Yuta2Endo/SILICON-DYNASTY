@@ -2,8 +2,10 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createDefaultCpuConfiguration, createCpuProject } from "../../game/models/cpu";
+import { createComponentProject, createDefaultComponentConfiguration } from "../../game/models/components";
 import { createInitialGameState } from "../../game/models/game-state";
 import type { ReleaseProductInput } from "../../game/engine/market";
+import type { ReleaseComponentProductInput } from "../../game/engine/component-market";
 import { translations } from "../../localization/messages";
 import { MarketPage } from "./MarketPage";
 
@@ -18,6 +20,14 @@ const project = createCpuProject(
   state.gameDate,
 );
 const stateWithProject = { ...state, cpuProjects: [project] };
+const componentProject = createComponentProject(
+  "component-1",
+  "Dynasty Graphics",
+  "gpu",
+  createDefaultComponentConfiguration("gpu"),
+  state.gameDate,
+);
+const stateWithComponentProject = { ...stateWithProject, componentProjects: [componentProject] };
 const noop = async () => true;
 
 function renderMarket(overrides: Partial<Parameters<typeof MarketPage>[0]> = {}) {
@@ -26,11 +36,14 @@ function renderMarket(overrides: Partial<Parameters<typeof MarketPage>[0]> = {})
       activeView="market"
       isSaving={false}
       onDiscontinueProduct={noop}
+      onDiscontinueComponentProduct={noop}
       onOrderProduction={noop}
       onReleaseProduct={noop}
+      onReleaseComponentProduct={noop}
       onRepayLoan={noop}
       onTakeLoan={noop}
       onUpdateMarketingBudget={noop}
+      onUpdateComponentPrice={noop}
       onUpdatePrice={noop}
       onViewChange={() => undefined}
       state={stateWithProject}
@@ -58,6 +71,28 @@ describe("Market screen", () => {
     }));
   });
 
+  it("launches a component version with its own price and market", async () => {
+    const user = userEvent.setup();
+    const onReleaseComponentProduct = vi.fn(
+      async (input: ReleaseComponentProductInput) => input.name.length > 0,
+    );
+    renderMarket({ state: stateWithComponentProject, onReleaseComponentProduct });
+
+    await user.type(
+      screen.getByRole("textbox", { name: ru.market.componentMarket.release.name }),
+      "Dynasty Graphics 100",
+    );
+    await user.click(screen.getByRole("button", { name: ru.market.componentMarket.release.submit }));
+
+    await waitFor(() => expect(onReleaseComponentProduct).toHaveBeenCalledTimes(1));
+    expect(onReleaseComponentProduct).toHaveBeenCalledWith(expect.objectContaining({
+      projectId: "component-1",
+      projectVersion: 1,
+      name: "Dynasty Graphics 100",
+      priceUsd: expect.any(Number),
+    }));
+  });
+
   it("shows a clear empty state when there is no saved CPU version", () => {
     renderMarket({ state });
 
@@ -78,11 +113,14 @@ describe("Market screen", () => {
         activeView="finance"
         isSaving={false}
         onDiscontinueProduct={noop}
+        onDiscontinueComponentProduct={noop}
         onOrderProduction={noop}
         onReleaseProduct={noop}
+        onReleaseComponentProduct={noop}
         onRepayLoan={noop}
         onTakeLoan={noop}
         onUpdateMarketingBudget={noop}
+        onUpdateComponentPrice={noop}
         onUpdatePrice={noop}
         onViewChange={onViewChange}
         state={stateWithProject}

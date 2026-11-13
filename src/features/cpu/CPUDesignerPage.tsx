@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Cpu, MemoryStick, Save, Workflow } from "lucide-react";
 import { ConfirmationBottomSheet } from "../../components/ConfirmationBottomSheet";
 import { MetricCard } from "../../components/MetricCard";
+import { ProductWorkspaceTabs } from "../../components/ProductWorkspaceTabs";
 import { CPUBenchmarkPanel } from "../benchmark/CPUBenchmarkPanel";
 import {
   CPU_ARCHITECTURE_OPTIONS,
@@ -36,6 +37,7 @@ interface CPUDesignerPageProps {
   onDirtyChange: (isDirty: boolean) => void;
   onCreateProject: (name: string, configuration: CpuConfiguration) => Promise<string | null>;
   onSaveVersion: (projectId: string, name: string, configuration: CpuConfiguration) => Promise<boolean>;
+  onOpenComponents: () => void;
 }
 
 type PendingAction =
@@ -48,6 +50,7 @@ export function CPUDesignerPage({
   onDirtyChange,
   onCreateProject,
   onSaveVersion,
+  onOpenComponents,
 }: CPUDesignerPageProps) {
   const locale = state.settings.locale;
   const t = translations[locale];
@@ -226,6 +229,15 @@ export function CPUDesignerPage({
 
   return (
     <div className="page-stack cpu-designer">
+      <ProductWorkspaceTabs
+        active="cpu"
+        componentsLabel={t.productWorkspace.components}
+        cpuLabel={t.productWorkspace.cpu}
+        label={t.productWorkspace.label}
+        onOpenComponents={onOpenComponents}
+        onOpenCpu={() => undefined}
+      />
+
       <section className="cpu-project-panel">
         <div className="cpu-project-panel__intro">
           <span className="cpu-project-panel__icon" aria-hidden="true"><Cpu size={21} /></span>
