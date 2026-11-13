@@ -117,6 +117,37 @@ type PendingAction =
   | { type: "switch-project"; projectId: string }
   | { type: "load-version"; version: number };
 
+type OsEditorSection = "core" | "systems" | "ecosystem";
+
+const OS_EDITOR_SECTION_FIELDS: Record<OsEditorSection, readonly OsConfigurationField[]> = {
+  core: [
+    "targetPlatform",
+    "kernelType",
+    "bootloader",
+    "scheduler",
+    "memoryManager",
+    "ipcModel",
+    "moduleSupport",
+    "driverModel",
+    "addressBits",
+    "virtualMemory",
+    "syscallCount",
+    "maxProcesses",
+    "supportedArchitectures",
+  ],
+  systems: [
+    "filesystem",
+    "driverFramework",
+    "networkStack",
+    "permissions",
+    "encryption",
+    "updateModel",
+    "packageManager",
+    "diagnostics",
+  ],
+  ecosystem: ["gui", "sdk", "api", "developerTools", "appStore"],
+};
+
 type SelectFieldKey =
   | "targetPlatform"
   | "kernelType"
@@ -175,6 +206,7 @@ export function OsDesignerPage({
   const [showEditorValidation, setShowEditorValidation] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [releaseError, setReleaseError] = useState<string | null>(null);
+  const [editorSection, setEditorSection] = useState<OsEditorSection>("core");
 
   const draftIsDirty = Boolean(
     selectedProject
@@ -341,6 +373,9 @@ export function OsDesignerPage({
 
   const fieldError = (key: OsConfigurationField): OsValidationIssue | undefined =>
     (showEditorValidation || draftIsDirty) ? configurationValidation.errors[key] : undefined;
+
+  const sectionErrorCount = (section: OsEditorSection): number =>
+    OS_EDITOR_SECTION_FIELDS[section].filter((key) => fieldError(key)).length;
 
   function selectOptions(key: SelectFieldKey): SelectOption[] {
     switch (key) {
@@ -747,6 +782,54 @@ export function OsDesignerPage({
               )}
             </div>
 
+            <div
+              className="os-editor-tabs"
+              onKeyDown={(event) => {
+                if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+                event.preventDefault();
+                const order = ["core", "systems", "ecosystem"] as const;
+                const currentIndex = order.indexOf(editorSection);
+                const nextSection = order[
+                  (currentIndex + (event.key === "ArrowRight" ? 1 : order.length - 1)) % order.length
+                ] ?? "core";
+                setEditorSection(nextSection);
+                document.getElementById(`os-tab-${nextSection}`)?.focus();
+              }}
+              role="tablist"
+              aria-label={copy.editorTabs.title}
+            >
+              {(["core", "systems", "ecosystem"] as const).map((section) => {
+                const errorCount = sectionErrorCount(section);
+                return (
+                  <button
+                    aria-controls={`os-panel-${section}`}
+                    aria-selected={editorSection === section}
+                    className="os-editor-tab"
+                    id={`os-tab-${section}`}
+                    key={section}
+                    onClick={() => setEditorSection(section)}
+                    role="tab"
+                    tabIndex={editorSection === section ? 0 : -1}
+                    type="button"
+                  >
+                    <span>{copy.editorTabs[section]}</span>
+                    {errorCount > 0 && (
+                      <span className="os-editor-tab__errors">
+                        {copy.editorTabs.errors.replace("{count}", String(errorCount))}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div
+              aria-labelledby="os-tab-core"
+              className="os-editor-panel"
+              hidden={editorSection !== "core"}
+              id="os-panel-core"
+              role="tabpanel"
+            >
             <div className="cpu-fields-grid">
               {renderSelectField("targetPlatform")}
               {renderSelectField("kernelType")}
@@ -831,7 +914,15 @@ export function OsDesignerPage({
                 </p>
               )}
             </fieldset>
+            </div>
 
+            <div
+              aria-labelledby="os-tab-systems"
+              className="os-editor-panel"
+              hidden={editorSection !== "systems"}
+              id="os-panel-systems"
+              role="tabpanel"
+            >
             <fieldset className="os-systems-fieldset">
               <legend>{copy.systemsTitle}</legend>
               <p className="os-systems-fieldset__hint">{copy.systemsHint}</p>
@@ -846,7 +937,15 @@ export function OsDesignerPage({
                 {renderSelectField("diagnostics")}
               </div>
             </fieldset>
+            </div>
 
+            <div
+              aria-labelledby="os-tab-ecosystem"
+              className="os-editor-panel"
+              hidden={editorSection !== "ecosystem"}
+              id="os-panel-ecosystem"
+              role="tabpanel"
+            >
             <fieldset className="os-systems-fieldset os-ecosystem-fieldset">
               <legend>{copy.ecosystemTitle}</legend>
               <p className="os-systems-fieldset__hint">{copy.ecosystemHint}</p>
@@ -858,6 +957,7 @@ export function OsDesignerPage({
                 {renderSelectField("appStore")}
               </div>
             </fieldset>
+            </div>
 
             <div className="cpu-editor-actions">
               <button

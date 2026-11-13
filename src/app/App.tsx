@@ -25,6 +25,14 @@ const AiDesignerPage = lazy(() => import("../features/ai/AiDesignerPage").then((
 const DeviceDesignerPage = lazy(() => import("../features/devices/DeviceDesignerPage").then((module) => ({ default: module.DeviceDesignerPage })));
 const MarketPage = lazy(() => import("../features/market/MarketPage").then((module) => ({ default: module.MarketPage })));
 
+function prefetchPageChunks() {
+  void import("../features/company/CompanyPage");
+  void import("../features/research/ResearchPage");
+  void import("../features/settings/SettingsPage");
+  void import("../features/cpu/CPUDesignerPage");
+  void import("../features/market/MarketPage");
+}
+
 interface AppProps {
   application?: GameApplication;
   initialMenuOpen?: boolean;
@@ -69,6 +77,14 @@ export function App({ application, initialMenuOpen }: AppProps = {}) {
       void refreshSaveOverview();
     }
   }, [state, activeScreen, refreshSaveOverview]);
+
+  const isGameLoaded = state !== null;
+
+  useEffect(() => {
+    if (!isGameLoaded) return;
+    const timer = window.setTimeout(prefetchPageChunks, 1_200);
+    return () => window.clearTimeout(timer);
+  }, [isGameLoaded]);
 
   const startNewGame = useCallback(async () => {
     setMenuError(false);
@@ -479,8 +495,18 @@ export function App({ application, initialMenuOpen }: AppProps = {}) {
 function ScreenLoading({ label }: { label: string }) {
   return (
     <div className="screen-loading" role="status">
-      <span className="screen-loading__spinner" aria-hidden="true" />
-      <span>{label}</span>
+      <span className="visually-hidden">{label}</span>
+      <div aria-hidden="true" className="screen-skeleton">
+        <span className="screen-skeleton__eyebrow" />
+        <span className="screen-skeleton__title" />
+        <span className="screen-skeleton__subtitle" />
+        <div className="screen-skeleton__metrics">
+          {[0, 1, 2, 3].map((index) => (
+            <span className="screen-skeleton__metric" key={index} />
+          ))}
+        </div>
+        <span className="screen-skeleton__panel" />
+      </div>
     </div>
   );
 }

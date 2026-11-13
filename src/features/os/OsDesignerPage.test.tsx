@@ -51,6 +51,23 @@ describe("OS designer", () => {
     expect(onCreateProject).toHaveBeenCalledWith("Dynasty OS", createDefaultOsConfiguration());
   });
 
+  it("switches configuration sections with accessible tabs", async () => {
+    const user = userEvent.setup();
+    renderDesigner();
+
+    const coreTab = screen.getByRole("tab", { name: ru.os.editorTabs.core });
+    const systemsTab = screen.getByRole("tab", { name: ru.os.editorTabs.systems });
+
+    expect(coreTab.getAttribute("aria-selected")).toBe("true");
+    expect(document.getElementById("os-panel-systems")?.hasAttribute("hidden")).toBe(true);
+
+    await user.click(systemsTab);
+
+    expect(systemsTab.getAttribute("aria-selected")).toBe("true");
+    expect(document.getElementById("os-panel-systems")?.hasAttribute("hidden")).toBe(false);
+    expect(document.getElementById("os-panel-core")?.hasAttribute("hidden")).toBe(true);
+  });
+
   it("saves a changed, valid kernel configuration as a new version", async () => {
     const user = userEvent.setup();
     const onSaveVersion = vi.fn(async () => true);
@@ -105,6 +122,7 @@ describe("OS designer", () => {
     const onSaveVersion = vi.fn(async () => true);
     renderDesigner({ onSaveVersion });
 
+    await user.click(screen.getByRole("tab", { name: ru.os.editorTabs.systems }));
     await user.selectOptions(screen.getByLabelText(ru.os.fields.filesystem), "ext2");
     await user.selectOptions(screen.getByLabelText(ru.os.fields.driverFramework), "unified");
     await user.selectOptions(screen.getByLabelText(ru.os.fields.diagnostics), "crash-dumps");
@@ -169,6 +187,7 @@ describe("OS designer", () => {
       state: { ...baseState, gameDate: "2010-01-01", osProjects: [osProject] },
     });
 
+    await user.click(screen.getByRole("tab", { name: ru.os.editorTabs.ecosystem }));
     await user.selectOptions(screen.getByLabelText(ru.os.fields.gui), "modern-desktop");
     await user.selectOptions(screen.getByLabelText(ru.os.fields.sdk), "full");
     await user.selectOptions(screen.getByLabelText(ru.os.fields.api), "hybrid");

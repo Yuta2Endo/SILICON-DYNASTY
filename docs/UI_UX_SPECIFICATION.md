@@ -325,6 +325,8 @@ Include:
 
 Use architecture diagrams, subsystem cards, compatibility indicators and development progress.
 
+Group the configuration editor into accessible tabs for core, system services and ecosystem settings, with validation-error counts on each tab. Keep the live preview sticky beside the editor on wide screens and above the editor on mobile.
+
 Show a live visual OS preview derived from the current draft configuration and latest saved release. The preview must evolve through terminal, desktop shell, modern desktop and adaptive GUI levels, use a platform-appropriate device frame (desktop, mobile, server or gaming), reflect Alpha/Beta/RC/Stable release polish, and unlock or lock application icons from real compatibility results. It is a game simulation, not a real operating system, and must not create a second persisted configuration.
 
 ## 9. AI Lab
@@ -436,7 +438,7 @@ Do not use desktop-style centered modals as the default mobile interaction patte
 
 Every screen must handle:
 
-- Loading.
+- Loading, using content-shaped skeletons for lazy screens rather than a blank page or lone spinner.
 - Empty.
 - Error.
 - Validation.
