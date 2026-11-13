@@ -3519,7 +3519,7 @@ input:focus-visible {
 /* Stage 06: component designer and component market */
 .product-workspace-tabs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 6px;
   padding: 5px;
   border: 1px solid var(--border);
@@ -4427,5 +4427,225 @@ input:focus-visible {
   .os-application-list,
   .os-release-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.ai-simulation-banner {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--accent-violet) 28%, var(--border));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--accent-violet) 7%, var(--surface));
+}
+
+.ai-simulation-banner__icon {
+  display: grid;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent-violet) 14%, var(--surface));
+  color: var(--accent-violet);
+}
+
+.ai-simulation-banner h2 {
+  margin: 2px 0 4px;
+  font-size: 1rem;
+}
+
+.ai-simulation-banner p {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.ai-model-size-note {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-muted);
+  color: var(--text-subtle);
+  font-size: 0.8rem;
+}
+
+.ai-model-size-note svg {
+  flex: none;
+  color: var(--accent-blue);
+}
+
+.ai-datasets-section,
+.ai-metrics-section,
+.ai-hardware-section {
+  display: grid;
+  gap: 12px;
+}
+
+.ai-dataset-form {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.ai-dataset-form__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.ai-dataset-empty,
+.ai-empty-state {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  background: var(--surface-muted);
+  color: var(--text-subtle);
+}
+
+.ai-dataset-empty svg,
+.ai-empty-state svg {
+  flex: none;
+  color: var(--accent-amber);
+}
+
+.ai-dataset-empty h3,
+.ai-empty-state h2 {
+  margin: 0 0 4px;
+  color: var(--text);
+  font-size: 0.92rem;
+}
+
+.ai-dataset-empty p,
+.ai-empty-state p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.ai-dataset-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ai-dataset-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.ai-dataset-card__header {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.ai-dataset-card__header h3 {
+  margin: 0 0 3px;
+  font-size: 0.92rem;
+}
+
+.ai-dataset-card__header p {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: 0.75rem;
+}
+
+.ai-dataset-card__header .button {
+  flex: none;
+  min-height: 40px;
+}
+
+.ai-dataset-card__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.ai-dataset-card__stats div {
+  display: grid;
+  gap: 2px;
+}
+
+.ai-dataset-card__stats dt {
+  color: var(--text-subtle);
+  font-size: 0.68rem;
+}
+
+.ai-dataset-card__stats dd {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.ai-hardware-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ai-hardware-card {
+  display: grid;
+  gap: 4px;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.ai-hardware-card--recommended {
+  border-color: color-mix(in srgb, var(--accent-green) 35%, var(--border));
+  background: color-mix(in srgb, var(--accent-green) 6%, var(--surface));
+}
+
+.ai-hardware-card__label {
+  color: var(--text-subtle);
+  font-size: 0.72rem;
+}
+
+.ai-hardware-card strong {
+  font-size: 1rem;
+}
+
+.ai-hardware-note {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .ai-dataset-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ai-hardware-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .ai-hardware-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }

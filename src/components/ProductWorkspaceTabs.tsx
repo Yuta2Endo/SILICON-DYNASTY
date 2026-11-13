@@ -1,14 +1,16 @@
-import { Boxes, Cpu, MonitorCog } from "lucide-react";
+import { Boxes, BrainCircuit, Cpu, MonitorCog } from "lucide-react";
 
 interface ProductWorkspaceTabsProps {
-  active: "cpu" | "components" | "os";
+  active: "cpu" | "components" | "os" | "ai";
   label: string;
   cpuLabel: string;
   componentsLabel: string;
   osLabel: string;
+  aiLabel: string;
   onOpenCpu: () => void;
   onOpenComponents: () => void;
   onOpenOs: () => void;
+  onOpenAi: () => void;
 }
 
 export function ProductWorkspaceTabs({
@@ -17,9 +19,11 @@ export function ProductWorkspaceTabs({
   cpuLabel,
   componentsLabel,
   osLabel,
+  aiLabel,
   onOpenCpu,
   onOpenComponents,
   onOpenOs,
+  onOpenAi,
 }: ProductWorkspaceTabsProps) {
   return (
     <nav className="product-workspace-tabs" aria-label={label}>
@@ -49,6 +53,15 @@ export function ProductWorkspaceTabs({
       >
         <MonitorCog aria-hidden="true" size={17} />
         {osLabel}
+      </button>
+      <button
+        aria-current={active === "ai" ? "page" : undefined}
+        className={`product-workspace-tab${active === "ai" ? " is-active" : ""}`}
+        onClick={onOpenAi}
+        type="button"
+      >
+        <BrainCircuit aria-hidden="true" size={17} />
+        {aiLabel}
       </button>
     </nav>
   );

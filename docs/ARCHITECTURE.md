@@ -37,6 +37,8 @@ The implemented daily pipeline is fixed and tested: advance research; deliver du
 
 The OS Lab does not run in the daily pipeline yet. `src/game/models/os.ts` owns OS configuration types, project/version/release rules, historical gates, system-service validation, hardware-driver compatibility and strict parsing; `src/game/models/os-applications.ts` owns the application catalog and requirement checks; `src/game/formulas/os.ts` owns deterministic kernel, system, ecosystem and release calculations; `src/game/engine/os-release.ts` charges staged release costs through the finance ledger. `OsDesignerPage` is a third tab in the product-development workspace and calls application commands; it is explicitly presented as a game simulation. Stage 07 details are in [`OS_LAB.md`](OS_LAB.md); Stage 08 system services and hardware-driver checks are in [`OS_SYSTEMS.md`](OS_SYSTEMS.md); Stage 09 ecosystem, application and release rules are in [`OS_ECOSYSTEM.md`](OS_ECOSYSTEM.md).
 
+The AI Lab is the fourth product-development tab and does not run in the daily pipeline. `src/game/models/ai.ts` owns AI configurations, dataset validation, project versions and strict parsing; `src/game/formulas/ai.ts` owns model-quality, dataset, appeal and GPU/VRAM/RAM/storage requirement calculations. `AiDesignerPage` calls application commands and presents itself as a game simulation. Training, deployment and market integration are reserved for later stages; Stage 10 details are in [`AI_LAB.md`](AI_LAB.md).
+
 ## Worker boundary
 Workers receive serializable snapshots and explicit commands. They must not access React state or mutate the database outside a documented protocol.
 

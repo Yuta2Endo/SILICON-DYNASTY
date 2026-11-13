@@ -164,3 +164,28 @@ are in [`OS_ECOSYSTEM.md`](OS_ECOSYSTEM.md).
   options are year-gated.
 - OS releases persist in save schema v8. They remain a design/simulation feature
   and do not enter the daily market, finance or reputation pipeline.
+
+## AI architecture and data (Stage 10)
+
+Stage 10 adds AI model projects, architecture/parameter configuration, datasets,
+data quality/licensing and calculated hardware requirements. Full rules and
+formulas are in [`AI_LAB.md`](AI_LAB.md).
+
+- Architectures are Transformer, RNN, CNN, Diffusion, MoE, Multimodal and Custom.
+  They trade quality against training cost, inference efficiency and memory use.
+- Model quality combines architecture quality, parameter scale, dataset quality,
+  diversity, context window and precision. Dataset quality and diversity are
+  weighted by dataset size.
+- Licenses affect commercial readiness: proprietary 1.00, permissive 0.98,
+  research 0.65 and restricted 0.35 compliance. Restricted data therefore lowers
+  commercial readiness and appeal without changing raw model quality.
+- Quantization reduces model size and inference VRAM: INT8 uses 1 byte per
+  parameter and INT4 uses 0.5 byte; FP32/FP16/BF16/FP8 use 4/2/2/1 bytes.
+- Hardware requirements are calculated from parameters, layers, context, hidden
+  dimension, precision, quantization and dataset size: training VRAM, inference
+  VRAM, system RAM, storage, minimum GPU TFLOPS and recommended VRAM.
+- Historical gates: Transformer 2017, MoE 2019, Diffusion 2020, Multimodal 2021,
+  FP16 2008, BF16 2018, FP8 2022, INT8 2015, INT4 2022.
+- AI projects persist in save schema v9 with configuration and dataset snapshots
+  per version. They do not enter the daily market, finance or reputation pipeline.
+  Training and deployment are reserved for Stage 11.

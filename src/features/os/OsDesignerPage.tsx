@@ -108,6 +108,7 @@ interface OsDesignerPageProps {
   onAdvanceRelease?: (projectId: string, releaseId: string) => Promise<boolean>;
   onOpenCpu: () => void;
   onOpenComponents: () => void;
+  onOpenAi?: () => void;
 }
 
 type PendingAction =
@@ -153,6 +154,7 @@ export function OsDesignerPage({
   onAdvanceRelease,
   onOpenCpu,
   onOpenComponents,
+  onOpenAi = () => undefined,
 }: OsDesignerPageProps) {
   const locale = state.settings.locale;
   const t = translations[locale];
@@ -608,7 +610,9 @@ export function OsDesignerPage({
         onOpenComponents={onOpenComponents}
         onOpenCpu={onOpenCpu}
         onOpenOs={() => undefined}
+        onOpenAi={onOpenAi}
         osLabel={t.productWorkspace.os}
+        aiLabel={t.productWorkspace.ai}
       />
 
       <section className="os-simulation-banner" role="note" aria-labelledby="os-simulation-title">

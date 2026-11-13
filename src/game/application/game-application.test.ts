@@ -3,6 +3,7 @@ import type { GameState } from "../models/game-state";
 import { createDefaultCpuConfiguration } from "../models/cpu";
 import { createDefaultComponentConfiguration, type GpuConfiguration } from "../models/components";
 import { createDefaultOsConfiguration } from "../models/os";
+import { createDefaultAiConfiguration, createDefaultAiDataset } from "../models/ai";
 import { getFinanceDailyRecord } from "../models/finance";
 import { createGameApplication } from "./game-application";
 import type { GameStateRepository } from "../../storage/repositories/GameStateRepository";
@@ -216,6 +217,27 @@ describe("game application commands", () => {
       costUsd: 60_000,
     });
     expect(getFinanceDailyRecord(reloaded.finance, "1995-01-01")?.releaseUsd).toBe(60_000);
+  });
+
+  it("creates, versions, saves, and reloads an AI project", async () => {
+    const repository = new MemoryGameStateRepository();
+    const application = createGameApplication(repository);
+    const configuration = createDefaultAiConfiguration();
+    const dataset = createDefaultAiDataset("dataset-1");
+
+    await application.load();
+    await application.createAiProject("Dynasty Vision", configuration);
+    const saved = await application.saveAiVersion(
+      "ai-1",
+      "Dynasty Vision",
+      { ...configuration, architecture: "cnn", layers: 4 },
+      [dataset],
+    );
+    const reloaded = await createGameApplication(repository).load();
+
+    expect(saved.aiProjects[0]?.versions).toHaveLength(2);
+    expect(reloaded.aiProjects[0]?.configuration).toMatchObject({ architecture: "cnn", layers: 4 });
+    expect(reloaded.aiProjects[0]?.datasets).toEqual([dataset]);
   });
 
   it("posts research spending to the finance ledger", async () => {

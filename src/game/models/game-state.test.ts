@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createInitialGameState, InvalidGameStateError, parseGameState } from "./game-state";
 import { createCpuProject, createDefaultCpuConfiguration } from "./cpu";
 import { createDefaultOsConfiguration, createOsProject } from "./os";
+import { createAiProject, createDefaultAiConfiguration, createDefaultAiDataset } from "./ai";
 
 describe("game state validation", () => {
   it("round-trips a valid starting state", () => {
@@ -14,7 +15,7 @@ describe("game state validation", () => {
     const state = createInitialGameState();
 
     expect(() => parseGameState({ ...state, gameDate: "1995-02-30" })).toThrow(InvalidGameStateError);
-    expect(() => parseGameState({ ...state, schemaVersion: 9 })).toThrow(InvalidGameStateError);
+    expect(() => parseGameState({ ...state, schemaVersion: 10 })).toThrow(InvalidGameStateError);
   });
 
   it("migrates a Stage 1 save without losing company, date, or settings", () => {
@@ -28,7 +29,7 @@ describe("game state validation", () => {
 
     const migrated = parseGameState(legacyStageOneSave);
 
-    expect(migrated.schemaVersion).toBe(8);
+    expect(migrated.schemaVersion).toBe(9);
     expect(migrated.gameDate).toBe(current.gameDate);
     expect(migrated.company).toEqual(current.company);
     expect(migrated.settings).toEqual(current.settings);
@@ -57,7 +58,7 @@ describe("game state validation", () => {
       settings: current.settings,
     });
 
-    expect(migrated.schemaVersion).toBe(8);
+    expect(migrated.schemaVersion).toBe(9);
     expect(migrated.cpuProjects).toEqual([cpuProject]);
     expect(migrated.componentProjects).toEqual([]);
     expect(migrated.osProjects).toEqual([]);
@@ -82,7 +83,7 @@ describe("game state validation", () => {
 
     const migrated = parseGameState(legacySave);
 
-    expect(migrated.schemaVersion).toBe(8);
+    expect(migrated.schemaVersion).toBe(9);
     expect(migrated.gameDate).toBe("1998-06-15");
     expect(migrated.osProjects).toEqual([]);
     expect(migrated.finance).toEqual(current.finance);
@@ -121,7 +122,7 @@ describe("game state validation", () => {
 
     const migrated = parseGameState(legacySave);
 
-    expect(migrated.schemaVersion).toBe(8);
+    expect(migrated.schemaVersion).toBe(9);
     expect(migrated.company.balance).toBe(123_456);
     expect(migrated.componentProjects).toEqual([]);
     expect(migrated.osProjects).toEqual([]);
@@ -151,7 +152,7 @@ describe("game state validation", () => {
     };
     const migrated = parseGameState(stageFiveState);
 
-    expect(migrated.schemaVersion).toBe(8);
+    expect(migrated.schemaVersion).toBe(9);
     expect(migrated.osProjects).toEqual([]);
     expect(migrated.componentProjects).toEqual(state.componentProjects);
   });
@@ -186,7 +187,7 @@ describe("game state validation", () => {
       osProjects: [project],
     });
 
-    expect(migrated.schemaVersion).toBe(8);
+    expect(migrated.schemaVersion).toBe(9);
     expect(migrated.osProjects[0]?.configuration).toEqual(
       expect.objectContaining({
         filesystem: "fat",
@@ -237,7 +238,7 @@ describe("game state validation", () => {
       osProjects: [project],
     });
 
-    expect(migrated.schemaVersion).toBe(8);
+    expect(migrated.schemaVersion).toBe(9);
     expect(migrated.osProjects[0]?.configuration).toEqual(expect.objectContaining({
       gui: "cli",
       sdk: "basic",
@@ -246,6 +247,42 @@ describe("game state validation", () => {
       appStore: "none",
     }));
     expect(migrated.osProjects[0]?.releases).toEqual([]);
+  });
+
+  it("migrates schema-8 saves by initializing the AI project list", () => {
+    const state = createInitialGameState();
+    const migrated = parseGameState({
+      ...state,
+      schemaVersion: 8,
+      aiProjects: undefined,
+    });
+
+    expect(migrated.schemaVersion).toBe(9);
+    expect(migrated.aiProjects).toEqual([]);
+    expect(migrated.osProjects).toEqual(state.osProjects);
+  });
+
+  it("preserves valid AI projects in current saves", () => {
+    const state = createInitialGameState();
+    const configuration = createDefaultAiConfiguration();
+    const dataset = createDefaultAiDataset("dataset-1");
+    const project = createAiProject("ai-1", "Dynasty Vision", configuration, state.gameDate);
+    const saved = {
+      ...project,
+      datasets: [dataset],
+      versions: [{ version: 1, savedOn: state.gameDate, configuration, datasets: [dataset] }],
+    };
+    const parsed = parseGameState({ ...state, aiProjects: [saved] });
+
+    expect(parsed.aiProjects).toEqual([saved]);
+  });
+
+  it("rejects invalid AI projects in the current save schema", () => {
+    const state = createInitialGameState();
+
+    expect(() => parseGameState({ ...state, aiProjects: [{ id: "bad" }] })).toThrow(
+      InvalidGameStateError,
+    );
   });
 
   it("preserves valid OS projects in current saves", () => {

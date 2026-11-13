@@ -29,6 +29,13 @@ import {
   type OsConfiguration,
   type OsProject,
 } from "../models/os";
+import {
+  createAiProject as buildAiProject,
+  saveAiVersion as buildAiVersion,
+  type AiConfiguration,
+  type AiDataset,
+  type AiProject,
+} from "../models/ai";
 import { startResearchProject } from "../engine/research";
 import {
   discontinueProduct,
@@ -71,6 +78,13 @@ export interface GameApplication {
   saveOsVersion(projectId: string, name: string, configuration: OsConfiguration): Promise<GameState>;
   startOsRelease(projectId: string): Promise<GameState>;
   advanceOsRelease(projectId: string, releaseId: string): Promise<GameState>;
+  createAiProject(name: string, configuration: AiConfiguration): Promise<GameState>;
+  saveAiVersion(
+    projectId: string,
+    name: string,
+    configuration: AiConfiguration,
+    datasets: readonly AiDataset[],
+  ): Promise<GameState>;
   releaseProduct(input: ReleaseProductInput): Promise<GameState>;
   releaseComponentProduct(input: ReleaseComponentProductInput): Promise<GameState>;
   updateComponentProductPrice(productId: string, priceUsd: number): Promise<GameState>;
@@ -267,6 +281,32 @@ export function createGameApplication(repository: GameStateRepository): GameAppl
       return commit(advanceOsRelease(await ensureLoaded(), projectId, releaseId));
     },
 
+    async createAiProject(name, configuration) {
+      const state = await ensureLoaded();
+      const project = buildAiProject(nextAiProjectId(state.aiProjects), name, configuration, state.gameDate);
+      return commit({ ...state, aiProjects: [...state.aiProjects, project] });
+    },
+
+    async saveAiVersion(projectId, name, configuration, datasets) {
+      const state = await ensureLoaded();
+      const projectIndex = state.aiProjects.findIndex((project) => project.id === projectId);
+      if (projectIndex < 0) {
+        throw new Error("AI project was not found.");
+      }
+
+      const project = state.aiProjects[projectIndex];
+      if (!project) {
+        throw new Error("AI project was not found.");
+      }
+
+      const updatedProject = buildAiVersion(project, name, configuration, datasets, state.gameDate);
+      const aiProjects = state.aiProjects.map((currentProject) =>
+        currentProject.id === projectId ? updatedProject : currentProject,
+      );
+
+      return commit({ ...state, aiProjects });
+    },
+
     async updateProductPrice(productId, priceUsd) {
       return commit(updateProductPrice(await ensureLoaded(), productId, priceUsd));
     },
@@ -315,6 +355,14 @@ function nextOsProjectId(projects: OsProject[]): string {
     sequence += 1;
   }
   return `os-${sequence}`;
+}
+
+function nextAiProjectId(projects: AiProject[]): string {
+  let sequence = 1;
+  while (projects.some((project) => project.id === `ai-${sequence}`)) {
+    sequence += 1;
+  }
+  return `ai-${sequence}`;
 }
 
 function assertCpuConfigurationUnlocked(configuration: CpuConfiguration, state: GameState): void {

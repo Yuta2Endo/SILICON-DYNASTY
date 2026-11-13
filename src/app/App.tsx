@@ -4,10 +4,12 @@ import { ConfirmationBottomSheet } from "../components/ConfirmationBottomSheet";
 import { CPUDesignerPage } from "../features/cpu/CPUDesignerPage";
 import { ComponentDesignerPage } from "../features/components/ComponentDesignerPage";
 import { OsDesignerPage } from "../features/os/OsDesignerPage";
+import { AiDesignerPage } from "../features/ai/AiDesignerPage";
 import { MarketPage } from "../features/market/MarketPage";
 import { ResearchPage } from "../features/research/ResearchPage";
 import { createGameApplication, type GameApplication } from "../game/application/game-application";
 import type { CpuConfiguration } from "../game/models/cpu";
+import type { AiConfiguration, AiDataset } from "../game/models/ai";
 import type { GameSettings, GameState } from "../game/models/game-state";
 import { createBrowserGameStateRepository } from "../storage/repositories/BrowserGameStateRepository";
 import { translations } from "../localization/messages";
@@ -34,6 +36,7 @@ export function App({ application }: AppProps = {}) {
   const [hasUnsavedCpuDraft, setHasUnsavedCpuDraft] = useState(false);
   const [hasUnsavedComponentDraft, setHasUnsavedComponentDraft] = useState(false);
   const [hasUnsavedOsDraft, setHasUnsavedOsDraft] = useState(false);
+  const [hasUnsavedAiDraft, setHasUnsavedAiDraft] = useState(false);
   const [pendingScreen, setPendingScreen] = useState<ScreenId | null>(null);
 
   const loadGame = useCallback(async () => {
@@ -93,8 +96,12 @@ export function App({ application }: AppProps = {}) {
       setPendingScreen(screen);
       return;
     }
+    if (activeScreen === "ai" && hasUnsavedAiDraft) {
+      setPendingScreen(screen);
+      return;
+    }
     setActiveScreen(screen);
-  }, [activeScreen, hasUnsavedCpuDraft, hasUnsavedComponentDraft, hasUnsavedOsDraft]);
+  }, [activeScreen, hasUnsavedCpuDraft, hasUnsavedComponentDraft, hasUnsavedOsDraft, hasUnsavedAiDraft]);
 
   const cancelNavigation = useCallback(() => setPendingScreen(null), []);
 
@@ -103,6 +110,7 @@ export function App({ application }: AppProps = {}) {
       setHasUnsavedCpuDraft(false);
       setHasUnsavedComponentDraft(false);
       setHasUnsavedOsDraft(false);
+      setHasUnsavedAiDraft(false);
       setActiveScreen(pendingScreen);
       setPendingScreen(null);
     }
@@ -163,6 +171,7 @@ export function App({ application }: AppProps = {}) {
           onDirtyChange={setHasUnsavedCpuDraft}
           onOpenComponents={() => requestNavigation("components")}
           onOpenOs={() => requestNavigation("os")}
+          onOpenAi={() => requestNavigation("ai")}
           onSaveVersion={async (projectId, name, configuration: CpuConfiguration) =>
             (await runCommand(() => gameApplication.saveCpuVersion(projectId, name, configuration))) !== null
           }
@@ -181,6 +190,7 @@ export function App({ application }: AppProps = {}) {
           onDirtyChange={setHasUnsavedComponentDraft}
           onOpenCpu={() => requestNavigation("cpu")}
           onOpenOs={() => requestNavigation("os")}
+          onOpenAi={() => requestNavigation("ai")}
           onSaveVersion={async (projectId, name, configuration) =>
             (await runCommand(
               () => gameApplication.saveComponentVersion(projectId, name, configuration),
@@ -199,6 +209,7 @@ export function App({ application }: AppProps = {}) {
           onDirtyChange={setHasUnsavedOsDraft}
           onOpenComponents={() => requestNavigation("components")}
           onOpenCpu={() => requestNavigation("cpu")}
+          onOpenAi={() => requestNavigation("ai")}
           onSaveVersion={async (projectId, name, configuration) =>
             (await runCommand(() => gameApplication.saveOsVersion(projectId, name, configuration))) !== null
           }
@@ -207,6 +218,25 @@ export function App({ application }: AppProps = {}) {
           }
           onAdvanceRelease={async (projectId, releaseId) =>
             (await runCommand(() => gameApplication.advanceOsRelease(projectId, releaseId))) !== null
+          }
+          state={state}
+        />
+      )}
+      {activeScreen === "ai" && (
+        <AiDesignerPage
+          isSaving={isSaving}
+          onCreateProject={async (name, configuration) => {
+            const nextState = await runCommand(() => gameApplication.createAiProject(name, configuration));
+            return nextState?.aiProjects.at(-1)?.id ?? null;
+          }}
+          onDirtyChange={setHasUnsavedAiDraft}
+          onOpenComponents={() => requestNavigation("components")}
+          onOpenCpu={() => requestNavigation("cpu")}
+          onOpenOs={() => requestNavigation("os")}
+          onSaveVersion={async (projectId, name, configuration: AiConfiguration, datasets: AiDataset[]) =>
+            (await runCommand(
+              () => gameApplication.saveAiVersion(projectId, name, configuration, datasets),
+            )) !== null
           }
           state={state}
         />
@@ -255,7 +285,7 @@ export function App({ application }: AppProps = {}) {
           state={state}
         />
       )}
-      {(activeScreen === "cpu" || activeScreen === "components" || activeScreen === "os") && pendingScreen && (
+      {(activeScreen === "cpu" || activeScreen === "components" || activeScreen === "os" || activeScreen === "ai") && pendingScreen && (
         <ConfirmationBottomSheet
           cancelLabel={t.cpu.unsavedCancel}
           confirmLabel={t.cpu.unsavedConfirm}

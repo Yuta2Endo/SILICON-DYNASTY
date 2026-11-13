@@ -1,6 +1,7 @@
 import { validateCompany, type Company } from "./company";
 import { parseCpuProject, type CpuProject } from "./cpu";
 import { parseComponentProject, type ComponentProject } from "./components";
+import { parseAiProject, type AiProject } from "./ai";
 import { parseOsProject, type OsProject } from "./os";
 import { isValidDateOnly } from "./date";
 import {
@@ -20,9 +21,9 @@ import {
   type ResearchState,
 } from "./research";
 
-export const SAVE_SCHEMA_VERSION = 8 as const;
+export const SAVE_SCHEMA_VERSION = 9 as const;
 
-const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7, SAVE_SCHEMA_VERSION] as const;
+const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, SAVE_SCHEMA_VERSION] as const;
 
 export type Locale = "ru" | "en";
 export type Theme = "light" | "dark";
@@ -39,6 +40,7 @@ export interface GameState {
   cpuProjects: CpuProject[];
   componentProjects: ComponentProject[];
   osProjects: OsProject[];
+  aiProjects: AiProject[];
   research: ResearchState;
   finance: FinanceState;
   market: MarketState;
@@ -61,6 +63,7 @@ export function createInitialGameState(): GameState {
     cpuProjects: [],
     componentProjects: [],
     osProjects: [],
+    aiProjects: [],
     research: createInitialResearchState(),
     finance: createInitialFinanceState(),
     market: createInitialMarketState(gameDate),
@@ -202,6 +205,24 @@ export function parseGameState(value: unknown): GameState {
     }
   }
 
+  let aiProjects: AiProject[] = [];
+  if (sourceSchemaVersion >= 9) {
+    if (!Array.isArray(value.aiProjects)) {
+      throw new InvalidGameStateError("Save data contains an invalid AI project list.");
+    }
+
+    try {
+      aiProjects = value.aiProjects.map((project) => parseAiProject(project, value.gameDate as string));
+    } catch {
+      throw new InvalidGameStateError("Save data contains an invalid AI project.");
+    }
+
+    const aiProjectIds = new Set(aiProjects.map((project) => project.id));
+    if (aiProjectIds.size !== aiProjects.length) {
+      throw new InvalidGameStateError("Save data contains duplicate AI project IDs.");
+    }
+  }
+
   let research: ResearchState;
   if (sourceSchemaVersion >= 3) {
     try {
@@ -241,6 +262,7 @@ export function parseGameState(value: unknown): GameState {
     cpuProjects,
     componentProjects,
     osProjects,
+    aiProjects,
     research,
     finance,
     market,
