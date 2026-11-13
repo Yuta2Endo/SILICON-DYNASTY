@@ -53,6 +53,40 @@ describe("os preview model", () => {
     expect(model.appeal).toBe(57.4);
   });
 
+  it("previews a selected historical release instead of the latest release", () => {
+    const currentConfiguration = { ...createDefaultOsConfiguration(), gui: "modern-desktop" as const };
+    const alphaConfiguration = { ...createDefaultOsConfiguration(), gui: "desktop-shell" as const };
+    const project = {
+      ...createOsProject("os-1", "Dynasty OS", currentConfiguration, "2001-01-01"),
+      releases: [
+        release({
+          id: "os-release-1",
+          version: 1,
+          stage: "alpha",
+          configuration: alphaConfiguration,
+          qualityScore: 42.5,
+          appealScore: 38.1,
+        }),
+        release({
+          id: "os-release-2",
+          version: 2,
+          stage: "stable",
+          configuration: currentConfiguration,
+          qualityScore: 78.4,
+          appealScore: 72.1,
+        }),
+      ],
+    };
+
+    const model = buildOsPreviewModel(alphaConfiguration, project, project.releases[0]!);
+
+    expect(model.shell).toBe("desktop-shell");
+    expect(model.stage).toBe("alpha");
+    expect(model.versionLabel).toBe("1.0");
+    expect(model.quality).toBe(42.5);
+    expect(model.appeal).toBe(38.1);
+  });
+
   it("maps target platforms to device frames and accents", () => {
     expect(buildOsPreviewModel({ ...createDefaultOsConfiguration(), targetPlatform: "mobile" }))
       .toMatchObject({ device: "mobile", accent: "green" });

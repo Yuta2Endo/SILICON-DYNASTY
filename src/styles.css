@@ -7501,6 +7501,42 @@ textarea {
   gap: 6px;
 }
 
+.os-preview-history {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-muted);
+}
+
+.os-preview-history label {
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.os-preview-history select {
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+@media (min-width: 520px) {
+  .os-preview-history {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+  }
+}
+
 .os-preview-stage,
 .os-preview-version {
   display: inline-flex;

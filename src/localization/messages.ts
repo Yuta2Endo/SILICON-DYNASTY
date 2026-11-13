@@ -409,6 +409,8 @@ const ru = {
       eyebrow: "ИНТЕРФЕЙС СИСТЕМЫ",
       title: "Живой предпросмотр интерфейса",
       hint: "Предпросмотр собирается из текущей конфигурации ОС. Это игровая визуализация, а не настоящая операционная система.",
+      historyTitle: "Версия интерфейса",
+      currentDraft: "Текущая конфигурация",
       summary: "Сводка интерфейса",
       development: "Разработка",
       devices: {
@@ -2253,6 +2255,8 @@ const en: Translation = {
       eyebrow: "SYSTEM INTERFACE",
       title: "Live interface preview",
       hint: "The preview is assembled from the current OS configuration. It is a game visualization, not a real operating system.",
+      historyTitle: "Interface version",
+      currentDraft: "Current configuration",
       summary: "Interface summary",
       development: "Development",
       devices: {

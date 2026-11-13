@@ -67,7 +67,16 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
   const t = translations[locale];
   const copy = t.os.preview;
   const appCopy = t.os.applications;
-  const model = buildOsPreviewModel(configuration, project);
+  const releases = project
+    ? [...project.releases].sort((left, right) => right.version - left.version)
+    : [];
+  const [selectedReleaseId, setSelectedReleaseId] = useState<string | null>(null);
+  const selectedRelease = releases.find((release) => release.id === selectedReleaseId) ?? null;
+  const model = buildOsPreviewModel(
+    selectedRelease?.configuration ?? configuration,
+    project,
+    selectedRelease,
+  );
   const [activeAppId, setActiveAppId] = useState<string | null>(null);
   const [isStartOpen, setIsStartOpen] = useState(false);
   const activeApp = model.apps.find((app) => app.id === activeAppId) ?? null;
@@ -79,6 +88,11 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
   const nextHint = model.nextShell
     ? copy.nextHints[model.shell]
     : copy.maxLevel;
+
+  useEffect(() => {
+    setActiveAppId(null);
+    setIsStartOpen(false);
+  }, [selectedReleaseId]);
 
   useEffect(() => {
     function handleEscape(event: KeyboardEvent) {
@@ -109,6 +123,27 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
           <span className="os-preview-version">v{model.versionLabel}</span>
         </div>
       </header>
+
+      {releases.length > 0 && (
+        <div className="os-preview-history">
+          <label htmlFor="os-preview-release">{copy.historyTitle}</label>
+          <select
+            id="os-preview-release"
+            onChange={(event) => {
+              const value = event.currentTarget.value;
+              setSelectedReleaseId(value === "draft" ? null : value);
+            }}
+            value={selectedReleaseId ?? "draft"}
+          >
+            <option value="draft">{copy.currentDraft}</option>
+            {releases.map((release) => (
+              <option key={release.id} value={release.id}>
+                {t.os.releases.stages[release.stage]} · v{release.version}.0
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className="os-preview-stagebar" aria-label={copy.summary}>
         <span><ShellIcon aria-hidden="true" size={15} />{copy.shells[model.shell]}</span>

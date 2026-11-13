@@ -87,6 +87,7 @@ function toApp(result: OsApplicationCompatibility): OsPreviewApp {
 export function buildOsPreviewModel(
   configuration: OsConfiguration,
   project?: Pick<OsProject, "releases"> | null,
+  releaseOverride?: OsRelease | null,
 ): OsPreviewModel {
   const metrics = calculateOsKernelMetrics(configuration);
   const compatibility = checkOsApplicationCompatibility(configuration, {
@@ -98,6 +99,7 @@ export function buildOsPreviewModel(
     (latest, release) => (latest === null || release.version > latest.version ? release : latest),
     null,
   );
+  const selectedRelease = releaseOverride ?? latestRelease;
   const shell = getShell(configuration.gui);
   const device = getDevice(configuration.targetPlatform);
 
@@ -105,10 +107,10 @@ export function buildOsPreviewModel(
     shell,
     device,
     accent: getAccent(device),
-    stage: latestRelease?.stage ?? "development",
-    versionLabel: latestRelease ? `${latestRelease.version}.0` : "0.1",
-    quality: latestRelease?.qualityScore ?? metrics.overallScore,
-    appeal: latestRelease?.appealScore ?? metrics.overallScore,
+    stage: selectedRelease?.stage ?? "development",
+    versionLabel: selectedRelease ? `${selectedRelease.version}.0` : "0.1",
+    quality: selectedRelease?.qualityScore ?? metrics.overallScore,
+    appeal: selectedRelease?.appealScore ?? metrics.overallScore,
     bootSeconds: metrics.bootTimeSeconds,
     kernelType: configuration.kernelType,
     gui: configuration.gui,

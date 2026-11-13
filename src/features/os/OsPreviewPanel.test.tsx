@@ -1,13 +1,28 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
-import { createDefaultOsConfiguration } from "../../game/models/os";
+import { createDefaultOsConfiguration, createOsProject, type OsRelease } from "../../game/models/os";
 import { translations } from "../../localization/messages";
 import { OsPreviewPanel } from "./OsPreviewPanel";
 
 const ru = translations.ru.os.preview;
+const stages = translations.ru.os.releases.stages;
 
 afterEach(cleanup);
+
+function release(overrides: Partial<OsRelease> = {}): OsRelease {
+  return {
+    id: "os-release-1",
+    version: 1,
+    stage: "alpha",
+    createdOn: "1995-01-01",
+    configuration: createDefaultOsConfiguration(),
+    qualityScore: 42.5,
+    appealScore: 38.1,
+    costUsd: 25_000,
+    ...overrides,
+  };
+}
 
 describe("OsPreviewPanel", () => {
   it("renders a terminal for a CLI system", () => {
@@ -38,6 +53,41 @@ describe("OsPreviewPanel", () => {
 
     expect(screen.getByRole("dialog", { name: "Заметки" })).toBeTruthy();
     expect(screen.getByText(ru.running)).toBeTruthy();
+  });
+
+  it("switches the preview to a saved release from the history selector", async () => {
+    const user = userEvent.setup();
+    const currentConfiguration = { ...createDefaultOsConfiguration(), gui: "modern-desktop" as const };
+    const alphaConfiguration = { ...createDefaultOsConfiguration(), gui: "desktop-shell" as const };
+    const project = {
+      ...createOsProject("os-1", "Dynasty OS", currentConfiguration, "2001-01-01"),
+      releases: [
+        release({ configuration: alphaConfiguration }),
+        release({
+          id: "os-release-2",
+          version: 2,
+          stage: "beta",
+          configuration: currentConfiguration,
+          qualityScore: 61.2,
+        }),
+      ],
+    };
+
+    render(
+      <OsPreviewPanel
+        configuration={currentConfiguration}
+        locale="ru"
+        project={project}
+      />,
+    );
+
+    expect(screen.getByLabelText(ru.historyTitle)).toBeTruthy();
+    expect(document.querySelector(".os-preview-stage")?.textContent).toBe(stages.beta);
+
+    await user.selectOptions(screen.getByLabelText(ru.historyTitle), "os-release-1");
+
+    expect(document.querySelector(".os-preview-stage")?.textContent).toBe(stages.alpha);
+    expect(screen.getByText(ru.shells["desktop-shell"])).toBeTruthy();
   });
 
   it("shows a lock reason for an incompatible application", async () => {
