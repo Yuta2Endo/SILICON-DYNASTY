@@ -95,6 +95,9 @@ describe("App", () => {
     await user.click(financeTab);
     expect(await screen.findByRole("heading", { name: "Финансы" })).toBeTruthy();
     expect(screen.getByRole("tab", { name: "Финансы" }).getAttribute("aria-selected")).toBe("true");
+
+    await user.click(screen.getByRole("tab", { name: "Аналитика" }));
+    expect(await screen.findByRole("heading", { name: "Аналитика компании" })).toBeTruthy();
   });
 
   it("opens the OS Lab from the product workspace and creates an OS project", async () => {

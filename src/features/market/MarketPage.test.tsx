@@ -100,6 +100,15 @@ describe("Market screen", () => {
     expect(screen.queryByRole("button", { name: ru.market.release.submit })).toBeNull();
   });
 
+  it("switches to the analytics tab", async () => {
+    const user = userEvent.setup();
+    const onViewChange = vi.fn();
+    renderMarket({ onViewChange });
+
+    await user.click(screen.getByRole("tab", { name: ru.market.tabAnalytics }));
+    expect(onViewChange).toHaveBeenCalledWith("analytics");
+  });
+
   it("switches to finance and explains the absence of daily records", async () => {
     const user = userEvent.setup();
     const onViewChange = vi.fn();

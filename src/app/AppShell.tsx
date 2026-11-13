@@ -44,7 +44,7 @@ export function AppShell({
             {navigationItems.map(({ id, icon: Icon }) => {
               const isActive = activeScreen === id
                 || (id === "cpu" && (activeScreen === "components" || activeScreen === "os" || activeScreen === "ai" || activeScreen === "devices"))
-                || (id === "market" && activeScreen === "finance");
+                || (id === "market" && (activeScreen === "finance" || activeScreen === "analytics"));
 
               return (
                 <button

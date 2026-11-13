@@ -153,6 +153,7 @@ Available destinations:
 - Manufacturing
 - Market
 - Finance
+- Analytics
 - Ecosystem
 - Settings
 
@@ -362,6 +363,15 @@ Use dedicated visualizations for:
 Use charts, comparison panels and compact financial cards.
 
 All monetary values must use consistent formatting.
+
+### Analytics
+
+Analytics is a third tab in the Market/Finance workspace. It must:
+
+- Offer 7/30/90-day report ranges and a CSV export of the selected daily summary.
+- Show revenue, profit, market share, balance, expense breakdown, cash runway, market segments, top products and technology portfolio data from real game state.
+- Use accessible SVG charts with a title, description, axes and a readable legend.
+- Reuse the existing metric cards, tables, localization and design tokens.
 
 ## 11. Charts
 

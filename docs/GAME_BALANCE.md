@@ -264,3 +264,16 @@ save management and a derived experience layer; full details are in
   research and OS releases, so they add no economic effects or schema fields.
 - Fixture-based migration tests cover schemas 1, 5, 7, 10 and 11, reject schema
   12, and verify a 30-day session survives export/import.
+
+## Analytics reports (Plugin Stage 03)
+
+- Analytics is read-only and introduces no balance or simulation changes.
+- Reports use existing finance daily records, market summaries, research state
+  and product projects; the selected 7/30/90-day window is filtered by game date.
+- Corporate metrics are sums and ratios of recorded values: expenses include
+  manufacturing, payroll, overhead, marketing, research, release, interest and
+  tax; net margin is net profit divided by revenue; cash runway is current cash
+  divided by the latest recurring operating cost.
+- Market share is player units divided by total demand across the selected
+  summaries. Segment shares use the same units/demand aggregation.
+- CSV export contains the selected daily points and does not alter game state.

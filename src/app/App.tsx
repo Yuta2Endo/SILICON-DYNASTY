@@ -328,7 +328,7 @@ export function App({ application, initialMenuOpen }: AppProps = {}) {
           state={state}
         />
       )}
-      {(activeScreen === "market" || activeScreen === "finance") && (
+      {(activeScreen === "market" || activeScreen === "finance" || activeScreen === "analytics") && (
         <MarketPage
           activeView={activeScreen}
           isSaving={isSaving}

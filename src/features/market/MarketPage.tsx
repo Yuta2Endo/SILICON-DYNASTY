@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import {
   Banknote,
+  BarChart3,
   Boxes,
   CircleDollarSign,
   Factory,
@@ -64,8 +65,9 @@ import {
 } from "../../localization/formatters";
 import { translations, type TranslationMessages } from "../../localization/messages";
 import { MetricCard } from "../../components/MetricCard";
+import { AnalyticsPanel } from "../analytics/AnalyticsPanel";
 
-export type MarketView = "market" | "finance";
+export type MarketView = "market" | "finance" | "analytics";
 type MarketCopy = TranslationMessages["market"];
 type FinanceCopy = MarketCopy["finance"];
 const DEFAULT_MARKET_SEGMENT = MARKET_SEGMENTS[0]!;
@@ -132,10 +134,26 @@ export function MarketPage({
           <Landmark aria-hidden="true" size={16} />
           {copy.tabFinance}
         </button>
+        <button
+          aria-controls="market-panel"
+          aria-selected={activeView === "analytics"}
+          className={`segment-button${activeView === "analytics" ? " is-selected" : ""}`}
+          id="analytics-tab"
+          onClick={() => onViewChange("analytics")}
+          role="tab"
+          type="button"
+        >
+          <BarChart3 aria-hidden="true" size={16} />
+          {copy.tabAnalytics}
+        </button>
       </div>
 
       <div
-        aria-labelledby={activeView === "market" ? "market-tab" : "finance-tab"}
+        aria-labelledby={activeView === "market"
+          ? "market-tab"
+          : activeView === "finance"
+            ? "finance-tab"
+            : "analytics-tab"}
         id="market-panel"
         role="tabpanel"
       >
@@ -152,7 +170,7 @@ export function MarketPage({
             onUpdateComponentPrice={onUpdateComponentPrice}
             state={state}
           />
-        ) : (
+        ) : activeView === "finance" ? (
           <FinanceOverview
             copy={copy.finance}
             isSaving={isSaving}
@@ -162,6 +180,8 @@ export function MarketPage({
             onUpdateMarketingBudget={onUpdateMarketingBudget}
             state={state}
           />
+        ) : (
+          <AnalyticsPanel state={state} />
         )}
       </div>
     </div>
