@@ -88,7 +88,7 @@
 <clipPath id="tile"><rect width="512" height="512" rx="112"/></clipPath>
 </defs>
   
-  <g transform="translate(256 256) scale(0.62) translate(-256 -256)">
+  <g transform="translate(256 256) scale(0.9) translate(-256 -256)">
     
   <defs>
     <clipPath id="waferAppClip"><ellipse cx="256" cy="250" rx="152" ry="144"/></clipPath>
@@ -109,8 +109,8 @@
     <ellipse cx="256" cy="252" rx="156" ry="116" fill="none" stroke="url(#metal)" stroke-width="5"/>
     <ellipse cx="256" cy="252" rx="149" ry="109" fill="none" stroke="#9BE7FF" stroke-opacity="0.3" stroke-width="1.5"/>
   </g>
-  <path d="M238 374h36l-18-26Z" fill="#0B1626"/>
-  <path d="M242 372l14-18 14 18" fill="none" stroke="#9BE7FF" stroke-opacity="0.5" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M232 374h48l-24-22Z" fill="#0B1626"/>
+  <path d="M238 372l18-16 18 16" fill="none" stroke="#9BB4D4" stroke-opacity="0.45" stroke-width="2" stroke-linejoin="round"/>
 
   </g>
 

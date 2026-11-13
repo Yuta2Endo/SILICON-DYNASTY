@@ -15,6 +15,7 @@ import {
 import { ConfirmationBottomSheet } from "../../components/ConfirmationBottomSheet";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { APP_ICON_SRC } from "../../app/art";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import type { GameState } from "../../game/models/game-state";
 import { formatCurrency, formatGameDate, formatYear } from "../../localization/formatters";
@@ -64,7 +65,13 @@ export function MainMenu({
       >
         <div className="main-menu__shell">
           <header className="main-menu__brand">
-            <span className="brand-mark brand-mark--menu" aria-hidden="true">SD</span>
+            <img
+              alt=""
+              aria-hidden="true"
+              className="brand-mark brand-mark--menu brand-mark--logo"
+              decoding="async"
+              src={APP_ICON_SRC}
+            />
             <div className="main-menu__brand-copy">
               <p className="main-menu__eyebrow">{copy.eyebrow}</p>
               <p className="main-menu__wordmark" id="main-menu-title">

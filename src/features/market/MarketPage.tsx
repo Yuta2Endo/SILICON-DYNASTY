@@ -23,6 +23,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { GameState } from "../../game/models/game-state";
+import { CPU_DIE_EMBLEM_SRC, MANUFACTURING_EMBLEM_SRC, WAFER_EMBLEM_SRC } from "../../app/art";
 import { getEconomicCycle } from "../../game/formulas/economy";
 import { validateComponentName } from "../../game/models/components";
 import {
@@ -356,13 +357,14 @@ function MarketOverview({
 
       <section className="market-section" aria-labelledby="market-products-title">
         <SectionHeading
+          art={CPU_DIE_EMBLEM_SRC}
           copy={copy.products.hint}
           icon={Boxes}
           id="market-products-title"
           title={copy.products.title}
         />
         {state.market.products.length === 0 ? (
-          <EmptyState body={copy.emptyProductsHint} title={copy.emptyProducts} />
+          <EmptyState art={CPU_DIE_EMBLEM_SRC} body={copy.emptyProductsHint} title={copy.emptyProducts} />
         ) : (
           <div className="market-product-list">
             {state.market.products.map((product) => (
@@ -400,6 +402,7 @@ function MarketOverview({
 
       <section className="market-section" aria-labelledby="market-orders-title">
         <SectionHeading
+          art={MANUFACTURING_EMBLEM_SRC}
           copy={copy.orders.hint}
           icon={Factory}
           id="market-orders-title"
@@ -1330,14 +1333,24 @@ function ProductCard({
   return (
     <article className={`market-product-card${product.status === "discontinued" ? " is-discontinued" : ""}`}>
       <div className="market-product-card__header">
-        <div>
-          <div className="market-product-card__titleline">
-            <h3>{product.name}</h3>
-            <span className={`market-status market-status--${product.status}`}>
-              {product.status === "active" ? copy.products.active : copy.products.discontinued}
-            </span>
+        <div className="market-product-card__identity">
+          <img
+            alt=""
+            aria-hidden="true"
+            className="market-product-card__emblem"
+            decoding="async"
+            loading="lazy"
+            src={CPU_DIE_EMBLEM_SRC}
+          />
+          <div>
+            <div className="market-product-card__titleline">
+              <h3>{product.name}</h3>
+              <span className={`market-status market-status--${product.status}`}>
+                {product.status === "active" ? copy.products.active : copy.products.discontinued}
+              </span>
+            </div>
+            <p>{copy.segmentNames[product.segmentId]} · v{product.projectVersion} · {formatShortGameDate(product.releaseDate, locale)}</p>
           </div>
-          <p>{copy.segmentNames[product.segmentId]} · v{product.projectVersion} · {formatShortGameDate(product.releaseDate, locale)}</p>
         </div>
         <strong>{formatCurrency(product.priceUsd, locale)}</strong>
       </div>
@@ -1430,7 +1443,7 @@ function ProductionOrders({
   locale: GameState["settings"]["locale"];
 }) {
   if (orders.length === 0) {
-    return <EmptyState body={copy.orders.hint} title={copy.orders.empty} />;
+    return <EmptyState art={MANUFACTURING_EMBLEM_SRC} body={copy.orders.hint} title={copy.orders.empty} />;
   }
 
   return (
@@ -1439,6 +1452,14 @@ function ProductionOrders({
         const product = products.find((candidate) => candidate.id === order.productId);
         return (
           <article className="market-history-row" key={order.id}>
+            <img
+              alt=""
+              aria-hidden="true"
+              className="market-history-row__emblem"
+              decoding="async"
+              loading="lazy"
+              src={WAFER_EMBLEM_SRC}
+            />
             <strong>{product?.name ?? order.productId}</strong>
             <span>{copy.orders.quantity}: {formatNumber(order.quantity, locale)}</span>
             <span>{copy.orders.unitCost}: {formatCurrency(order.unitCostUsd, locale)}</span>
@@ -1911,15 +1932,28 @@ function SectionHeading({
   copy,
   icon: Icon,
   id,
+  art,
 }: {
   title: string;
   copy: string;
   icon: LucideIcon;
   id: string;
+  art?: string;
 }) {
   return (
     <div className="market-section__heading">
-      <span className="market-section__icon" aria-hidden="true"><Icon size={18} /></span>
+      {art ? (
+        <img
+          alt=""
+          aria-hidden="true"
+          className="market-section__emblem"
+          decoding="async"
+          loading="lazy"
+          src={art}
+        />
+      ) : (
+        <span className="market-section__icon" aria-hidden="true"><Icon size={18} /></span>
+      )}
       <div>
         <h2 id={id}>{title}</h2>
         <p>{copy}</p>
@@ -1937,10 +1971,21 @@ function SummaryStat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function EmptyState({ title, body }: { title: string; body: string }) {
+function EmptyState({ title, body, art }: { title: string; body: string; art?: string }) {
   return (
     <div className="market-empty">
-      <span className="market-empty__icon" aria-hidden="true"><Boxes size={20} /></span>
+      {art ? (
+        <img
+          alt=""
+          aria-hidden="true"
+          className="market-empty__emblem"
+          decoding="async"
+          loading="lazy"
+          src={art}
+        />
+      ) : (
+        <span className="market-empty__icon" aria-hidden="true"><Boxes size={20} /></span>
+      )}
       <strong>{title}</strong>
       <p>{body}</p>
     </div>

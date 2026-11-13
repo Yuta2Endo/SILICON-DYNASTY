@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Check, Clock3, FlaskConical, LockKeyhole, Play, Wallet } from "lucide-react";
+import { RESEARCH_CATEGORY_EMBLEMS } from "../../app/art";
 import { getResearchAvailability } from "../../game/engine/research";
 import {
   getTechnology,
@@ -248,13 +249,23 @@ export function ResearchPage({ state, isSaving, onStartResearch }: ResearchPageP
                 return (
                   <article className={`research-technology-card research-technology-card--${availability.status}`} key={technology.id}>
                     <header className="research-technology-card__header">
-                      <div>
-                        <p className="research-technology-card__category">{copy.categories[technology.category]}</p>
+                      <img
+                        alt=""
+                        aria-hidden="true"
+                        className="research-technology-card__emblem"
+                        decoding="async"
+                        loading="lazy"
+                        src={RESEARCH_CATEGORY_EMBLEMS[technology.category]}
+                      />
+                      <div className="research-technology-card__content">
+                        <div className="research-technology-card__meta">
+                          <p className="research-technology-card__category">{copy.categories[technology.category]}</p>
+                          <span className={`research-status research-status--${availability.status}`}>
+                            {copy.statuses[availability.status]}
+                          </span>
+                        </div>
                         <h4>{technologyCopy.name}</h4>
                       </div>
-                      <span className={`research-status research-status--${availability.status}`}>
-                        {copy.statuses[availability.status]}
-                      </span>
                     </header>
                     <p className="research-technology-card__description">{technologyCopy.description}</p>
 

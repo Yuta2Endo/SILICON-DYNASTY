@@ -101,8 +101,8 @@
     <path d="M256 132L360 210L320 344L192 344L152 210Z" fill="url(#glass)" stroke="url(#edge)" stroke-width="2"/>
     <path d="M256 203.01999999999998L290.32 228.76L277.12 272.98L234.88 272.98L221.68 228.76Z" fill="none" stroke="#7FB2FF" stroke-opacity="0.22" stroke-width="1.5"/><path d="M256 168.04L324.64 219.52L298.24 307.96000000000004L213.76 307.96000000000004L187.36 219.52Z" fill="none" stroke="#7FB2FF" stroke-opacity="0.22" stroke-width="1.5"/>
     <path d="M256 238L256 238" stroke="#7FB2FF" stroke-opacity="0.2" stroke-width="1.5"/><path d="M256 238L360 238" stroke="#7FB2FF" stroke-opacity="0.2" stroke-width="1.5"/><path d="M256 238L320 238" stroke="#7FB2FF" stroke-opacity="0.2" stroke-width="1.5"/><path d="M256 238L192 238" stroke="#7FB2FF" stroke-opacity="0.2" stroke-width="1.5"/><path d="M256 238L152 238" stroke="#7FB2FF" stroke-opacity="0.2" stroke-width="1.5"/>
-    <path d="M256 182L318 228L292 314L220 314L194 228Z" fill="url(#blue)" fill-opacity="0.55" stroke="#9BE7FF" stroke-width="3.5" stroke-linejoin="round"/>
-    <circle cx="256" cy="182" r="6" fill="#EAF7FF" /><circle cx="318" cy="228" r="6" fill="#EAF7FF" /><circle cx="292" cy="314" r="6" fill="#EAF7FF" /><circle cx="220" cy="314" r="6" fill="#EAF7FF" /><circle cx="194" cy="228" r="6" fill="#EAF7FF" />
+    <path d="M256 196L326 224L300 322L206 310L190 226Z" fill="url(#blue)" fill-opacity="0.55" stroke="#9BE7FF" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="256" cy="196" r="6" fill="#EAF7FF" /><circle cx="326" cy="224" r="6" fill="#EAF7FF" /><circle cx="300" cy="322" r="6" fill="#EAF7FF" /><circle cx="206" cy="310" r="6" fill="#EAF7FF" /><circle cx="190" cy="226" r="6" fill="#EAF7FF" />
     <circle cx="256" cy="238" r="20.8" fill="#9BE7FF" opacity="0.18" filter="url(#soft)"/><circle cx="256" cy="238" r="8" fill="#9BE7FF" />
     <ellipse cx="256" cy="238" rx="162" ry="162" fill="none" stroke="#57A8FF" stroke-opacity="0.14" stroke-width="2" transform="rotate(0 256 238)"/>
     <rect x="9" y="9" width="494" height="494" rx="103" fill="none" stroke="#FFFFFF" stroke-opacity="0.10" stroke-width="2"/>

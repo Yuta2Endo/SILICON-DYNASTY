@@ -1,3 +1,4 @@
+/* global console */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -630,8 +631,24 @@ const APP_ICON_BODY = `
 
 const appIcon = svg("Silicon Dynasty", APP_ICON_BODY);
 
+const roundAppIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Silicon Dynasty">
+  <title>Silicon Dynasty — круглый значок</title>
+  <defs>${DEFS}<clipPath id="round"><circle cx="256" cy="256" r="256"/></clipPath></defs>
+  <g clip-path="url(#round)">
+    <g clip-path="url(#tile)">
+      <rect width="512" height="512" fill="url(#bg)"/>
+      <rect width="512" height="512" fill="url(#halo)"/>
+      <rect width="512" height="512" fill="url(#grid)"/>
+      <path d="M0 0h512v210L0 396Z" fill="url(#sheen)" opacity="0.5"/>
+      <ellipse cx="256" cy="452" rx="196" ry="62" fill="#020812" opacity="0.5" filter="url(#soft)"/>
+      ${APP_ICON_BODY}
+    </g>
+  </g>
+</svg>`;
+
+
 const FOREGROUND_BODY = `
-  <g transform="translate(256 256) scale(0.62) translate(-256 -256)">
+  <g transform="translate(256 256) scale(0.9) translate(-256 -256)">
     ${APP_ICON_BODY}
   </g>
 `;
@@ -649,7 +666,7 @@ function showcase() {
       <div class="meta">
         <strong>${ru}</strong>
         <span>${en}</span>
-        <code>${folder}/${id}.svg</code>
+        <code title="${folder}/${id}.svg">${folder}/${id}.svg</code>
       </div>
     </article>`;
   return `<!doctype html>
@@ -682,7 +699,7 @@ function showcase() {
   .meta { padding:12px 4px 2px; display:flex; flex-direction:column; gap:2px; }
   .meta strong { font-size:14px; }
   .meta span { font-size:12px; color:var(--muted); }
-  .meta code { margin-top:6px; font-size:10px; color:#8794a8; word-break:break-all; }
+  .meta code { margin-top:6px; font-size:10px; color:#8794a8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .sizes { display:flex; align-items:center; gap:24px; background:var(--surface); border:1px solid var(--line);
     border-radius:20px; padding:24px; margin-top:18px; flex-wrap:wrap; }
   .sizes img { border-radius:22%; box-shadow:0 10px 26px rgb(12 23 40 / 18%); }
@@ -705,7 +722,7 @@ function showcase() {
 <header>
   <img class="brand" src="brand/app-icon.svg" alt="Silicon Dynasty"/>
   <h1>Silicon Dynasty — Art Pack</h1>
-  <p>Единая система эмблем: глубокий нави, стекло, титан и электрический синий. 18 разделов, 8 ресурсов, бренд-иконка и сплэш. Вектор, 512×512, прозрачность не требуется.</p>
+  <p>Единая система эмблем: глубокий нави, стекло, титан и электрический синий. 18 разделов, 8 ресурсов, бренд-иконка и сплэш. Вектор 512×512, чистые силуэты и единый стиль.</p>
 </header>
 <div class="wrap">
   <div class="sizes">
@@ -763,6 +780,7 @@ for (const [id, en, ru] of RESOURCE_META) {
   writeFileSync(join(ART, "resources", `${id}.svg`), svg(`${ru} — ${en}`, RESOURCES[id]()));
 }
 writeFileSync(join(ART, "brand", "app-icon.svg"), appIcon);
+writeFileSync(join(ART, "brand", "app-icon-round.svg"), roundAppIcon);
 writeFileSync(join(ART, "brand", "adaptive-foreground.svg"), adaptiveForeground);
 writeFileSync(join(ART, "index.html"), showcase());
 

@@ -28,7 +28,7 @@
   .meta { padding:12px 4px 2px; display:flex; flex-direction:column; gap:2px; }
   .meta strong { font-size:14px; }
   .meta span { font-size:12px; color:var(--muted); }
-  .meta code { margin-top:6px; font-size:10px; color:#8794a8; word-break:break-all; }
+  .meta code { margin-top:6px; font-size:10px; color:#8794a8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .sizes { display:flex; align-items:center; gap:24px; background:var(--surface); border:1px solid var(--line);
     border-radius:20px; padding:24px; margin-top:18px; flex-wrap:wrap; }
   .sizes img { border-radius:22%; box-shadow:0 10px 26px rgb(12 23 40 / 18%); }
@@ -51,7 +51,7 @@
 <header>
   <img class="brand" src="brand/app-icon.svg" alt="Silicon Dynasty"/>
   <h1>Silicon Dynasty — Art Pack</h1>
-  <p>Единая система эмблем: глубокий нави, стекло, титан и электрический синий. 18 разделов, 8 ресурсов, бренд-иконка и сплэш. Вектор, 512×512, прозрачность не требуется.</p>
+  <p>Единая система эмблем: глубокий нави, стекло, титан и электрический синий. 18 разделов, 8 ресурсов, бренд-иконка и сплэш. Вектор 512×512, чистые силуэты и единый стиль.</p>
 </header>
 <div class="wrap">
   <div class="sizes">
@@ -70,7 +70,7 @@
       <div class="meta">
         <strong>Дашборд</strong>
         <span>Dashboard</span>
-        <code>sections/dashboard.svg</code>
+        <code title="sections/dashboard.svg">sections/dashboard.svg</code>
       </div>
     </article>
     <article class="card" style="--d:18ms">
@@ -78,7 +78,7 @@
       <div class="meta">
         <strong>Компания</strong>
         <span>Company</span>
-        <code>sections/company.svg</code>
+        <code title="sections/company.svg">sections/company.svg</code>
       </div>
     </article>
     <article class="card" style="--d:36ms">
@@ -86,7 +86,7 @@
       <div class="meta">
         <strong>Исследования</strong>
         <span>Research</span>
-        <code>sections/research.svg</code>
+        <code title="sections/research.svg">sections/research.svg</code>
       </div>
     </article>
     <article class="card" style="--d:54ms">
@@ -94,7 +94,7 @@
       <div class="meta">
         <strong>Оборудование</strong>
         <span>Hardware</span>
-        <code>sections/hardware.svg</code>
+        <code title="sections/hardware.svg">sections/hardware.svg</code>
       </div>
     </article>
     <article class="card" style="--d:72ms">
@@ -102,7 +102,7 @@
       <div class="meta">
         <strong>Процессоры</strong>
         <span>CPU Designer</span>
-        <code>sections/cpu.svg</code>
+        <code title="sections/cpu.svg">sections/cpu.svg</code>
       </div>
     </article>
     <article class="card" style="--d:90ms">
@@ -110,7 +110,7 @@
       <div class="meta">
         <strong>Графика</strong>
         <span>GPU Designer</span>
-        <code>sections/gpu.svg</code>
+        <code title="sections/gpu.svg">sections/gpu.svg</code>
       </div>
     </article>
     <article class="card" style="--d:108ms">
@@ -118,7 +118,7 @@
       <div class="meta">
         <strong>Компоненты</strong>
         <span>Components</span>
-        <code>sections/components.svg</code>
+        <code title="sections/components.svg">sections/components.svg</code>
       </div>
     </article>
     <article class="card" style="--d:126ms">
@@ -126,7 +126,7 @@
       <div class="meta">
         <strong>Операционные системы</strong>
         <span>OS Lab</span>
-        <code>sections/os.svg</code>
+        <code title="sections/os.svg">sections/os.svg</code>
       </div>
     </article>
     <article class="card" style="--d:144ms">
@@ -134,7 +134,7 @@
       <div class="meta">
         <strong>Искусственный интеллект</strong>
         <span>AI Lab</span>
-        <code>sections/ai.svg</code>
+        <code title="sections/ai.svg">sections/ai.svg</code>
       </div>
     </article>
     <article class="card" style="--d:162ms">
@@ -142,7 +142,7 @@
       <div class="meta">
         <strong>Софт</strong>
         <span>Software Studio</span>
-        <code>sections/software.svg</code>
+        <code title="sections/software.svg">sections/software.svg</code>
       </div>
     </article>
     <article class="card" style="--d:180ms">
@@ -150,7 +150,7 @@
       <div class="meta">
         <strong>Устройства</strong>
         <span>Devices</span>
-        <code>sections/devices.svg</code>
+        <code title="sections/devices.svg">sections/devices.svg</code>
       </div>
     </article>
     <article class="card" style="--d:198ms">
@@ -158,7 +158,7 @@
       <div class="meta">
         <strong>Облако</strong>
         <span>Cloud</span>
-        <code>sections/cloud.svg</code>
+        <code title="sections/cloud.svg">sections/cloud.svg</code>
       </div>
     </article>
     <article class="card" style="--d:216ms">
@@ -166,7 +166,7 @@
       <div class="meta">
         <strong>Производство</strong>
         <span>Manufacturing</span>
-        <code>sections/manufacturing.svg</code>
+        <code title="sections/manufacturing.svg">sections/manufacturing.svg</code>
       </div>
     </article>
     <article class="card" style="--d:234ms">
@@ -174,7 +174,7 @@
       <div class="meta">
         <strong>Рынок</strong>
         <span>Market</span>
-        <code>sections/market.svg</code>
+        <code title="sections/market.svg">sections/market.svg</code>
       </div>
     </article>
     <article class="card" style="--d:252ms">
@@ -182,7 +182,7 @@
       <div class="meta">
         <strong>Финансы</strong>
         <span>Finance</span>
-        <code>sections/finance.svg</code>
+        <code title="sections/finance.svg">sections/finance.svg</code>
       </div>
     </article>
     <article class="card" style="--d:270ms">
@@ -190,7 +190,7 @@
       <div class="meta">
         <strong>Аналитика</strong>
         <span>Analytics</span>
-        <code>sections/analytics.svg</code>
+        <code title="sections/analytics.svg">sections/analytics.svg</code>
       </div>
     </article>
     <article class="card" style="--d:288ms">
@@ -198,7 +198,7 @@
       <div class="meta">
         <strong>Экосистема</strong>
         <span>Ecosystem</span>
-        <code>sections/ecosystem.svg</code>
+        <code title="sections/ecosystem.svg">sections/ecosystem.svg</code>
       </div>
     </article>
     <article class="card" style="--d:306ms">
@@ -206,7 +206,7 @@
       <div class="meta">
         <strong>Настройки</strong>
         <span>Settings</span>
-        <code>sections/settings.svg</code>
+        <code title="sections/settings.svg">sections/settings.svg</code>
       </div>
     </article>
   </div>
@@ -220,7 +220,7 @@
       <div class="meta">
         <strong>Поликремний</strong>
         <span>Silicon</span>
-        <code>resources/silicon.svg</code>
+        <code title="resources/silicon.svg">resources/silicon.svg</code>
       </div>
     </article>
     <article class="card" style="--d:342ms">
@@ -228,7 +228,7 @@
       <div class="meta">
         <strong>Монокристалл</strong>
         <span>Ingot</span>
-        <code>resources/ingot.svg</code>
+        <code title="resources/ingot.svg">resources/ingot.svg</code>
       </div>
     </article>
     <article class="card" style="--d:360ms">
@@ -236,7 +236,7 @@
       <div class="meta">
         <strong>Кремниевая пластина</strong>
         <span>Wafer</span>
-        <code>resources/wafer.svg</code>
+        <code title="resources/wafer.svg">resources/wafer.svg</code>
       </div>
     </article>
     <article class="card" style="--d:378ms">
@@ -244,7 +244,7 @@
       <div class="meta">
         <strong>Кристалл CPU</strong>
         <span>CPU Die</span>
-        <code>resources/cpu-die.svg</code>
+        <code title="resources/cpu-die.svg">resources/cpu-die.svg</code>
       </div>
     </article>
     <article class="card" style="--d:396ms">
@@ -252,7 +252,7 @@
       <div class="meta">
         <strong>Кристалл GPU</strong>
         <span>GPU Die</span>
-        <code>resources/gpu-die.svg</code>
+        <code title="resources/gpu-die.svg">resources/gpu-die.svg</code>
       </div>
     </article>
     <article class="card" style="--d:414ms">
@@ -260,7 +260,7 @@
       <div class="meta">
         <strong>Память</strong>
         <span>DRAM</span>
-        <code>resources/dram.svg</code>
+        <code title="resources/dram.svg">resources/dram.svg</code>
       </div>
     </article>
     <article class="card" style="--d:432ms">
@@ -268,7 +268,7 @@
       <div class="meta">
         <strong>Материнская плата</strong>
         <span>Motherboard</span>
-        <code>resources/motherboard.svg</code>
+        <code title="resources/motherboard.svg">resources/motherboard.svg</code>
       </div>
     </article>
     <article class="card" style="--d:450ms">
@@ -276,7 +276,7 @@
       <div class="meta">
         <strong>Сервер</strong>
         <span>Server</span>
-        <code>resources/server.svg</code>
+        <code title="resources/server.svg">resources/server.svg</code>
       </div>
     </article>
   </div>
@@ -291,7 +291,7 @@
       <div class="meta">
         <strong>Дашборд</strong>
         <span>Dashboard</span>
-        <code>sections/dashboard.svg</code>
+        <code title="sections/dashboard.svg">sections/dashboard.svg</code>
       </div>
     </article>
     <article class="card" style="--d:18ms">
@@ -299,7 +299,7 @@
       <div class="meta">
         <strong>Компания</strong>
         <span>Company</span>
-        <code>sections/company.svg</code>
+        <code title="sections/company.svg">sections/company.svg</code>
       </div>
     </article>
     <article class="card" style="--d:36ms">
@@ -307,7 +307,7 @@
       <div class="meta">
         <strong>Исследования</strong>
         <span>Research</span>
-        <code>sections/research.svg</code>
+        <code title="sections/research.svg">sections/research.svg</code>
       </div>
     </article>
     <article class="card" style="--d:54ms">
@@ -315,7 +315,7 @@
       <div class="meta">
         <strong>Оборудование</strong>
         <span>Hardware</span>
-        <code>sections/hardware.svg</code>
+        <code title="sections/hardware.svg">sections/hardware.svg</code>
       </div>
     </article>
       
@@ -324,7 +324,7 @@
       <div class="meta">
         <strong>Поликремний</strong>
         <span>Silicon</span>
-        <code>resources/silicon.svg</code>
+        <code title="resources/silicon.svg">resources/silicon.svg</code>
       </div>
     </article>
     <article class="card" style="--d:54ms">
@@ -332,7 +332,7 @@
       <div class="meta">
         <strong>Монокристалл</strong>
         <span>Ingot</span>
-        <code>resources/ingot.svg</code>
+        <code title="resources/ingot.svg">resources/ingot.svg</code>
       </div>
     </article>
     <article class="card" style="--d:72ms">
@@ -340,7 +340,7 @@
       <div class="meta">
         <strong>Кремниевая пластина</strong>
         <span>Wafer</span>
-        <code>resources/wafer.svg</code>
+        <code title="resources/wafer.svg">resources/wafer.svg</code>
       </div>
     </article>
     <article class="card" style="--d:90ms">
@@ -348,7 +348,7 @@
       <div class="meta">
         <strong>Кристалл CPU</strong>
         <span>CPU Die</span>
-        <code>resources/cpu-die.svg</code>
+        <code title="resources/cpu-die.svg">resources/cpu-die.svg</code>
       </div>
     </article>
     </div>

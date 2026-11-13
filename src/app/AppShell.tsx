@@ -5,6 +5,7 @@ import { useFocusTrap } from "../hooks/useFocusTrap";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 import { formatGameDate, formatYear } from "../localization/formatters";
 import { translations } from "../localization/messages";
+import { APP_ICON_SRC, SCREEN_EMBLEMS } from "./art";
 import { mobileMoreNavigationItems, mobilePrimaryNavigationItems, navigationItems, type ScreenId } from "./navigation";
 
 interface AppShellProps {
@@ -74,7 +75,13 @@ export function AppShell({
         <aside className="app-sidebar" aria-label={t.app.name}>
           <div className="sidebar-brand">
             <div className="brand-lockup">
-              <span className="brand-mark" aria-hidden="true">SD</span>
+              <img
+                alt=""
+                aria-hidden="true"
+                className="brand-mark brand-mark--logo"
+                decoding="async"
+                src={APP_ICON_SRC}
+              />
               <span className="brand-name">{t.app.name}</span>
             </div>
             <p className="sidebar-tagline">{t.app.tagline}</p>
@@ -139,7 +146,13 @@ export function AppShell({
         <div className="app-main-column">
           <header className="mobile-header">
             <div className="brand-lockup">
-              <span className="brand-mark" aria-hidden="true">SD</span>
+              <img
+                alt=""
+                aria-hidden="true"
+                className="brand-mark brand-mark--logo"
+                decoding="async"
+                src={APP_ICON_SRC}
+              />
               <div className="mobile-header__copy">
                 <span className="brand-name">{t.app.name}</span>
                 <span className="mobile-header__era">{year} · {t.app.era}</span>
@@ -165,10 +178,19 @@ export function AppShell({
           <main className="main-scroll" id="main-content" ref={mainRef} tabIndex={-1}>
             <div className="page-content mx-auto w-full max-w-7xl px-4 pb-28 pt-6 sm:px-6 lg:px-10 lg:pb-10">
               <header className="page-heading">
-                <div>
-                  <p className="eyebrow">{screenCopy.eyebrow}</p>
-                  <h1>{screenCopy.title}</h1>
-                  <p className="page-heading__description">{screenCopy.description}</p>
+                <div className="page-heading__main">
+                  <img
+                    alt=""
+                    aria-hidden="true"
+                    className="page-heading__emblem"
+                    decoding="async"
+                    src={SCREEN_EMBLEMS[activeScreen]}
+                  />
+                  <div>
+                    <p className="eyebrow">{screenCopy.eyebrow}</p>
+                    <h1>{screenCopy.title}</h1>
+                    <p className="page-heading__description">{screenCopy.description}</p>
+                  </div>
                 </div>
                 <div className="page-heading__date">
                   <CalendarDays aria-hidden="true" size={17} />
