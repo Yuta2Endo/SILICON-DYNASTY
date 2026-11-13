@@ -1,6 +1,8 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { releaseProduct } from "../../game/engine/market";
 import { advanceGameDay } from "../../game/engine/time";
+import { createCpuProject, createDefaultCpuConfiguration } from "../../game/models/cpu";
 import { createInitialGameState, type GameState } from "../../game/models/game-state";
 import { DashboardPage } from "./DashboardPage";
 
@@ -72,5 +74,30 @@ describe("DashboardPage", () => {
     expect(screen.getByRole("img", { name: /^Прибыль:/ })).toBeTruthy();
     expect(screen.getByRole("img", { name: /^Доля рынка:/ })).toBeTruthy();
     expect(screen.getAllByText("За 14 дней")).toHaveLength(3);
+  });
+
+  it("shows press reviews once a released product reaches the market", () => {
+    let state = createInitialGameState();
+    state = {
+      ...state,
+      cpuProjects: [
+        createCpuProject("cpu-1", "Dynasty CPU", createDefaultCpuConfiguration(), "1995-01-01"),
+      ],
+    };
+    state = releaseProduct(state, {
+      projectId: "cpu-1",
+      projectVersion: 1,
+      name: "Dynasty One",
+      segmentId: "budget",
+      priceUsd: 300,
+    });
+    state = { ...state, gameDate: "1995-03-01" };
+
+    renderDashboard(state);
+
+    expect(screen.getByText("Пресса")).toBeTruthy();
+    expect(screen.getByText(/\/100/)).toBeTruthy();
+    expect(screen.getAllByText(/Dynasty One/).length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "Открыть рынок" })).toBeTruthy();
   });
 });

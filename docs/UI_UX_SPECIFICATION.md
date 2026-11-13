@@ -204,6 +204,7 @@ Show:
 - Active products.
 - A command center with quick actions and actionable signals, including pending OEM design-win offers.
 - A company pulse with 14-day trends for revenue, net profit and market share, derived from real finance and market records.
+- A press panel with up to three current product reviews, scores, outlets, localized headlines and a link to the market. Reviews are derived from real products and affect demand after the first month on sale.
 - First-run quick start guidance until the tutorial is complete or the player dismisses it.
 - Research.
 - Manufacturing.

@@ -1,7 +1,7 @@
 # QA Strategy
 
 ## Unit tests
-CPU/GPU formulas, benchmark, power/thermal, economy, research dependencies, market, OS quality, AI training simulation, compatibility and save migrations.
+CPU/GPU formulas, benchmark, power/thermal, economy, research dependencies, market, press reviews, OS quality, AI training simulation, compatibility and save migrations.
 
 ## Integration tests
 Hardware + benchmark; hardware + manufacturing; research + unlocks; OS + devices; AI + GPU; cloud + AI; ecosystem + market; finance + manufacturing; OEM contracts + market demand and finance.

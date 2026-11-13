@@ -11,6 +11,7 @@ import {
   FlaskConical,
   History,
   MonitorCog,
+  Newspaper,
   Percent,
   Rocket,
   ShoppingCart,
@@ -27,7 +28,8 @@ import { TrendSparkline } from "../../components/TrendSparkline";
 import type { ScreenId } from "../../app/navigation";
 import { getTutorialSteps, type TutorialStepId } from "../../game/models/game-experience";
 import type { GameState } from "../../game/models/game-state";
-import { getCompetitor } from "../../game/models/market";
+import { getCompetitor, getMarketSegment } from "../../game/models/market";
+import { getPressReview, type PressReview } from "../../game/formulas/press";
 import {
   formatCurrency,
   formatDecimal,
@@ -124,6 +126,27 @@ export function DashboardPage({
   const activeComponentProducts = state.market.componentProducts.filter(
     (product) => product.status === "active",
   );
+  const pressReviews: PressReview[] = activeProducts
+    .map((product) => {
+      const segment = getMarketSegment(product.segmentId);
+      return segment
+        ? getPressReview({
+          productId: product.id,
+          productName: product.name,
+          segment,
+          releaseDate: product.releaseDate,
+          date: state.gameDate,
+          priceUsd: product.priceUsd,
+          performanceScore: product.performanceScore,
+          reputation: state.company.reputation,
+        })
+        : null;
+    })
+    .filter((review): review is PressReview => review !== null)
+    .sort((left, right) => (
+      right.publishedOn.localeCompare(left.publishedOn) || right.score - left.score
+    ))
+    .slice(0, 3);
   const hasActiveProduct = activeProducts.length > 0 || activeComponentProducts.length > 0;
   const hasStockout = activeProducts.some((product) => product.inventoryUnits === 0);
   const alerts = [
@@ -372,7 +395,60 @@ export function DashboardPage({
       </Panel>
 
       <Panel
-        className="dashboard-command-center"
+        action={(
+          <Button
+            onClick={() => onNavigate("market")}
+            size="sm"
+            variant="ghost"
+          >
+            {t.dashboard.pressOpen}
+          </Button>
+        )}
+        className="dashboard-press"
+        description={t.dashboard.pressHint}
+        icon={Newspaper}
+        title={t.dashboard.pressTitle}
+      >
+        {pressReviews.length === 0 ? (
+          <p className="dashboard-press-empty">{t.dashboard.pressEmpty}</p>
+        ) : (
+          <div className="dashboard-press-grid">
+            {pressReviews.map((review) => (
+              <article
+                className={`dashboard-press-card dashboard-press-card--${review.sentiment}`}
+                key={`${review.productId}-${review.publishedOn}`}
+              >
+                <div className="dashboard-press-card__top">
+                  <span className="dashboard-press-card__outlet">
+                    {t.dashboard.press.outlets[review.outletId]}
+                  </span>
+                  <strong className="dashboard-press-card__score">
+                    {formatNumber(review.score, locale)}
+                    <small>/100</small>
+                  </strong>
+                </div>
+                <h3>
+                  {t.dashboard.press.headlines[review.headlineKey].replace(
+                    "{product}",
+                    review.productName,
+                  )}
+                </h3>
+                <p className="dashboard-press-card__quote">
+                  {t.dashboard.press.quotes[review.sentiment].replace(
+                    "{product}",
+                    review.productName,
+                  )}
+                </p>
+                <p className="dashboard-press-card__meta">
+                  {review.productName} · {formatShortGameDate(review.publishedOn, locale)}
+                </p>
+              </article>
+            ))}
+          </div>
+        )}
+      </Panel>
+
+      <Panel
         description={t.dashboard.commandCenterHint}
         icon={Zap}
         title={t.dashboard.commandCenterTitle}

@@ -61,6 +61,10 @@ Devices and cloud are the fifth product-development tab. `src/game/models/device
 
 `src/game/models/oem-contracts.ts` owns deterministic customer offers, contract terms, expiry and strict parsing. `src/game/engine/oem-contracts.ts` runs expiry/offer generation on the daily tick, accepts or declines offers and posts upfront payments through the finance ledger. `src/game/engine/market.ts` applies the active demand bonus to CPU appeal; the Market screen renders offers and active contracts. No separate market engine or persisted report is created. Schema v12 adds `oemContracts`; details are in [`OEM_CONTRACTS.md`](OEM_CONTRACTS.md).
 
+## Press reviews
+
+`src/game/formulas/press.ts` derives deterministic press reviews from a released CPU product's price, performance, segment and company reputation. Reviews begin after 30 days and refresh every 90 days; their score maps to a bounded appeal multiplier used by market simulation and demand estimates. Reviews are not persisted, so there is no schema change or second source of truth. The dashboard shows the three latest reviews. Details are in [`PRESS_REVIEWS.md`](PRESS_REVIEWS.md).
+
 ## Worker boundary
 Workers receive serializable snapshots and explicit commands. They must not access React state or mutate the database outside a documented protocol.
 

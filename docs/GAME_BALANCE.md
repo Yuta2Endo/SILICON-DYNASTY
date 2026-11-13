@@ -303,3 +303,12 @@ save management and a derived experience layer; full details are in
 - Contract generation depends on company reputation, product segment, product performance, price and active product status.
 - Schema v12 adds `oemContracts`; v1-v11 saves migrate with empty offers/active lists.
 - No new dependency or second market engine. Full details: `OEM_CONTRACTS.md`.
+
+## Press reviews (UI improvement)
+
+- Reviews are derived from saved products and are not persisted: no schema change.
+- First review after 30 days on sale, then a new cycle every 90 days.
+- Score starts at 52, adjusts for price versus segment reference, performance versus segment reference and company reputation, then adds deterministic cycle noise; clamped 5-98.
+- Demand multiplier is `0.92 + score * 0.0016`, clamped to 0.90-1.10. It applies to market simulation and demand estimates, and stacks with OEM bonuses.
+- Sentiment thresholds: positive at 70+, mixed at 45-69, negative below 45.
+- Dashboard shows up to three current reviews. Full details: `PRESS_REVIEWS.md`.

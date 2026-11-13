@@ -10,7 +10,8 @@ Version 2.0 | Android | React + TypeScript + Vite + Capacitor | RU/EN
 - docs/ROADMAP.md — 14 development stages
 - docs/UI_UX_SPECIFICATION.md — interface specification
 - docs/GAME_BALANCE.md — simulation and balance rules
-- docs/OEM_CONTRACTS.md — OEM design-win contracts and demand bonuses
+- docs/OEM_CONTRACTS.md - OEM design-win contracts and demand bonuses
+- docs/PRESS_REVIEWS.md - derived press reviews and demand effects
 - docs/CPU_DESIGN.md — CPU project model and validation limits
 - docs/QA_STRATEGY.md — testing strategy
 - docs/SAVE_SYSTEM.md — persistence and migrations

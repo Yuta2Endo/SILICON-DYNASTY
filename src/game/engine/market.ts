@@ -27,6 +27,7 @@ import {
   PRODUCT_LIFECYCLE_RETIRE_AFTER_DAYS,
 } from "../formulas/market";
 import { getEconomicCycle } from "../formulas/economy";
+import { getPressDemandFactor, getPressReview } from "../formulas/press";
 import { getOemContractDemandBonus } from "../models/oem-contracts";
 import { postFinanceTransaction } from "./finance";
 import { recordDailyUnits, roundUsd } from "../models/finance";
@@ -399,6 +400,17 @@ export function simulateMarketDay(state: GameState, date: string): GameState {
         product.segmentId,
         date,
       );
+      const pressReview = getPressReview({
+        productId: product.id,
+        productName: product.name,
+        segment: segmentDefinition,
+        releaseDate: product.releaseDate,
+        date,
+        priceUsd: product.priceUsd,
+        performanceScore: product.performanceScore,
+        reputation: state.company.reputation,
+      });
+      const pressFactor = pressReview ? getPressDemandFactor(pressReview.score) : 1;
       return {
         product,
         appeal: calculateProductAppeal({
@@ -410,7 +422,7 @@ export function simulateMarketDay(state: GameState, date: string): GameState {
           date,
           reputation: state.company.reputation,
           marketingBudgetUsdPerDay: state.market.marketingBudgetUsdPerDay,
-        }) * (1 + contractBonus / 100),
+        }) * (1 + contractBonus / 100) * pressFactor,
       };
     });
     const playerAppeal = playerAppeals.reduce((total, entry) => total + entry.appeal, 0);
@@ -553,6 +565,17 @@ export function estimateProductDailyDemand(
     product.segmentId,
     date,
   );
+  const pressReview = getPressReview({
+    productId: product.id,
+    productName: product.name,
+    segment,
+    releaseDate: product.releaseDate,
+    date,
+    priceUsd: product.priceUsd,
+    performanceScore: product.performanceScore,
+    reputation: state.company.reputation,
+  });
+  const pressFactor = pressReview ? getPressDemandFactor(pressReview.score) : 1;
   const appeal = calculateProductAppeal({
     segment,
     configuration: product.configuration,
@@ -562,7 +585,7 @@ export function estimateProductDailyDemand(
     date,
     reputation: state.company.reputation,
     marketingBudgetUsdPerDay: state.market.marketingBudgetUsdPerDay,
-  }) * (1 + contractBonus / 100);
+  }) * (1 + contractBonus / 100) * pressFactor;
   const totalAppeal = appeal + competitorAppeal;
   const marketDemandUnits = getSegmentDailyDemand(segment, date);
   const share = totalAppeal > 0 ? appeal / totalAppeal : 0;
