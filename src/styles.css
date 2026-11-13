@@ -5022,3 +5022,370 @@ input:focus-visible {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+/* Stage 13: save management and game journey */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.standalone-screen__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.save-management-card,
+.journey-card {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.save-management-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.save-management-heading .preference-card__heading {
+  flex: 1;
+}
+
+.icon-button {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  background: var(--surface);
+}
+
+.icon-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.save-management-loading,
+.save-management-unavailable,
+.save-empty {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.save-autosave-card,
+.save-backup-card,
+.save-slots,
+.save-transfer {
+  display: grid;
+  gap: 10px;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-muted);
+}
+
+.save-card-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.save-card-heading strong,
+.save-section-heading strong {
+  color: var(--text-primary);
+  font-size: 0.82rem;
+}
+
+.save-card-heading__icon {
+  display: inline-flex;
+  color: var(--accent-strong);
+}
+
+.save-autosave-card > p,
+.save-backup-card > p,
+.save-section-heading p,
+.journey-achievements > p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.status-pill--success {
+  border-color: color-mix(in srgb, var(--green) 35%, var(--border));
+  color: var(--green-strong);
+  background: var(--green-soft);
+}
+
+.save-metadata {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.save-metadata div {
+  min-width: 0;
+}
+
+.save-metadata dt {
+  margin: 0 0 2px;
+  color: var(--text-tertiary);
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.save-metadata dd {
+  margin: 0;
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 0.76rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.save-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.save-slot-list {
+  display: grid;
+  gap: 9px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.save-slot {
+  display: grid;
+  gap: 9px;
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.save-slot__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.save-slot__heading strong {
+  color: var(--text-primary);
+  font-size: 0.79rem;
+}
+
+.save-slot__actions,
+.save-transfer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.save-slot__actions .button,
+.save-transfer__actions .button {
+  min-height: 44px;
+  padding: 8px 10px;
+  font-size: 0.71rem;
+}
+
+.save-transfer__actions label.button {
+  cursor: pointer;
+}
+
+.save-transfer__actions label.button.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.save-confirm {
+  display: grid;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid color-mix(in srgb, var(--amber) 38%, var(--border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--amber) 8%, var(--surface));
+}
+
+.save-confirm strong {
+  color: var(--text-primary);
+  font-size: 0.82rem;
+}
+
+.save-confirm p {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.save-confirm__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.journey-progress {
+  display: grid;
+  gap: 8px;
+}
+
+.journey-progress__copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 0.73rem;
+}
+
+.journey-progress__copy strong {
+  color: var(--text-primary);
+  font-size: 0.8rem;
+}
+
+.journey-progress__track {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-muted);
+}
+
+.journey-progress__track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--violet));
+  transition: width 220ms ease;
+}
+
+.journey-checklist {
+  display: grid;
+  gap: 7px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.journey-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.journey-step svg {
+  flex: none;
+  color: var(--text-tertiary);
+}
+
+.journey-step--done {
+  color: var(--text-primary);
+}
+
+.journey-step--done svg {
+  color: var(--green);
+}
+
+.journey-achievements {
+  display: grid;
+  gap: 7px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.journey-achievements__heading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--amber-strong);
+}
+
+.journey-achievements__heading strong {
+  color: var(--text-primary);
+  font-size: 0.8rem;
+}
+
+.journey-achievement-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.journey-achievement {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-tertiary);
+  background: var(--surface-muted);
+  font-size: 0.67rem;
+}
+
+.journey-achievement--unlocked {
+  border-color: color-mix(in srgb, var(--amber) 40%, var(--border));
+  color: var(--amber-strong);
+  background: var(--amber-soft);
+}
+
+@media (min-width: 640px) {
+  .save-management-card,
+  .journey-card {
+    padding: 22px;
+  }
+
+  .save-metadata {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .save-slot-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .save-slot__actions {
+    flex-direction: column;
+  }
+}
+
+@media (min-width: 900px) {
+  .save-slot__actions {
+    flex-direction: row;
+  }
+}

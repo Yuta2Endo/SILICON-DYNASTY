@@ -41,6 +41,10 @@ The AI Lab is the fourth product-development tab. `src/game/models/ai.ts` owns A
 
 Devices and cloud are the fifth product-development tab. `src/game/models/devices.ts` owns device references, platform matching, slot rules, version histories and strict parsing; `src/game/models/cloud.ts` owns cloud configuration, server references and limits. `src/game/formulas/devices.ts` derives device metrics, cost, power, thermal load and ecosystem synergy from canonical CPU/component/OS/AI projects; `src/game/formulas/cloud.ts` derives capacity, availability, operating cost and capex from a saved server device. Device and cloud projects do not yet run in the daily sales pipeline. Stage 12 details are in [`DEVICES_CLOUD.md`](DEVICES_CLOUD.md).
 
+## Save management
+
+`src/storage/repositories/SaveManagement.ts` defines the optional save-management contract on top of `GameStateRepository`: overview, manual slots, slot deletion and backup restore. Both the IndexedDB and localStorage repositories implement it with separate autosave, recovery-backup, slot and metadata records. `src/game/application/save-transfer.ts` owns the versioned JSON export/import format; imports are validated with `parseGameState` before any commit. `src/game/application/game-application.ts` exposes save-management commands and never overwrites the current save with an invalid import. Tutorial and achievement progress is derived from existing state in `src/game/models/game-experience.ts`, not persisted separately. Stage 13 details are in [`SAVE_GAME_EXPERIENCE.md`](SAVE_GAME_EXPERIENCE.md).
+
 ## Worker boundary
 Workers receive serializable snapshots and explicit commands. They must not access React state or mutate the database outside a documented protocol.
 

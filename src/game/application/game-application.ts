@@ -78,6 +78,13 @@ import {
 } from "../engine/ai-training";
 import { advanceGameDay } from "../engine/time";
 import type { GameStateRepository } from "../../storage/repositories/GameStateRepository";
+import {
+  createUnsupportedSaveOverview,
+  isSaveManagementRepository,
+  type SaveManagementRepository,
+  type SaveOverview,
+} from "../../storage/repositories/SaveManagement";
+import { exportGameState, parseImportedGameState } from "./save-transfer";
 
 export interface GameApplication {
   load(): Promise<GameState>;
@@ -85,6 +92,13 @@ export interface GameApplication {
   startResearch(technologyId: ResearchTechnologyId): Promise<GameState>;
   renameCompany(name: string): Promise<GameState>;
   updateSettings(settings: Partial<GameSettings>): Promise<GameState>;
+  getSaveInfo(): Promise<SaveOverview>;
+  saveToSlot(slotId: string): Promise<SaveOverview>;
+  loadFromSlot(slotId: string): Promise<GameState>;
+  deleteSlot(slotId: string): Promise<SaveOverview>;
+  exportSave(): Promise<string>;
+  importSave(serialized: string): Promise<GameState>;
+  restoreBackup(): Promise<GameState>;
   createCpuProject(name: string, configuration: CpuConfiguration): Promise<GameState>;
   saveCpuVersion(projectId: string, name: string, configuration: CpuConfiguration): Promise<GameState>;
   createComponentProject(
@@ -135,6 +149,13 @@ export class CpuResearchRequirementError extends Error {
   constructor(readonly missingUnlockIds: readonly ResearchUnlockId[]) {
     super("CPU configuration requires technologies that have not been researched.");
     this.name = "CpuResearchRequirementError";
+  }
+}
+
+export class SaveManagementUnavailableError extends Error {
+  constructor() {
+    super("Save management is not available in this storage environment.");
+    this.name = "SaveManagementUnavailableError";
   }
 }
 
@@ -203,6 +224,51 @@ export function createGameApplication(repository: GameStateRepository): GameAppl
         ...state,
         settings: { ...state.settings, ...settings },
       });
+    },
+
+    async getSaveInfo() {
+      return isSaveManagementRepository(repository)
+        ? repository.getSaveOverview()
+        : createUnsupportedSaveOverview();
+    },
+
+    async saveToSlot(slotId) {
+      const saveRepository = requireSaveManagement(repository);
+      await saveRepository.saveSlot(slotId, await ensureLoaded());
+      return saveRepository.getSaveOverview();
+    },
+
+    async loadFromSlot(slotId) {
+      const saveRepository = requireSaveManagement(repository);
+      const slotState = await saveRepository.loadSlot(slotId);
+      if (!slotState) {
+        throw new Error("The selected save slot is empty.");
+      }
+      return commit(slotState);
+    },
+
+    async deleteSlot(slotId) {
+      const saveRepository = requireSaveManagement(repository);
+      await saveRepository.deleteSlot(slotId);
+      return saveRepository.getSaveOverview();
+    },
+
+    async exportSave() {
+      return exportGameState(await ensureLoaded());
+    },
+
+    async importSave(serialized) {
+      return commit(parseImportedGameState(serialized));
+    },
+
+    async restoreBackup() {
+      const saveRepository = requireSaveManagement(repository);
+      const backupState = await saveRepository.restoreBackup();
+      if (!backupState) {
+        throw new Error("No recovery backup is available.");
+      }
+      currentState = parseGameState(backupState);
+      return currentState;
     },
 
     async createCpuProject(name, configuration) {
@@ -445,6 +511,13 @@ export function createGameApplication(repository: GameStateRepository): GameAppl
       return commit(repayLoan(await ensureLoaded(), amountUsd));
     },
   };
+}
+
+function requireSaveManagement(repository: GameStateRepository): SaveManagementRepository {
+  if (!isSaveManagementRepository(repository)) {
+    throw new SaveManagementUnavailableError();
+  }
+  return repository;
 }
 
 function nextCpuProjectId(projects: GameState["cpuProjects"]): string {

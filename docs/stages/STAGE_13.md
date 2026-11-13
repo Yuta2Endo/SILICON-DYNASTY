@@ -1,7 +1,7 @@
 # STAGE 13 — Save System & Game Experience
 
 **Project:** SILICON DYNASTY  
-**Status:** NOT STARTED  
+**Status:** COMPLETED
 **Execution rule:** complete this stage only, then stop for approval.
 
 ## Objective
@@ -19,10 +19,10 @@ Implement slots, autosave, import/export, backup/recovery, schema migrations, tu
 9. Stop. Do not begin the next stage without separate authorization.
 
 ## Acceptance criteria
-- [ ] Full game state survives restart.
-- [ ] Migrations are tested with fixture saves.
-- [ ] Invalid imports cannot overwrite working saves.
-- [ ] Autosave and recovery have clear UI states.
+- [x] Full game state survives restart.
+- [x] Migrations are tested with fixture saves.
+- [x] Invalid imports cannot overwrite working saves.
+- [x] Autosave and recovery have clear UI states.
 
 ## Engineering constraints
 - React + TypeScript strict + Vite + Capacitor.

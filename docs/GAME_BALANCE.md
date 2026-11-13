@@ -246,3 +246,21 @@ formulas are in [`DEVICES_CLOUD.md`](DEVICES_CLOUD.md).
   are derived from the server device rather than duplicated.
 - Device and cloud projects persist in save schema v11 but are not yet sold in the
   daily market pipeline. They are explicitly presented as game simulations.
+
+## Save system and game experience (Stage 13)
+
+Stage 13 does not change economic formulas or balance values. It adds safe
+save management and a derived experience layer; full details are in
+[`SAVE_GAME_EXPERIENCE.md`](SAVE_GAME_EXPERIENCE.md).
+
+- Every successful command autosaves. The previous valid autosave is retained
+  as a recovery backup; three manual slots store full states with metadata.
+- Slots, backup restore and imports validate and migrate the source state before
+  replacing the current save. Invalid or newer-schema imports cannot overwrite a
+  working save.
+- Export uses a versioned JSON wrapper; import accepts the wrapper or a raw
+  state. Save schema remains v11.
+- Tutorial progress and achievements are derived from existing projects, sales,
+  research and OS releases, so they add no economic effects or schema fields.
+- Fixture-based migration tests cover schemas 1, 5, 7, 10 and 11, reject schema
+  12, and verify a 30-day session survives export/import.

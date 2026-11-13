@@ -15,6 +15,7 @@ import type { DeviceConfiguration } from "../game/models/devices";
 import type { CloudConfiguration } from "../game/models/cloud";
 import type { GameSettings, GameState } from "../game/models/game-state";
 import { createBrowserGameStateRepository } from "../storage/repositories/BrowserGameStateRepository";
+import type { SaveOverview } from "../storage/repositories/SaveManagement";
 import { translations } from "../localization/messages";
 import { CompanyPage } from "../features/company/CompanyPage";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
@@ -36,6 +37,12 @@ export function App({ application }: AppProps = {}) {
   const [hasLoadError, setHasLoadError] = useState(false);
   const [hasCommandError, setHasCommandError] = useState(false);
   const [showSavedFeedback, setShowSavedFeedback] = useState(false);
+  const [saveOverview, setSaveOverview] = useState<SaveOverview | null>(null);
+  const [isSaveOverviewLoading, setIsSaveOverviewLoading] = useState(false);
+  const [saveManagementError, setSaveManagementError] = useState(false);
+  const [canRestoreBackup, setCanRestoreBackup] = useState(false);
+  const [isRestoringBackup, setIsRestoringBackup] = useState(false);
+  const [restoreBackupError, setRestoreBackupError] = useState(false);
   const [hasUnsavedCpuDraft, setHasUnsavedCpuDraft] = useState(false);
   const [hasUnsavedComponentDraft, setHasUnsavedComponentDraft] = useState(false);
   const [hasUnsavedOsDraft, setHasUnsavedOsDraft] = useState(false);
@@ -46,15 +53,60 @@ export function App({ application }: AppProps = {}) {
   const loadGame = useCallback(async () => {
     setIsLoading(true);
     setHasLoadError(false);
+    setRestoreBackupError(false);
 
     try {
       setState(await gameApplication.load());
     } catch {
       setHasLoadError(true);
+      try {
+        const overview = await gameApplication.getSaveInfo();
+        setCanRestoreBackup(overview.backup !== null);
+        setSaveOverview(overview);
+      } catch {
+        setCanRestoreBackup(false);
+      }
     } finally {
       setIsLoading(false);
     }
   }, [gameApplication]);
+
+  const refreshSaveOverview = useCallback(async () => {
+    setIsSaveOverviewLoading(true);
+    setSaveManagementError(false);
+
+    try {
+      setSaveOverview(await gameApplication.getSaveInfo());
+    } catch {
+      setSaveManagementError(true);
+    } finally {
+      setIsSaveOverviewLoading(false);
+    }
+  }, [gameApplication]);
+
+  useEffect(() => {
+    if (state && activeScreen === "settings") {
+      void refreshSaveOverview();
+    }
+  }, [state, activeScreen, refreshSaveOverview]);
+
+  const restoreBackup = useCallback(async () => {
+    setIsRestoringBackup(true);
+    setRestoreBackupError(false);
+
+    try {
+      const nextState = await gameApplication.restoreBackup();
+      setState(nextState);
+      setHasLoadError(false);
+      setCanRestoreBackup(false);
+      setShowSavedFeedback(true);
+      await refreshSaveOverview();
+    } catch {
+      setRestoreBackupError(true);
+    } finally {
+      setIsRestoringBackup(false);
+    }
+  }, [gameApplication, refreshSaveOverview]);
 
   useEffect(() => {
     void loadGame();
@@ -66,7 +118,10 @@ export function App({ application }: AppProps = {}) {
     }
   }, [state?.settings.locale]);
 
-  const runCommand = useCallback(async (command: () => Promise<GameState>): Promise<GameState | null> => {
+  const runCommand = useCallback(async (
+    command: () => Promise<GameState>,
+    options: { suppressErrorAlert?: boolean } = {},
+  ): Promise<GameState | null> => {
     setIsSaving(true);
     setHasCommandError(false);
     setShowSavedFeedback(false);
@@ -77,7 +132,9 @@ export function App({ application }: AppProps = {}) {
       setShowSavedFeedback(true);
       return nextState;
     } catch {
-      setHasCommandError(true);
+      if (!options.suppressErrorAlert) {
+        setHasCommandError(true);
+      }
       return null;
     } finally {
       setIsSaving(false);
@@ -133,7 +190,20 @@ export function App({ application }: AppProps = {}) {
   }
 
   if (!state || hasLoadError) {
-    return <StartupErrorScreen label={t.errors.load} retryLabel={t.common.retry} onRetry={() => void loadGame()} />;
+    return (
+      <StartupErrorScreen
+        canRestoreBackup={canRestoreBackup}
+        isRestoringBackup={isRestoringBackup}
+        label={t.errors.load}
+        onRestoreBackup={() => void restoreBackup()}
+        onRetry={() => void loadGame()}
+        restoreError={restoreBackupError}
+        restoreErrorLabel={t.settings.saveManagement.restoreError}
+        restoreLabel={t.settings.saveManagement.restoreBackup}
+        restoringLabel={t.common.loading}
+        retryLabel={t.common.retry}
+      />
+    );
   }
 
   const announcement = showSavedFeedback ? t.common.saved : null;
@@ -338,7 +408,61 @@ export function App({ application }: AppProps = {}) {
       )}
       {activeScreen === "settings" && (
         <SettingsPage
+          isSaveBusy={isSaving || isSaveOverviewLoading || isRestoringBackup}
+          onDeleteSlot={async (slotId) => {
+            try {
+              setSaveOverview(await gameApplication.deleteSlot(slotId));
+              setSaveManagementError(false);
+              return true;
+            } catch {
+              setSaveManagementError(true);
+              return false;
+            }
+          }}
+          onExportSave={async () => {
+            try {
+              return await gameApplication.exportSave();
+            } catch {
+              return null;
+            }
+          }}
+          onImportSave={async (serialized) =>
+            (await runCommand(
+              () => gameApplication.importSave(serialized),
+              { suppressErrorAlert: true },
+            )) !== null
+          }
+          onLoadSlot={async (slotId) =>
+            (await runCommand(
+              () => gameApplication.loadFromSlot(slotId),
+              { suppressErrorAlert: true },
+            )) !== null
+          }
+          onRefreshSaves={() => void refreshSaveOverview()}
+          onRestoreBackup={async () => {
+            const nextState = await runCommand(
+              () => gameApplication.restoreBackup(),
+              { suppressErrorAlert: true },
+            );
+            if (!nextState) {
+              return false;
+            }
+            await refreshSaveOverview();
+            return true;
+          }}
+          onSaveToSlot={async (slotId) => {
+            try {
+              setSaveOverview(await gameApplication.saveToSlot(slotId));
+              setSaveManagementError(false);
+              return true;
+            } catch {
+              setSaveManagementError(true);
+              return false;
+            }
+          }}
           onUpdate={(settings: Partial<GameSettings>) => void runCommand(() => gameApplication.updateSettings(settings))}
+          saveManagementError={saveManagementError}
+          saveOverview={saveOverview}
           state={state}
         />
       )}
@@ -368,19 +492,46 @@ function LoadingScreen({ label }: { label: string }) {
 function StartupErrorScreen({
   label,
   retryLabel,
+  restoreLabel,
+  restoringLabel,
+  restoreErrorLabel,
+  canRestoreBackup,
+  isRestoringBackup,
+  restoreError,
   onRetry,
+  onRestoreBackup,
 }: {
   label: string;
   retryLabel: string;
+  restoreLabel: string;
+  restoringLabel: string;
+  restoreErrorLabel: string;
+  canRestoreBackup: boolean;
+  isRestoringBackup: boolean;
+  restoreError: boolean;
   onRetry: () => void;
+  onRestoreBackup: () => void;
 }) {
   return (
     <div className="standalone-screen">
       <span className="brand-mark" aria-hidden="true">SD</span>
       <p role="alert">{label}</p>
-      <button className="button button--primary" onClick={onRetry} type="button">
-        {retryLabel}
-      </button>
+      {restoreError && <p className="inline-feedback inline-feedback--error" role="alert">{restoreErrorLabel}</p>}
+      <div className="standalone-screen__actions">
+        <button className="button button--primary" onClick={onRetry} type="button">
+          {retryLabel}
+        </button>
+        {canRestoreBackup && (
+          <button
+            className="button button--secondary"
+            disabled={isRestoringBackup}
+            onClick={onRestoreBackup}
+            type="button"
+          >
+            {isRestoringBackup ? restoringLabel : restoreLabel}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

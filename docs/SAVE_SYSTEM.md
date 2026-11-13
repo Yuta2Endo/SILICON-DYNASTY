@@ -36,6 +36,21 @@ Schema v10 adds training jobs and deployments to each AI project. A training job
 
 Schema v11 adds `deviceProjects` and `cloudProjects`. A device project stores a name, type and version history of references to CPU, motherboard, RAM, SSD, optional GPU/networking/AI-accelerator, OS project/release and optional AI project/deployment. A cloud project references a saved server device/version and stores data-center, server, storage, network, AI-capacity and redundancy values. Version 1-10 saves receive empty device/cloud lists while preserving all earlier data. Strict v11 parsing validates project names, reference types and versions, device compatibility, OS platform matching, cloud numeric limits, unique IDs and version histories. Saves from schema 12 or newer are rejected rather than overwritten.
 
+## Save management (Stage 13)
+
+The save schema remains v11. Save metadata, slots and recovery records are storage concerns outside `GameState`.
+
+- The current autosave is written after every successful command.
+- Before overwriting a valid current save, the repository copies it to a recovery backup. A corrupt current save is never copied over a valid backup.
+- Three manual slots (`slot-1` to `slot-3`) store validated full game states plus metadata: save time, game date, company, balance and schema version.
+- IndexedDB uses `current`, `backup`, `slot:*` and `meta:*` keys. The localStorage fallback uses `silicon-dynasty:save`, `silicon-dynasty:save:backup`, `silicon-dynasty:save:slot:*` and matching metadata keys.
+- Loading a slot or restoring a backup validates and migrates the source before writing it to current. The recovery backup remains intact after restore.
+- Export uses the versioned `silicon-dynasty-save` JSON wrapper. Import accepts the wrapper or a raw state, validates it through `parseGameState`, and never writes an invalid or newer-schema save.
+- Startup load failures offer backup recovery instead of silently discarding data.
+- Legacy fixture saves for schemas 1, 5, 7, 10 and 11 are migrated and tested; schema 12 is rejected.
+
+See `docs/SAVE_GAME_EXPERIENCE.md` for keys, recovery rules, UI states and tests.
+
 ## Import/export
 Use a versioned format. Validate file structure, size and domain data. Invalid imports must not overwrite a working save. Treat imported values as untrusted.
 
