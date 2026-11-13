@@ -1,4 +1,6 @@
-# SILICON DYNASTY — Documentation Package
+# SILICON-DYNASTY
+
+## SILICON DYNASTY — Documentation Package
 Version 2.0 | Android | React + TypeScript + Vite + Capacitor | RU/EN
 
 ## Contents
