@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Activity,
   ArrowUpRight,
   Banknote,
   CalendarDays,
@@ -22,6 +23,7 @@ import {
 import { Button } from "../../components/ui/Button";
 import { Panel } from "../../components/ui/Panel";
 import { MetricCard } from "../../components/MetricCard";
+import { TrendSparkline } from "../../components/TrendSparkline";
 import type { ScreenId } from "../../app/navigation";
 import { getTutorialSteps, type TutorialStepId } from "../../game/models/game-experience";
 import type { GameState } from "../../game/models/game-state";
@@ -37,6 +39,7 @@ import {
 import { translations } from "../../localization/messages";
 
 const QUICK_START_DISMISSED_KEY = "silicon-dynasty:quick-start-dismissed";
+const PULSE_DAYS = 14;
 
 const STEP_TARGETS: Record<TutorialStepId, { screen: ScreenId; advanceDay?: boolean }> = {
   "design-cpu": { screen: "cpu" },
@@ -67,6 +70,41 @@ export function DashboardPage({
   const t = translations[locale];
   const latestMarket = state.market.dailySummaries.at(-1);
   const latestFinance = state.finance.dailyRecords.at(-1);
+  const financeHistory = state.finance.dailyRecords.slice(-PULSE_DAYS);
+  const marketHistory = state.market.dailySummaries.slice(-PULSE_DAYS);
+  const pulseCards: Array<{
+    id: string;
+    label: string;
+    values: number[];
+    latest: number;
+    tone: "blue" | "green" | "violet" | "danger";
+    format: (value: number) => string;
+  }> = [
+    {
+      id: "revenue",
+      label: t.dashboard.pulseRevenue,
+      values: financeHistory.map((record) => record.revenueUsd),
+      latest: latestFinance?.revenueUsd ?? 0,
+      tone: "green",
+      format: (value) => formatCurrency(value, locale),
+    },
+    {
+      id: "profit",
+      label: t.dashboard.pulseProfit,
+      values: financeHistory.map((record) => record.netProfitUsd),
+      latest: latestFinance?.netProfitUsd ?? 0,
+      tone: (latestFinance?.netProfitUsd ?? 0) < 0 ? "danger" : "blue",
+      format: (value) => formatCurrency(value, locale),
+    },
+    {
+      id: "share",
+      label: t.dashboard.pulseShare,
+      values: marketHistory.map((summary) => summary.marketShare * 100),
+      latest: (latestMarket?.marketShare ?? 0) * 100,
+      tone: "violet",
+      format: (value) => `${formatDecimal(value, locale, 2)}%`,
+    },
+  ];
   const recentActions = state.market.actions.slice(0, 4);
   const tutorialSteps = getTutorialSteps(state);
   const completedSteps = tutorialSteps.filter((step) => step.completed).length;
@@ -287,6 +325,41 @@ export function DashboardPage({
           value={formatNumber((latestMarket?.playerUnits ?? 0) + (latestMarket?.componentUnits ?? 0), locale)}
         />
       </section>
+
+      <Panel
+        className="dashboard-pulse"
+        description={t.dashboard.pulseHint.replace("{days}", String(PULSE_DAYS))}
+        icon={Activity}
+        title={t.dashboard.pulseTitle}
+      >
+        <div className="dashboard-pulse-grid">
+          {pulseCards.map((card) => {
+            const first = card.values[0];
+            const last = card.values.at(-1);
+            const chartLabel = first !== undefined && last !== undefined
+              ? `${card.label}: ${card.format(first)} → ${card.format(last)}`
+              : card.label;
+            return (
+              <article className="dashboard-pulse-card" key={card.id}>
+                <div className="dashboard-pulse-card__header">
+                  <span>{card.label}</span>
+                  <strong>{card.values.length > 0 ? card.format(card.latest) : "—"}</strong>
+                </div>
+                {card.values.length > 0 ? (
+                  <TrendSparkline label={chartLabel} tone={card.tone} values={card.values} />
+                ) : (
+                  <p className="dashboard-pulse-card__empty">{t.dashboard.pulseEmpty}</p>
+                )}
+                <p className="dashboard-pulse-card__footer">
+                  {card.values.length > 0
+                    ? t.dashboard.pulseWindow.replace("{days}", String(PULSE_DAYS))
+                    : t.dashboard.pulseEmpty}
+                </p>
+              </article>
+            );
+          })}
+        </div>
+      </Panel>
 
       <Panel
         className="dashboard-command-center"

@@ -203,6 +203,7 @@ Show:
 - Sales.
 - Active products.
 - A command center with quick actions and actionable signals.
+- A company pulse with 14-day trends for revenue, net profit and market share, derived from real finance and market records.
 - First-run quick start guidance until the tutorial is complete or the player dismisses it.
 - Research.
 - Manufacturing.

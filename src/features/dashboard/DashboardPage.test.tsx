@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createInitialGameState } from "../../game/models/game-state";
+import { advanceGameDay } from "../../game/engine/time";
+import { createInitialGameState, type GameState } from "../../game/models/game-state";
 import { DashboardPage } from "./DashboardPage";
 
 afterEach(() => {
@@ -8,8 +9,7 @@ afterEach(() => {
   window.localStorage.clear();
 });
 
-function renderDashboard() {
-  const state = createInitialGameState();
+function renderDashboard(state: GameState = createInitialGameState()) {
   const onNavigate = vi.fn();
   const onAdvanceDay = vi.fn();
   render(
@@ -58,5 +58,19 @@ describe("DashboardPage", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Новый процессор" }));
     expect(onNavigate).toHaveBeenCalledWith("cpu");
+  });
+
+  it("shows real finance and market trends in the company pulse", () => {
+    let state = createInitialGameState();
+    state = advanceGameDay(state);
+    state = advanceGameDay(state);
+
+    renderDashboard(state);
+
+    expect(screen.getByText("Пульс компании")).toBeTruthy();
+    expect(screen.getByRole("img", { name: /^Выручка:/ })).toBeTruthy();
+    expect(screen.getByRole("img", { name: /^Прибыль:/ })).toBeTruthy();
+    expect(screen.getByRole("img", { name: /^Доля рынка:/ })).toBeTruthy();
+    expect(screen.getAllByText("За 14 дней")).toHaveLength(3);
   });
 });

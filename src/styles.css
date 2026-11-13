@@ -6434,6 +6434,98 @@ textarea {
   line-height: 1.35;
 }
 
+.dashboard-pulse-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+
+.dashboard-pulse-card {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-muted);
+}
+
+.dashboard-pulse-card__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dashboard-pulse-card__header span {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.dashboard-pulse-card__header strong {
+  color: var(--text-primary);
+  font-size: 1.08rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-pulse-card__empty {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.dashboard-pulse-card__footer {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: 0.68rem;
+}
+
+.trend-sparkline {
+  width: 100%;
+  height: 52px;
+  color: var(--accent);
+  overflow: visible;
+}
+
+.trend-sparkline--green { color: var(--green); }
+.trend-sparkline--violet { color: var(--violet); }
+.trend-sparkline--amber { color: var(--amber); }
+.trend-sparkline--danger { color: var(--danger); }
+
+.trend-sparkline__line {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.trend-sparkline__area {
+  fill: color-mix(in srgb, currentColor 13%, transparent);
+  stroke: none;
+}
+
+.trend-sparkline__baseline {
+  stroke: color-mix(in srgb, currentColor 35%, transparent);
+  stroke-dasharray: 3 3;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+@media (min-width: 640px) {
+  .dashboard-pulse-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .dashboard-command-center .ui-panel__header {
   margin-bottom: 18px;
 }
