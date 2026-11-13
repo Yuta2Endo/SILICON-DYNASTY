@@ -17,6 +17,7 @@ import { ConfirmationBottomSheet } from "../../components/ConfirmationBottomShee
 import { MetricCard } from "../../components/MetricCard";
 import { ProductWorkspaceTabs } from "../../components/ProductWorkspaceTabs";
 import { OsPreviewPanel } from "./OsPreviewPanel";
+import { OsVersionCompare } from "./OsVersionCompare";
 import {
   OS_ADDRESS_BIT_OPTIONS,
   OS_API_OPTIONS,
@@ -1003,6 +1004,8 @@ export function OsDesignerPage({
             locale={locale}
             results={applicationCompatibility}
           />
+
+          <OsVersionCompare locale={locale} project={selectedProject} />
 
           <section className="cpu-version-section">
             <header className="cpu-version-section__heading">
