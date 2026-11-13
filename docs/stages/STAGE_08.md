@@ -1,7 +1,7 @@
 # STAGE 08 — OS Systems & Drivers
 
 **Project:** SILICON DYNASTY  
-**Status:** NOT STARTED  
+**Status:** COMPLETED
 **Execution rule:** complete this stage only, then stop for approval.
 
 ## Objective
@@ -19,10 +19,10 @@ Add filesystems, driver framework, networking, security, permissions, encryption
 9. Stop. Do not begin the next stage without separate authorization.
 
 ## Acceptance criteria
-- [ ] OS capabilities affect quality and compatibility.
-- [ ] Incompatible drivers are detected.
-- [ ] Security and updates have modeled costs/effects.
-- [ ] Project states persist.
+- [x] OS capabilities affect quality and compatibility.
+- [x] Incompatible drivers are detected.
+- [x] Security and updates have modeled costs/effects.
+- [x] Project states persist.
 
 ## Engineering constraints
 - React + TypeScript strict + Vite + Capacitor.

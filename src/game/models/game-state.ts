@@ -20,9 +20,9 @@ import {
   type ResearchState,
 } from "./research";
 
-export const SAVE_SCHEMA_VERSION = 6 as const;
+export const SAVE_SCHEMA_VERSION = 7 as const;
 
-const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, SAVE_SCHEMA_VERSION] as const;
+const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, SAVE_SCHEMA_VERSION] as const;
 
 export type Locale = "ru" | "en";
 export type Theme = "light" | "dark";
@@ -185,7 +185,11 @@ export function parseGameState(value: unknown): GameState {
     }
 
     try {
-      osProjects = value.osProjects.map((project) => parseOsProject(project, value.gameDate as string));
+      osProjects = value.osProjects.map((project) =>
+        parseOsProject(project, value.gameDate as string, {
+          allowMissingSystems: sourceSchemaVersion < 7,
+        }),
+      );
     } catch {
       throw new InvalidGameStateError("Save data contains an invalid OS project.");
     }

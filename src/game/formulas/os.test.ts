@@ -62,6 +62,31 @@ describe("OS kernel metrics", () => {
     expect(sixteenBit.processCapacity).toBe(4_096);
   });
 
+  it("models system services, security, update costs, and maintenance", () => {
+    const legacy = calculateOsKernelMetrics(createDefaultOsConfiguration());
+    const hardened = calculateOsKernelMetrics(
+      configuration({
+        filesystem: "zfs",
+        driverFramework: "certified",
+        networkStack: "advanced",
+        permissions: "capability",
+        encryption: "hardware",
+        updateModel: "rolling",
+        packageManager: "signed",
+        diagnostics: "crash-dumps",
+        addressBits: 64,
+        supportedArchitectures: ["x86"],
+      }),
+    );
+
+    expect(hardened.systemQualityScore).toBeGreaterThan(legacy.systemQualityScore);
+    expect(hardened.securityScore).toBeGreaterThan(legacy.securityScore);
+    expect(hardened.compatibilityScore).toBeGreaterThan(legacy.compatibilityScore);
+    expect(hardened.driverCoverageScore).toBeGreaterThan(legacy.driverCoverageScore);
+    expect(hardened.updateLatencyDays).toBeLessThan(legacy.updateLatencyDays);
+    expect(hardened.annualMaintenanceCostUsd).toBeGreaterThan(legacy.annualMaintenanceCostUsd);
+  });
+
   it("evaluates platform requirements against calculated metrics", () => {
     const desktop = evaluateOsRequirements(createDefaultOsConfiguration());
     const gaming = evaluateOsRequirements(configuration({ targetPlatform: "gaming" }));

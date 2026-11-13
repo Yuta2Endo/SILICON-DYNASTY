@@ -3,13 +3,21 @@ import {
   type OsAddressBits,
   type OsBootloader,
   type OsConfiguration,
+  type OsDiagnostics,
+  type OsDriverFramework,
   type OsDriverModel,
+  type OsEncryption,
+  type OsFilesystem,
   type OsIpcModel,
   type OsKernelType,
   type OsMemoryManager,
   type OsModuleSupport,
+  type OsNetworkStack,
+  type OsPackageManager,
+  type OsPermissionModel,
   type OsPlatform,
   type OsScheduler,
+  type OsUpdateModel,
 } from "../models/os";
 
 export interface OsKernelMetrics {
@@ -24,6 +32,14 @@ export interface OsKernelMetrics {
   ipcLatencyMicroseconds: number;
   syscallOverheadNanoseconds: number;
   processCapacity: number;
+  systemQualityScore: number;
+  driverCoverageScore: number;
+  dataIntegrityScore: number;
+  networkScore: number;
+  diagnosticsScore: number;
+  updateReadinessScore: number;
+  annualMaintenanceCostUsd: number;
+  updateLatencyDays: number;
   overallScore: number;
 }
 
@@ -37,6 +53,7 @@ export type OsRequirementMetric =
   | "energyEfficiencyScore"
   | "ipcLatencyMicroseconds"
   | "syscallOverheadNanoseconds"
+  | "systemQualityScore"
   | "overallScore";
 
 export type OsRequirementId =
@@ -49,6 +66,7 @@ export type OsRequirementId =
   | "energy-efficiency"
   | "ipc-latency"
   | "syscall-overhead"
+  | "system-quality"
   | "overall-score";
 
 export interface OsRequirementRule {
@@ -229,6 +247,116 @@ const ADDRESS_PROFILES: Record<OsAddressBits, AddressProfile> = {
   64: { performance: 1.06, compatibility: 1.08, maintainability: 1.02, bootSeconds: 0.8, footprintMb: 8 },
 };
 
+interface FilesystemProfile {
+  dataIntegrity: number;
+  performance: number;
+  footprintMb: number;
+  maintenanceCostUsd: number;
+}
+
+const FILESYSTEM_PROFILES: Record<OsFilesystem, FilesystemProfile> = {
+  fat: { dataIntegrity: 72, performance: 1.02, footprintMb: 0, maintenanceCostUsd: 2 },
+  ext2: { dataIntegrity: 84, performance: 1, footprintMb: 2, maintenanceCostUsd: 3 },
+  ntfs: { dataIntegrity: 90, performance: 0.98, footprintMb: 4, maintenanceCostUsd: 5 },
+  zfs: { dataIntegrity: 98, performance: 0.94, footprintMb: 12, maintenanceCostUsd: 9 },
+};
+
+interface DriverFrameworkProfile {
+  coverage: number;
+  compatibility: number;
+  stability: number;
+  maintainability: number;
+  maintenanceCostUsd: number;
+}
+
+const DRIVER_FRAMEWORK_PROFILES: Record<OsDriverFramework, DriverFrameworkProfile> = {
+  legacy: { coverage: 45, compatibility: 0.95, stability: 0.94, maintainability: 0.9, maintenanceCostUsd: 0 },
+  acpi: { coverage: 62, compatibility: 0.97, stability: 1, maintainability: 1, maintenanceCostUsd: 2 },
+  unified: { coverage: 80, compatibility: 1.07, stability: 1.04, maintainability: 1.05, maintenanceCostUsd: 6 },
+  certified: { coverage: 94, compatibility: 1.12, stability: 1.1, maintainability: 1.12, maintenanceCostUsd: 12 },
+};
+
+interface NetworkProfile {
+  score: number;
+  compatibility: number;
+  security: number;
+  maintenanceCostUsd: number;
+}
+
+const NETWORK_PROFILES: Record<OsNetworkStack, NetworkProfile> = {
+  basic: { score: 40, compatibility: 0.95, security: 0.95, maintenanceCostUsd: 0 },
+  "tcp-ip": { score: 58, compatibility: 0.99, security: 1, maintenanceCostUsd: 2 },
+  advanced: { score: 78, compatibility: 1.07, security: 1.06, maintenanceCostUsd: 6 },
+  cloud: { score: 92, compatibility: 1.11, security: 1.02, maintenanceCostUsd: 10 },
+};
+
+interface PermissionProfile {
+  security: number;
+  stability: number;
+  maintenanceCostUsd: number;
+}
+
+const PERMISSION_PROFILES: Record<OsPermissionModel, PermissionProfile> = {
+  none: { security: 0.72, stability: 0.96, maintenanceCostUsd: 0 },
+  permissions: { security: 1, stability: 1, maintenanceCostUsd: 0 },
+  "role-based": { security: 1.12, stability: 1.02, maintenanceCostUsd: 3 },
+  capability: { security: 1.24, stability: 1.04, maintenanceCostUsd: 6 },
+};
+
+interface EncryptionProfile {
+  security: number;
+  dataIntegrity: number;
+  performance: number;
+  maintenanceCostUsd: number;
+}
+
+const ENCRYPTION_PROFILES: Record<OsEncryption, EncryptionProfile> = {
+  none: { security: 1, dataIntegrity: 1, performance: 1, maintenanceCostUsd: 0 },
+  disk: { security: 1.06, dataIntegrity: 1.04, performance: 0.99, maintenanceCostUsd: 3 },
+  "full-disk": { security: 1.14, dataIntegrity: 1.09, performance: 0.96, maintenanceCostUsd: 7 },
+  hardware: { security: 1.22, dataIntegrity: 1.12, performance: 0.99, maintenanceCostUsd: 12 },
+};
+
+interface UpdateProfile {
+  latencyDays: number;
+  readiness: number;
+  security: number;
+  maintenanceCostUsd: number;
+}
+
+const UPDATE_PROFILES: Record<OsUpdateModel, UpdateProfile> = {
+  manual: { latencyDays: 180, readiness: 30, security: 0.94, maintenanceCostUsd: 1 },
+  "package-manager": { latencyDays: 60, readiness: 58, security: 1.02, maintenanceCostUsd: 3 },
+  staged: { latencyDays: 30, readiness: 76, security: 1.08, maintenanceCostUsd: 7 },
+  rolling: { latencyDays: 7, readiness: 92, security: 1.1, maintenanceCostUsd: 10 },
+};
+
+interface PackageManagerProfile {
+  readiness: number;
+  security: number;
+  maintenanceCostUsd: number;
+}
+
+const PACKAGE_MANAGER_PROFILES: Record<OsPackageManager, PackageManagerProfile> = {
+  none: { readiness: 0.85, security: 0.93, maintenanceCostUsd: 0 },
+  centralized: { readiness: 0.97, security: 1.02, maintenanceCostUsd: 2 },
+  signed: { readiness: 1.08, security: 1.1, maintenanceCostUsd: 5 },
+  decentralized: { readiness: 1.12, security: 1.06, maintenanceCostUsd: 7 },
+};
+
+interface DiagnosticsProfile {
+  score: number;
+  stability: number;
+  maintenanceCostUsd: number;
+}
+
+const DIAGNOSTICS_PROFILES: Record<OsDiagnostics, DiagnosticsProfile> = {
+  none: { score: 25, stability: 0.92, maintenanceCostUsd: 0 },
+  logs: { score: 60, stability: 1, maintenanceCostUsd: 2 },
+  "crash-dumps": { score: 78, stability: 1.06, maintenanceCostUsd: 5 },
+  telemetry: { score: 92, stability: 1.09, maintenanceCostUsd: 9 },
+};
+
 export const OS_PLATFORM_REQUIREMENTS: Record<OsPlatform, readonly OsRequirementRule[]> = {
   desktop: [
     { id: "boot-time", metric: "bootTimeSeconds", comparator: "at-most", target: 30 },
@@ -236,6 +364,7 @@ export const OS_PLATFORM_REQUIREMENTS: Record<OsPlatform, readonly OsRequirement
     { id: "performance", metric: "performanceScore", comparator: "at-least", target: 45 },
     { id: "stability", metric: "stabilityScore", comparator: "at-least", target: 45 },
     { id: "compatibility", metric: "compatibilityScore", comparator: "at-least", target: 40 },
+    { id: "system-quality", metric: "systemQualityScore", comparator: "at-least", target: 45 },
   ],
   mobile: [
     { id: "boot-time", metric: "bootTimeSeconds", comparator: "at-most", target: 20 },
@@ -243,6 +372,7 @@ export const OS_PLATFORM_REQUIREMENTS: Record<OsPlatform, readonly OsRequirement
     { id: "stability", metric: "stabilityScore", comparator: "at-least", target: 50 },
     { id: "energy-efficiency", metric: "energyEfficiencyScore", comparator: "at-least", target: 55 },
     { id: "compatibility", metric: "compatibilityScore", comparator: "at-least", target: 35 },
+    { id: "system-quality", metric: "systemQualityScore", comparator: "at-least", target: 45 },
   ],
   server: [
     { id: "boot-time", metric: "bootTimeSeconds", comparator: "at-most", target: 120 },
@@ -250,6 +380,7 @@ export const OS_PLATFORM_REQUIREMENTS: Record<OsPlatform, readonly OsRequirement
     { id: "stability", metric: "stabilityScore", comparator: "at-least", target: 60 },
     { id: "security", metric: "securityScore", comparator: "at-least", target: 45 },
     { id: "performance", metric: "performanceScore", comparator: "at-least", target: 45 },
+    { id: "system-quality", metric: "systemQualityScore", comparator: "at-least", target: 55 },
   ],
   gaming: [
     { id: "boot-time", metric: "bootTimeSeconds", comparator: "at-most", target: 25 },
@@ -257,6 +388,7 @@ export const OS_PLATFORM_REQUIREMENTS: Record<OsPlatform, readonly OsRequirement
     { id: "stability", metric: "stabilityScore", comparator: "at-least", target: 40 },
     { id: "ipc-latency", metric: "ipcLatencyMicroseconds", comparator: "at-most", target: 120 },
     { id: "syscall-overhead", metric: "syscallOverheadNanoseconds", comparator: "at-most", target: 600 },
+    { id: "system-quality", metric: "systemQualityScore", comparator: "at-least", target: 45 },
   ],
   universal: [
     { id: "boot-time", metric: "bootTimeSeconds", comparator: "at-most", target: 45 },
@@ -264,6 +396,7 @@ export const OS_PLATFORM_REQUIREMENTS: Record<OsPlatform, readonly OsRequirement
     { id: "performance", metric: "performanceScore", comparator: "at-least", target: 45 },
     { id: "stability", metric: "stabilityScore", comparator: "at-least", target: 50 },
     { id: "compatibility", metric: "compatibilityScore", comparator: "at-least", target: 50 },
+    { id: "system-quality", metric: "systemQualityScore", comparator: "at-least", target: 50 },
     { id: "overall-score", metric: "overallScore", comparator: "at-least", target: 50 },
   ],
 };
@@ -288,6 +421,14 @@ export function calculateOsKernelMetrics(configuration: OsConfiguration): OsKern
   const modules = MODULE_PROFILES[configuration.moduleSupport];
   const drivers = DRIVER_PROFILES[configuration.driverModel];
   const address = ADDRESS_PROFILES[configuration.addressBits];
+  const filesystem = FILESYSTEM_PROFILES[configuration.filesystem];
+  const driverFramework = DRIVER_FRAMEWORK_PROFILES[configuration.driverFramework];
+  const network = NETWORK_PROFILES[configuration.networkStack];
+  const permissions = PERMISSION_PROFILES[configuration.permissions];
+  const encryption = ENCRYPTION_PROFILES[configuration.encryption];
+  const updates = UPDATE_PROFILES[configuration.updateModel];
+  const packageManager = PACKAGE_MANAGER_PROFILES[configuration.packageManager];
+  const diagnostics = DIAGNOSTICS_PROFILES[configuration.diagnostics];
   const virtualMemory = configuration.virtualMemory;
   const architectureCount = configuration.supportedArchitectures.length;
 
@@ -309,6 +450,9 @@ export function calculateOsKernelMetrics(configuration: OsConfiguration): OsKern
   memoryFootprintMb += Math.sqrt(Math.max(1, configuration.maxProcesses)) * 0.55;
   memoryFootprintMb += Math.max(0, architectureCount - 1) * 5;
   memoryFootprintMb += address.footprintMb;
+  memoryFootprintMb += filesystem.footprintMb;
+  memoryFootprintMb += configuration.diagnostics === "telemetry" ? 6 : 0;
+  memoryFootprintMb += configuration.encryption === "full-disk" ? 4 : 0;
   memoryFootprintMb = clamp(memoryFootprintMb, 16, 4_096);
 
   let bootTimeSeconds = bootloader.seconds + 2;
@@ -330,6 +474,8 @@ export function calculateOsKernelMetrics(configuration: OsConfiguration): OsKern
       * syscallPermutationFactor
       * processFactor
       * address.performance
+      * filesystem.performance
+      * encryption.performance
       * (virtualMemory ? 0.96 : 1),
     0,
     100,
@@ -344,6 +490,9 @@ export function calculateOsKernelMetrics(configuration: OsConfiguration): OsKern
       * drivers.stability
       * bootloader.security
       * modules.stability
+      * driverFramework.stability
+      * permissions.stability
+      * diagnostics.stability
       * (virtualMemory ? 1.05 : 1),
     0,
     100,
@@ -357,6 +506,12 @@ export function calculateOsKernelMetrics(configuration: OsConfiguration): OsKern
       * drivers.security
       * bootloader.security
       * modules.security
+      * permissions.security
+      * encryption.security
+      * updates.security
+      * packageManager.security
+      * network.security
+      * driverFramework.stability
       * (virtualMemory ? 1.06 : 1),
     0,
     100,
@@ -370,6 +525,8 @@ export function calculateOsKernelMetrics(configuration: OsConfiguration): OsKern
       * kernel.compatibility
       * address.compatibility
       * architectureCompatibility
+      * driverFramework.compatibility
+      * network.compatibility
       * syscallAdoption,
     0,
     100,
@@ -393,6 +550,7 @@ export function calculateOsKernelMetrics(configuration: OsConfiguration): OsKern
       * drivers.maintainability
       * bootloader.maintainability
       * address.maintainability
+      * driverFramework.maintainability
       * architectureMaintainability,
     0,
     100,
@@ -420,6 +578,55 @@ export function calculateOsKernelMetrics(configuration: OsConfiguration): OsKern
 
   const latencyScore = clamp(100 - Math.max(0, ipcLatencyMicroseconds - 4) * 4, 0, 100);
   const syscallScore = clamp(100 - Math.max(0, syscallOverheadNanoseconds - 80) / 7, 0, 100);
+  const driverCoverageScore = clamp(
+    driverFramework.coverage * (configuration.moduleSupport === "none" ? 0.9 : 1),
+    0,
+    100,
+  );
+  const dataIntegrityScore = clamp(
+    filesystem.dataIntegrity
+      * encryption.dataIntegrity
+      * memory.stability
+      * (virtualMemory ? 1.03 : 0.92),
+    0,
+    100,
+  );
+  const networkScore = network.score;
+  const diagnosticsScore = diagnostics.score;
+  const updateReadinessScore = clamp(
+    updates.readiness
+      * packageManager.readiness
+      * (configuration.encryption === "none" ? 1 : 1.03),
+    0,
+    100,
+  );
+  const annualMaintenanceCostUsd = Math.round(
+    120
+      + (
+        filesystem.maintenanceCostUsd
+        + driverFramework.maintenanceCostUsd
+        + network.maintenanceCostUsd
+        + permissions.maintenanceCostUsd
+        + encryption.maintenanceCostUsd
+        + updates.maintenanceCostUsd
+        + packageManager.maintenanceCostUsd
+        + diagnostics.maintenanceCostUsd
+      ) * 45,
+  );
+  const updateLatencyDays = Math.max(
+    1,
+    Math.round(updates.latencyDays * (configuration.packageManager === "none" ? 1 : 0.8)),
+  );
+  const systemQualityScore = clamp(
+    driverCoverageScore * 0.24
+      + dataIntegrityScore * 0.2
+      + networkScore * 0.18
+      + diagnosticsScore * 0.12
+      + updateReadinessScore * 0.14
+      + securityScore * 0.12,
+    0,
+    100,
+  );
   const weights = OVERALL_WEIGHTS[configuration.targetPlatform];
 
   const overallScore = clamp(
@@ -449,6 +656,14 @@ export function calculateOsKernelMetrics(configuration: OsConfiguration): OsKern
       configuration.maxProcesses,
       OS_PROCESS_LIMITS_BY_ADDRESS_BITS[configuration.addressBits],
     ),
+    systemQualityScore: round(systemQualityScore, 1),
+    driverCoverageScore: round(driverCoverageScore, 1),
+    dataIntegrityScore: round(dataIntegrityScore, 1),
+    networkScore: round(networkScore, 1),
+    diagnosticsScore: round(diagnosticsScore, 1),
+    updateReadinessScore: round(updateReadinessScore, 1),
+    annualMaintenanceCostUsd: round(annualMaintenanceCostUsd, 0),
+    updateLatencyDays: round(updateLatencyDays, 0),
     overallScore: round(overallScore, 1),
   };
 }

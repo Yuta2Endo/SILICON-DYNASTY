@@ -2,6 +2,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createInitialGameState } from "../../game/models/game-state";
+import { createCpuProject, createDefaultCpuConfiguration } from "../../game/models/cpu";
 import {
   createDefaultOsConfiguration,
   createOsProject,
@@ -96,6 +97,46 @@ describe("OS designer", () => {
       screen.getByRole("button", { name: ru.os.saveVersion }).hasAttribute("disabled"),
     ).toBe(true);
     expect(onSaveVersion).not.toHaveBeenCalled();
+  });
+
+  it("saves system-service capabilities as part of the configuration", async () => {
+    const user = userEvent.setup();
+    const onSaveVersion = vi.fn(async () => true);
+    renderDesigner({ onSaveVersion });
+
+    await user.selectOptions(screen.getByLabelText(ru.os.fields.filesystem), "ext2");
+    await user.selectOptions(screen.getByLabelText(ru.os.fields.driverFramework), "unified");
+    await user.selectOptions(screen.getByLabelText(ru.os.fields.diagnostics), "crash-dumps");
+    await user.click(screen.getByRole("button", { name: ru.os.saveVersion }));
+
+    await waitFor(() => expect(onSaveVersion).toHaveBeenCalledTimes(1));
+    expect(onSaveVersion).toHaveBeenCalledWith(
+      "os-1",
+      "Dynasty OS",
+      expect.objectContaining({
+        filesystem: "ext2",
+        driverFramework: "unified",
+        diagnostics: "crash-dumps",
+      }),
+    );
+  });
+
+  it("reports incompatible hardware drivers for the selected configuration", async () => {
+    const armCpu = createCpuProject(
+      "cpu-arm",
+      "ARM Processor",
+      { ...createDefaultCpuConfiguration(), isa: "arm" },
+      baseState.gameDate,
+    );
+    renderDesigner({
+      state: { ...baseState, cpuProjects: [armCpu], osProjects: [osProject] },
+    });
+
+    expect(await screen.findByText(ru.os.compatibility.title)).toBeTruthy();
+    expect(
+      await screen.findByText(ru.os.compatibility.issues["unsupported-architecture"]),
+    ).toBeTruthy();
+    expect(await screen.findByText(ru.os.compatibility.incompatible)).toBeTruthy();
   });
 
   it("switches from the OS workspace to processors and components", async () => {

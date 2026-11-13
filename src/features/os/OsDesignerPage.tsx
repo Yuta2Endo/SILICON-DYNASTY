@@ -20,15 +20,24 @@ import {
   OS_ADDRESS_BIT_OPTIONS,
   OS_ARCHITECTURE_OPTIONS,
   OS_BOOTLOADER_OPTIONS,
+  OS_DIAGNOSTICS_OPTIONS,
+  OS_DRIVER_FRAMEWORK_OPTIONS,
   OS_DRIVER_MODEL_OPTIONS,
+  OS_ENCRYPTION_OPTIONS,
+  OS_FILESYSTEM_OPTIONS,
   OS_IPC_OPTIONS,
   OS_KERNEL_OPTIONS,
   OS_LIMITS,
   OS_MEMORY_MANAGER_OPTIONS,
   OS_MODULE_SUPPORT_OPTIONS,
+  OS_NETWORK_STACK_OPTIONS,
+  OS_PACKAGE_MANAGER_OPTIONS,
+  OS_PERMISSION_MODEL_OPTIONS,
   OS_PLATFORM_OPTIONS,
   OS_PROCESS_LIMITS_BY_ADDRESS_BITS,
   OS_SCHEDULER_OPTIONS,
+  OS_UPDATE_MODEL_OPTIONS,
+  checkOsHardwareCompatibility,
   cloneOsConfiguration,
   createDefaultOsConfiguration,
   osConfigurationsEqual,
@@ -38,13 +47,22 @@ import {
   type OsBootloader,
   type OsConfiguration,
   type OsConfigurationField,
+  type OsDiagnostics,
+  type OsDriverFramework,
   type OsDriverModel,
+  type OsEncryption,
+  type OsFilesystem,
+  type OsHardwareTarget,
   type OsIpcModel,
   type OsKernelType,
   type OsMemoryManager,
   type OsModuleSupport,
+  type OsNetworkStack,
+  type OsPackageManager,
+  type OsPermissionModel,
   type OsPlatform,
   type OsScheduler,
+  type OsUpdateModel,
   type OsValidationIssue,
 } from "../../game/models/os";
 import {
@@ -55,7 +73,7 @@ import {
   type OsRequirementResult,
 } from "../../game/formulas/os";
 import type { GameState } from "../../game/models/game-state";
-import { formatDecimal, formatNumber } from "../../localization/formatters";
+import { formatCurrency, formatDecimal, formatNumber } from "../../localization/formatters";
 import { translations } from "../../localization/messages";
 
 interface OsDesignerPageProps {
@@ -81,7 +99,15 @@ type SelectFieldKey =
   | "ipcModel"
   | "moduleSupport"
   | "driverModel"
-  | "addressBits";
+  | "addressBits"
+  | "filesystem"
+  | "driverFramework"
+  | "networkStack"
+  | "permissions"
+  | "encryption"
+  | "updateModel"
+  | "packageManager"
+  | "diagnostics";
 
 interface SelectOption {
   value: string;
@@ -132,6 +158,7 @@ export function OsDesignerPage({
   const requirements = metrics
     ? evaluateOsRequirements(draftConfiguration, metrics)
     : [];
+  const compatibilityTargets = buildHardwareTargets(state);
 
   useEffect(() => {
     onDirtyChange(draftIsDirty);
@@ -283,6 +310,46 @@ export function OsDesignerPage({
           value,
           label: copy.options.driverModel[value],
         }));
+      case "filesystem":
+        return OS_FILESYSTEM_OPTIONS.map((value) => ({
+          value,
+          label: copy.options.filesystem[value],
+        }));
+      case "driverFramework":
+        return OS_DRIVER_FRAMEWORK_OPTIONS.map((value) => ({
+          value,
+          label: copy.options.driverFramework[value],
+        }));
+      case "networkStack":
+        return OS_NETWORK_STACK_OPTIONS.map((value) => ({
+          value,
+          label: copy.options.networkStack[value],
+        }));
+      case "permissions":
+        return OS_PERMISSION_MODEL_OPTIONS.map((value) => ({
+          value,
+          label: copy.options.permissions[value],
+        }));
+      case "encryption":
+        return OS_ENCRYPTION_OPTIONS.map((value) => ({
+          value,
+          label: copy.options.encryption[value],
+        }));
+      case "updateModel":
+        return OS_UPDATE_MODEL_OPTIONS.map((value) => ({
+          value,
+          label: copy.options.updateModel[value],
+        }));
+      case "packageManager":
+        return OS_PACKAGE_MANAGER_OPTIONS.map((value) => ({
+          value,
+          label: copy.options.packageManager[value],
+        }));
+      case "diagnostics":
+        return OS_DIAGNOSTICS_OPTIONS.map((value) => ({
+          value,
+          label: copy.options.diagnostics[value],
+        }));
       case "addressBits":
         return OS_ADDRESS_BIT_OPTIONS.map((value) => ({
           value: String(value),
@@ -324,6 +391,30 @@ export function OsDesignerPage({
       case "driverModel":
         updateField("driverModel", value as OsDriverModel);
         return;
+      case "filesystem":
+        updateField("filesystem", value as OsFilesystem);
+        return;
+      case "driverFramework":
+        updateField("driverFramework", value as OsDriverFramework);
+        return;
+      case "networkStack":
+        updateField("networkStack", value as OsNetworkStack);
+        return;
+      case "permissions":
+        updateField("permissions", value as OsPermissionModel);
+        return;
+      case "encryption":
+        updateField("encryption", value as OsEncryption);
+        return;
+      case "updateModel":
+        updateField("updateModel", value as OsUpdateModel);
+        return;
+      case "packageManager":
+        updateField("packageManager", value as OsPackageManager);
+        return;
+      case "diagnostics":
+        updateField("diagnostics", value as OsDiagnostics);
+        return;
       case "addressBits":
         updateField("addressBits", Number(value) as OsAddressBits);
         return;
@@ -360,6 +451,12 @@ export function OsDesignerPage({
         return copy.validation.processLimit
           .replace("{bits}", String(draftConfiguration.addressBits))
           .replace("{max}", formatNumber(error.max, locale));
+      case "filesystem-requires-64-bit":
+        return copy.validation.filesystemRequires64Bit;
+      case "encryption-requires-security":
+        return copy.validation.encryptionRequiresSecurity;
+      case "rolling-updates-require-package-manager":
+        return copy.validation.rollingUpdatesRequirePackageManager;
     }
   }
 
@@ -587,6 +684,21 @@ export function OsDesignerPage({
               )}
             </fieldset>
 
+            <fieldset className="os-systems-fieldset">
+              <legend>{copy.systemsTitle}</legend>
+              <p className="os-systems-fieldset__hint">{copy.systemsHint}</p>
+              <div className="cpu-fields-grid">
+                {renderSelectField("filesystem")}
+                {renderSelectField("driverFramework")}
+                {renderSelectField("networkStack")}
+                {renderSelectField("permissions")}
+                {renderSelectField("encryption")}
+                {renderSelectField("updateModel")}
+                {renderSelectField("packageManager")}
+                {renderSelectField("diagnostics")}
+              </div>
+            </fieldset>
+
             <div className="cpu-editor-actions">
               <button
                 className="button button--primary"
@@ -619,6 +731,12 @@ export function OsDesignerPage({
               locale={locale}
             />
           )}
+
+          <CompatibilityPanel
+            configuration={draftConfiguration}
+            locale={locale}
+            targets={compatibilityTargets}
+          />
 
           <section className="cpu-version-section">
             <header className="cpu-version-section__heading">
@@ -732,6 +850,46 @@ function MetricsPanel({
       icon: Cpu,
     },
     {
+      label: copy.metrics.systemQualityScore,
+      value: formatDecimal(metrics.systemQualityScore, locale, 1),
+      icon: ShieldCheck,
+    },
+    {
+      label: copy.metrics.driverCoverageScore,
+      value: formatDecimal(metrics.driverCoverageScore, locale, 1),
+      icon: Boxes,
+    },
+    {
+      label: copy.metrics.dataIntegrityScore,
+      value: formatDecimal(metrics.dataIntegrityScore, locale, 1),
+      icon: HardDrive,
+    },
+    {
+      label: copy.metrics.networkScore,
+      value: formatDecimal(metrics.networkScore, locale, 1),
+      icon: Zap,
+    },
+    {
+      label: copy.metrics.diagnosticsScore,
+      value: formatDecimal(metrics.diagnosticsScore, locale, 1),
+      icon: Activity,
+    },
+    {
+      label: copy.metrics.updateReadinessScore,
+      value: formatDecimal(metrics.updateReadinessScore, locale, 1),
+      icon: CheckCircle2,
+    },
+    {
+      label: copy.metrics.updateLatencyDays,
+      value: `${formatNumber(metrics.updateLatencyDays, locale)} ${copy.units.days}`,
+      icon: Timer,
+    },
+    {
+      label: copy.metrics.annualMaintenanceCostUsd,
+      value: `${formatCurrency(metrics.annualMaintenanceCostUsd, locale)} ${copy.units.perYear}`,
+      icon: Boxes,
+    },
+    {
       label: copy.metrics.ipcLatencyMicroseconds,
       value: `${formatDecimal(metrics.ipcLatencyMicroseconds, locale, 2)} ${copy.units.microseconds}`,
       icon: Timer,
@@ -832,6 +990,121 @@ function RequirementsPanel({
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+function buildHardwareTargets(state: GameState): OsHardwareTarget[] {
+  const targets: OsHardwareTarget[] = state.cpuProjects.map((project) => ({
+    id: project.id,
+    name: project.name,
+    kind: "cpu",
+    architecture: project.configuration.isa,
+  }));
+
+  for (const project of state.componentProjects) {
+    const configuration = project.configuration;
+    const target: OsHardwareTarget = {
+      id: project.id,
+      name: project.name,
+      kind: configuration.type,
+    };
+
+    switch (configuration.type) {
+      case "gpu":
+        target.bus = configuration.bus;
+        break;
+      case "ssd":
+        target.storageInterface = configuration.interface;
+        target.storageFormFactor = configuration.formFactor;
+        break;
+      case "motherboard":
+        target.pcieGeneration = configuration.pcieGeneration;
+        break;
+      case "ai-accelerator":
+        target.aiInterconnect = configuration.interconnect;
+        break;
+      case "networking":
+        target.bus = configuration.bus;
+        target.networkStandard = configuration.standard;
+        target.networkMedium = configuration.medium;
+        break;
+      case "ram":
+        break;
+    }
+
+    targets.push(target);
+  }
+
+  return targets;
+}
+
+function CompatibilityPanel({
+  configuration,
+  locale,
+  targets,
+}: {
+  configuration: OsConfiguration;
+  locale: GameState["settings"]["locale"];
+  targets: OsHardwareTarget[];
+}) {
+  const copy = translations[locale].os;
+  const results = checkOsHardwareCompatibility(configuration, targets);
+  const compatibleCount = results.filter((result) => result.compatible).length;
+
+  return (
+    <section className="os-compatibility-section" aria-labelledby="os-compatibility-title">
+      <div className="section-heading">
+        <span className="section-heading__icon" aria-hidden="true"><Cpu size={18} /></span>
+        <div>
+          <h2 id="os-compatibility-title">{copy.compatibility.title}</h2>
+          <p>{copy.compatibility.hint}</p>
+        </div>
+        {results.length > 0 && (
+          <span className={`status-pill${compatibleCount === results.length ? " os-status-pill--ok" : ""}`}>
+            {compatibleCount}/{results.length}
+          </span>
+        )}
+      </div>
+
+      {results.length === 0 ? (
+        <div className="os-compatibility-empty">
+          <Boxes aria-hidden="true" size={24} />
+          <div>
+            <strong>{copy.compatibility.emptyTitle}</strong>
+            <p>{copy.compatibility.emptyHint}</p>
+          </div>
+        </div>
+      ) : (
+        <div className="os-compatibility-list">
+          {results.map((result) => (
+            <article
+              className={`os-compatibility-card${result.compatible ? " os-compatibility-card--ok" : " os-compatibility-card--failed"}`}
+              key={result.targetId}
+            >
+              <header>
+                <div>
+                  <span className="os-compatibility-kind">{copy.compatibility.kinds[result.kind]}</span>
+                  <strong>{result.name}</strong>
+                </div>
+                <span className="status-pill">
+                  {result.compatible ? copy.compatibility.compatible : copy.compatibility.incompatible}
+                </span>
+              </header>
+              {result.issues.length > 0 && (
+                <ul>
+                  {result.issues.map((issue) => (
+                    <li key={issue.code}>
+                      <TriangleAlert aria-hidden="true" size={15} />
+                      <span>{copy.compatibility.issues[issue.code]}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

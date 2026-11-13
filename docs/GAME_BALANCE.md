@@ -114,3 +114,26 @@ architectures. Full fields, bounds, profiles and formulas are in
   64-bit addressing (2003) are year-gated.
 - OS projects are not yet part of the daily market/finance pipeline. They persist in
   save schema v6 with lightweight migration from v5.
+
+## OS systems and drivers (Stage 08)
+
+Stage 08 extends OS projects with filesystems, driver frameworks, networking,
+permissions, encryption, update/package management and diagnostics. Full profiles,
+rules and formulas are in [`OS_SYSTEMS.md`](OS_SYSTEMS.md).
+
+- Each capability level trades a cost against a benefit. Modern filesystems and
+  encryption raise integrity/security but add footprint, cost and update overhead;
+  certified driver frameworks raise coverage/compatibility but cost more to maintain.
+- System quality is a weighted blend of driver coverage 24%, data integrity 20%,
+  network capability 18%, diagnostics 12%, update readiness 14% and security 12%.
+- Update latency falls from 180 days for manual updates to 7 days for rolling updates;
+  package managers reduce it by another 20% and add a small encryption bonus.
+- Annual maintenance is $120 plus 45 per maintenance-cost unit across the eight
+  system-service profiles. The 1995 default costs $345/year.
+- Hardware compatibility is checked against saved CPU/component projects: CPU ISA,
+  PCIe generation, SATA/NVMe/M.2 storage, PCIe/NVLink accelerators and fiber/InfiniBand
+  networking each have explicit driver-framework or network-stack requirements.
+- Constraints: ZFS needs 64-bit addressing; encryption needs a permission model;
+  rolling updates need a package manager; all advanced options are year-gated.
+- System fields persist in save schema v7. Version 6 OS projects migrate with 1995
+  defaults. OS projects still do not participate in the daily market/finance pipeline.

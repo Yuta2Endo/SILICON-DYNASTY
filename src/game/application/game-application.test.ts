@@ -148,6 +148,14 @@ describe("game application commands", () => {
       ipcModel: "message-passing",
       driverModel: "user-space",
       moduleSupport: "user-space",
+      filesystem: "ext2",
+      driverFramework: "unified",
+      networkStack: "tcp-ip",
+      permissions: "permissions",
+      encryption: "disk",
+      updateModel: "package-manager",
+      packageManager: "centralized",
+      diagnostics: "crash-dumps",
     });
 
     const reloaded = await createGameApplication(repository).load();
@@ -155,6 +163,9 @@ describe("game application commands", () => {
 
     expect(project?.name).toBe("Dynasty OS");
     expect(project?.configuration.kernelType).toBe("microkernel");
+    expect(project?.configuration.filesystem).toBe("ext2");
+    expect(project?.configuration.driverFramework).toBe("unified");
+    expect(project?.configuration.diagnostics).toBe("crash-dumps");
     expect(project?.versions.map((version) => version.version)).toEqual([1, 2]);
   });
 
