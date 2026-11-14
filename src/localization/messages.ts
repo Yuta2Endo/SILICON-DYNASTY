@@ -676,6 +676,12 @@ const ru = {
         desktop: "Рабочий стол {number}",
         moveHint: "Перетащите окно на рабочий стол или используйте кнопки с номером.",
         moveTo: "Переместить на",
+        wallpaper: "Обои рабочего стола",
+        wallpapers: {
+          classic: "Классика",
+          aurora: "Аврора",
+          grid: "Сетка",
+        },
       },
       next: "Следующий шаг",
       nextHints: {
@@ -3075,6 +3081,12 @@ const en: Translation = {
         desktop: "Desktop {number}",
         moveHint: "Drag a window onto a desktop or use the numbered buttons.",
         moveTo: "Move to",
+        wallpaper: "Desktop wallpaper",
+        wallpapers: {
+          classic: "Classic",
+          aurora: "Aurora",
+          grid: "Grid",
+        },
       },
       next: "Next step",
       nextHints: {

@@ -17,6 +17,7 @@ import {
   LayoutGrid,
   Lock,
   MonitorCog,
+  Palette,
   PanelsTopLeft,
   Power,
   RefreshCw,
@@ -74,6 +75,9 @@ type PreviewWindow =
   | { kind: "catalog"; id: string }
   | { kind: "system"; id: SystemAppId };
 const PREVIEW_DESKTOP_COUNT = 3;
+type PreviewWallpaper = "classic" | "aurora" | "grid";
+const PREVIEW_WALLPAPERS: readonly PreviewWallpaper[] = ["classic", "aurora", "grid"];
+const INITIAL_DESKTOP_WALLPAPERS: readonly PreviewWallpaper[] = ["classic", "aurora", "grid"];
 const INITIAL_DESKTOP_WINDOWS: ReadonlyArray<PreviewWindow | null> = Array.from(
   { length: PREVIEW_DESKTOP_COUNT },
   () => null,
@@ -131,7 +135,11 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
     () => [...INITIAL_DESKTOP_WINDOWS],
   );
   const [activeDesktop, setActiveDesktop] = useState(0);
+  const [desktopWallpapers, setDesktopWallpapers] = useState<PreviewWallpaper[]>(
+    () => [...INITIAL_DESKTOP_WALLPAPERS],
+  );
   const activeWindow = desktopWindows[activeDesktop] ?? null;
+  const activeWallpaper = desktopWallpapers[activeDesktop] ?? "classic";
   const activeAppId = activeWindow?.kind === "catalog" ? activeWindow.id : null;
   const activeSystemAppId = activeWindow?.kind === "system" ? activeWindow.id : null;
   const [isStartOpen, setIsStartOpen] = useState(false);
@@ -174,6 +182,12 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
     setActiveDesktop(to);
   }
 
+  function setDesktopWallpaper(index: number, wallpaper: PreviewWallpaper) {
+    setDesktopWallpapers((current) =>
+      current.map((value, desktop) => (desktop === index ? wallpaper : value)),
+    );
+  }
+
   const openWindows = desktopWindows.flatMap((window, desktop) =>
     window ? [{ desktop, window }] : [],
   );
@@ -198,6 +212,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
 
   function restartPreview() {
     setDesktopWindows([...INITIAL_DESKTOP_WINDOWS]);
+    setDesktopWallpapers([...INITIAL_DESKTOP_WALLPAPERS]);
     setActiveDesktop(0);
     setIsStartOpen(false);
     setIsNotificationsOpen(false);
@@ -208,6 +223,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
 
   useEffect(() => {
     setDesktopWindows([...INITIAL_DESKTOP_WINDOWS]);
+    setDesktopWallpapers([...INITIAL_DESKTOP_WALLPAPERS]);
     setActiveDesktop(0);
     setIsStartOpen(false);
     setIsNotificationsOpen(false);
@@ -291,7 +307,10 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
       <div className={`os-preview-device os-preview-device--${model.device}`}>
         <div className="os-preview-device__bezel">
           {model.device === "mobile" && <span className="os-preview-device__notch" aria-hidden="true" />}
-          <div className={`os-preview-screen os-preview-screen--${model.shell} os-preview-screen--${model.accent}`}>
+          <div
+            className={`os-preview-screen os-preview-screen--${model.shell} os-preview-screen--${model.accent}`}
+            data-wallpaper={activeWallpaper}
+          >
             {model.shell === "terminal" ? (
               <TerminalView
                 appCount={model.compatibleApps}
@@ -506,7 +525,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                         <button
                           aria-label={`${copy.missionControl.desktop.replace("{number}", String(index + 1))} · ${window ? copy.missionControl.opened : copy.missionControl.empty}`}
                           aria-pressed={activeDesktop === index}
-                          className={`os-preview-mission__desktop${activeDesktop === index ? " is-active" : ""}${window ? " has-window" : ""}`}
+                          className={`os-preview-mission__desktop os-preview-mission__desktop--wallpaper-${desktopWallpapers[index]}${activeDesktop === index ? " is-active" : ""}${window ? " has-window" : ""}`}
                           key={index}
                           onClick={() => switchDesktop(index)}
                           onDragOver={(event) => event.preventDefault()}
@@ -524,6 +543,30 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                           <small>{window ? copy.missionControl.opened : copy.missionControl.empty}</small>
                         </button>
                       ))}
+                    </div>
+                    <div className="os-preview-mission__wallpapers">
+                      <span className="os-preview-mission__wallpaper-label">
+                        <Palette aria-hidden="true" size={11} />
+                        {copy.missionControl.wallpaper}
+                      </span>
+                      <div
+                        aria-label={copy.missionControl.wallpaper}
+                        className="os-preview-mission__wallpaper-options"
+                        role="group"
+                      >
+                        {PREVIEW_WALLPAPERS.map((wallpaper) => (
+                          <button
+                            aria-pressed={activeWallpaper === wallpaper}
+                            className={`os-preview-mission__wallpaper os-preview-mission__wallpaper--${wallpaper}${activeWallpaper === wallpaper ? " is-active" : ""}`}
+                            key={wallpaper}
+                            onClick={() => setDesktopWallpaper(activeDesktop, wallpaper)}
+                            type="button"
+                          >
+                            <span aria-hidden="true" className="os-preview-mission__wallpaper-swatch" />
+                            {copy.missionControl.wallpapers[wallpaper]}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                     <p className="os-preview-mission__move-hint">
                       <ArrowRightLeft aria-hidden="true" size={11} />
@@ -645,7 +688,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                   </div>
                 )}
 
-                <div className="os-preview-desktop-area">
+                <div className={`os-preview-desktop-area os-preview-desktop-area--wallpaper-${activeWallpaper}`}>
                   {model.hasWidgets && (
                     <div className="os-preview-widgets">
                       <div className="os-preview-widget">
@@ -702,6 +745,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                     <SystemWindowView
                       appId={activeSystemAppId}
                       configuration={previewConfiguration}
+                      key={`${activeDesktop}-system-${activeSystemAppId}`}
                       locale={locale}
                       model={model}
                       onClose={() => setActiveSystemAppId(null)}
@@ -724,6 +768,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                       issues={activeApp.issues.map((issue) =>
                         appCopy.issues[issue as keyof typeof appCopy.issues] ?? issue,
                       )}
+                      key={`${activeDesktop}-catalog-${activeApp.id}`}
                       locale={locale}
                       onClose={() => setActiveAppId(null)}
                     />

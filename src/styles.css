@@ -8557,6 +8557,19 @@ textarea {
   overflow: hidden;
 }
 
+.os-preview-desktop-area--wallpaper-aurora {
+  background:
+    radial-gradient(circle at 22% 28%, rgb(16 185 129 / 24%), transparent 34%),
+    radial-gradient(circle at 78% 68%, rgb(56 189 248 / 22%), transparent 38%);
+}
+
+.os-preview-desktop-area--wallpaper-grid {
+  background-image:
+    linear-gradient(rgb(148 163 184 / 13%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(148 163 184 / 13%) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
 .os-preview-widgets {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -8806,8 +8819,26 @@ textarea {
   background: rgb(15 23 42 / 92%);
   box-shadow: 0 20px 44px rgb(2 6 23 / 48%);
   transform: translate(-50%, -50%);
+  animation: os-preview-window-in 170ms cubic-bezier(0.2, 0.8, 0.2, 1);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
+}
+
+@keyframes os-preview-window-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .os-preview-window {
+    animation: none;
+  }
 }
 
 .os-preview-window--locked {
@@ -10444,6 +10475,86 @@ textarea {
 
 .os-preview-mission__desktop.has-window {
   box-shadow: inset 0 -2px 0 rgb(96 165 250 / 64%);
+}
+
+.os-preview-mission__desktop--wallpaper-aurora {
+  background-image:
+    radial-gradient(circle at 18% 20%, rgb(16 185 129 / 32%), transparent 46%),
+    radial-gradient(circle at 84% 80%, rgb(56 189 248 / 28%), transparent 48%);
+}
+
+.os-preview-mission__desktop--wallpaper-grid {
+  background-image:
+    linear-gradient(rgb(148 163 184 / 18%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(148 163 184 / 18%) 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+
+.os-preview-mission__wallpapers {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  border: 1px solid rgb(148 163 184 / 16%);
+  border-radius: 7px;
+  padding: 5px 6px;
+  background: rgb(15 23 42 / 44%);
+}
+
+.os-preview-mission__wallpaper-label {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 3px;
+  color: rgb(203 213 225 / 66%);
+  font-size: 0.4rem;
+}
+
+.os-preview-mission__wallpaper-options {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 3px;
+}
+
+.os-preview-mission__wallpaper {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  padding: 3px 5px;
+  color: rgb(226 232 240 / 72%);
+  font: inherit;
+  font-size: 0.4rem;
+  cursor: pointer;
+}
+
+.os-preview-mission__wallpaper.is-active {
+  border-color: rgb(96 165 250 / 56%);
+  color: #f8fafc;
+  background: rgb(37 99 235 / 28%);
+}
+
+.os-preview-mission__wallpaper-swatch {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #1d4ed8, #0f172a);
+}
+
+.os-preview-mission__wallpaper--aurora .os-preview-mission__wallpaper-swatch {
+  background: linear-gradient(135deg, #10b981, #0ea5e9);
+}
+
+.os-preview-mission__wallpaper--grid .os-preview-mission__wallpaper-swatch {
+  background:
+    linear-gradient(rgb(226 232 240 / 46%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(226 232 240 / 46%) 1px, transparent 1px),
+    #1e293b;
+  background-size: 3px 3px;
 }
 
 .os-preview-mission__move-hint {

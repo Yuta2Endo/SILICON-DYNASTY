@@ -210,6 +210,44 @@ describe("OsPreviewPanel", () => {
     expect(screen.getByRole("dialog", { name: ru.systemApps.settings.name })).toBeTruthy();
   });
 
+  it("changes wallpaper per desktop", async () => {
+    const user = userEvent.setup();
+    render(
+      <OsPreviewPanel
+        configuration={{ ...createDefaultOsConfiguration(), gui: "desktop-shell" }}
+        locale="ru"
+        project={null}
+      />,
+    );
+
+    const desktopArea = () => document.querySelector(".os-preview-desktop-area");
+    expect(desktopArea()?.classList.contains("os-preview-desktop-area--wallpaper-classic")).toBe(true);
+
+    await user.click(screen.getByRole("button", { name: ru.missionControl.open }));
+    let mission = screen.getByRole("dialog", { name: ru.missionControl.title });
+    await user.click(within(mission).getByRole("button", { name: ru.missionControl.wallpapers.aurora }));
+    await user.click(within(mission).getByRole("button", { name: ru.missionControl.close }));
+    expect(desktopArea()?.classList.contains("os-preview-desktop-area--wallpaper-aurora")).toBe(true);
+
+    await user.click(
+      screen.getByRole("button", {
+        name: ru.missionControl.desktop.replace("{number}", "2"),
+      }),
+    );
+    await user.click(screen.getByRole("button", { name: ru.missionControl.open }));
+    mission = screen.getByRole("dialog", { name: ru.missionControl.title });
+    await user.click(within(mission).getByRole("button", { name: ru.missionControl.wallpapers.grid }));
+    await user.click(within(mission).getByRole("button", { name: ru.missionControl.close }));
+    expect(desktopArea()?.classList.contains("os-preview-desktop-area--wallpaper-grid")).toBe(true);
+
+    await user.click(
+      screen.getByRole("button", {
+        name: ru.missionControl.desktop.replace("{number}", "1"),
+      }),
+    );
+    expect(desktopArea()?.classList.contains("os-preview-desktop-area--wallpaper-aurora")).toBe(true);
+  });
+
   it("keeps windows on separate desktops and moves a window between them", async () => {
     const user = userEvent.setup();
     render(
