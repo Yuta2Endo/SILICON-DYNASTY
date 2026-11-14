@@ -8,7 +8,9 @@ import {
   BriefcaseBusiness,
   Building2,
   ChevronRight,
+  Clock3,
   Code2,
+  Factory,
   FileText,
   FolderOpen,
   Gamepad2,
@@ -31,6 +33,7 @@ import {
   Sparkles,
   Store,
   Terminal,
+  TrendingUp,
   Wifi,
   Wrench,
   X,
@@ -47,7 +50,12 @@ import {
   type OsPreviewShell,
 } from "../../game/models/os-preview";
 import { calculateOsKernelMetrics } from "../../game/formulas/os";
-import { formatDecimal } from "../../localization/formatters";
+import {
+  formatCurrency,
+  formatDecimal,
+  formatNumber,
+  formatShortGameDate,
+} from "../../localization/formatters";
 import { translations, type TranslationMessages } from "../../localization/messages";
 
 const APP_ICONS: Record<string, LucideIcon> = {
@@ -135,9 +143,10 @@ interface OsPreviewPanelProps {
   configuration: OsConfiguration;
   project: Pick<OsProject, "releases"> | null;
   locale: GameState["settings"]["locale"];
+  state?: GameState;
 }
 
-export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPanelProps) {
+export function OsPreviewPanel({ configuration, project, locale, state }: OsPreviewPanelProps) {
   const t = translations[locale];
   const copy = t.os.preview;
   const appCopy = t.os.applications;
@@ -230,6 +239,11 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
     updateReadinessScore: previewMetrics.updateReadinessScore,
   });
   const activeApp = model.apps.find((app) => app.id === activeAppId) ?? null;
+  const latestFinance = state?.finance.dailyRecords.at(-1) ?? null;
+  const latestMarket = state?.market.dailySummaries.at(-1) ?? null;
+  const activeProductCount = state
+    ? state.market.products.filter((product) => product.status === "active").length
+    : 0;
   const DeviceIcon = DEVICE_ICONS[model.device];
   const ShellIcon = SHELL_ICONS[model.shell];
   const stageLabel = model.stage === "development"
@@ -724,17 +738,61 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                 <div className={`os-preview-desktop-area os-preview-desktop-area--wallpaper-${activeWallpaper}`}>
                   {model.hasWidgets && (
                     <div className="os-preview-widgets">
-                      <div className="os-preview-widget">
-                        <span>{copy.quality}</span>
-                        <strong>{formatDecimal(model.quality, locale, 0)}</strong>
+                      <div className="os-preview-widget os-preview-widget--clock">
+                        <span className="os-preview-widget__label">
+                          <Clock3 aria-hidden="true" size={10} />
+                          {copy.widgets.clock}
+                        </span>
+                        <strong>09:41</strong>
+                        <small>
+                          {state ? formatShortGameDate(state.gameDate, locale) : copy.widgets.noData}
+                        </small>
                       </div>
                       <div className="os-preview-widget">
-                        <span>{copy.apps}</span>
-                        <strong>{model.compatibleApps}/{model.totalApps}</strong>
+                        <span className="os-preview-widget__label">
+                          <BriefcaseBusiness aria-hidden="true" size={10} />
+                          {copy.widgets.company}
+                        </span>
+                        <strong>
+                          {state ? formatCurrency(state.company.balance, locale) : copy.widgets.noData}
+                        </strong>
+                        <small>
+                          {state
+                            ? `${copy.widgets.reputation}: ${formatNumber(state.company.reputation, locale)}`
+                            : ""}
+                        </small>
                       </div>
                       <div className="os-preview-widget">
-                        <span>{copy.stage}</span>
-                        <strong>{stageLabel}</strong>
+                        <span className="os-preview-widget__label">
+                          <Factory aria-hidden="true" size={10} />
+                          {copy.widgets.production}
+                        </span>
+                        <strong>
+                          {latestFinance
+                            ? `${formatNumber(latestFinance.unitsProduced, locale)} ${copy.widgets.perDay}`
+                            : copy.widgets.noData}
+                        </strong>
+                        <small>
+                          {state
+                            ? `${copy.widgets.factory}: ${state.manufacturing.factoryLevel}`
+                            : ""}
+                        </small>
+                      </div>
+                      <div className="os-preview-widget">
+                        <span className="os-preview-widget__label">
+                          <TrendingUp aria-hidden="true" size={10} />
+                          {copy.widgets.market}
+                        </span>
+                        <strong>
+                          {latestMarket
+                            ? `${formatDecimal(latestMarket.marketShare * 100, locale, 1)}%`
+                            : copy.widgets.noData}
+                        </strong>
+                        <small>
+                          {state
+                            ? `${copy.widgets.activeProducts}: ${activeProductCount}`
+                            : ""}
+                        </small>
                       </div>
                     </div>
                   )}

@@ -1,6 +1,7 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
+import { createInitialGameState } from "../../game/models/game-state";
 import { createDefaultOsConfiguration, createOsProject, type OsRelease } from "../../game/models/os";
 import { translations } from "../../localization/messages";
 import { OsPreviewPanel } from "./OsPreviewPanel";
@@ -404,6 +405,25 @@ describe("OsPreviewPanel", () => {
 
     expect(document.querySelector(".os-preview-stage")?.textContent).toBe(stages.alpha);
     expect(screen.getByText(ru.shells["desktop-shell"])).toBeTruthy();
+  });
+
+  it("shows live company widgets on the desktop", () => {
+    render(
+      <OsPreviewPanel
+        configuration={{ ...createDefaultOsConfiguration(), gui: "modern-desktop" }}
+        locale="ru"
+        project={null}
+        state={createInitialGameState()}
+      />,
+    );
+
+    expect(screen.getByText(ru.widgets.clock)).toBeTruthy();
+    expect(screen.getByText(ru.widgets.company)).toBeTruthy();
+    expect(screen.getByText(ru.widgets.production)).toBeTruthy();
+    expect(screen.getByText(ru.widgets.market)).toBeTruthy();
+    expect(screen.getByText(new RegExp(ru.widgets.reputation))).toBeTruthy();
+    expect(screen.getByText(new RegExp(ru.widgets.factory))).toBeTruthy();
+    expect(screen.getAllByText(ru.widgets.noData).length).toBeGreaterThanOrEqual(2);
   });
 
   it("shows a lock reason for an incompatible application", async () => {

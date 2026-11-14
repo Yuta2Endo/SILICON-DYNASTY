@@ -1047,6 +1047,7 @@ export function OsDesignerPage({
               configuration={draftConfiguration}
               locale={locale}
               project={selectedProject}
+              state={state}
             />
           </aside>
         </div>
