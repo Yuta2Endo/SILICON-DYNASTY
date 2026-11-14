@@ -288,6 +288,7 @@ Present:
 Present component specifications, compatibility, manufacturing costs and performance characteristics.
 
 - Saved-version comparison with performance index, unit cost, suggested price, gross margin and power draw deltas.
+- GPU projects include an accessible board/die preview derived from the draft configuration: board modules (GPU package, VRAM, VRM, PCIe, display outputs, power), die blocks (compute, cache/fabric, memory controllers, display, optional RT), heat tiers, hotspot marker, selected-element details and physical metrics. Both views are keyboard-selectable and labelled as a simulation.
 
 ### Devices and Cloud Designer
 

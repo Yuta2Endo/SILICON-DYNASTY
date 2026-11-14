@@ -3,6 +3,7 @@ import { Boxes, CheckCircle2, Save, ShieldCheck, TriangleAlert } from "lucide-re
 import { ProductWorkspaceTabs } from "../../components/ProductWorkspaceTabs";
 import { ConfirmationBottomSheet } from "../../components/ConfirmationBottomSheet";
 import { ComponentVersionCompare } from "./ComponentVersionCompare";
+import { GpuBoardPreview } from "./GpuBoardPreview";
 import {
   COMPONENT_FIELD_SCHEMAS,
   COMPONENT_LIMITS,
@@ -378,6 +379,10 @@ export function ComponentDesignerPage({
               </p>
             </div>
           </form>
+
+          {draftConfiguration.type === "gpu" && (
+            <GpuBoardPreview configuration={draftConfiguration} locale={locale} />
+          )}
 
           <ComponentVersionCompare locale={locale} project={selectedProject} />
 

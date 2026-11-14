@@ -251,6 +251,28 @@ Zero inventory means an out-of-stock product earns nothing until the next batch
 arrives. Reputation gain includes component units:
 `min(0.1, (CPU units + component units) / 5000)`.
 
+## GPU board and die preview
+
+The GPU designer includes a derived physical visualization of the current draft
+configuration. It is not persisted and does not feed market or benchmark formulas.
+
+- **Board view**: PCB outline, GPU package, VRAM modules, VRM phases, PCIe x16
+  fingers, display outputs and power connectors.
+- **Die view**: compute blocks (up to 23 individual blocks plus an aggregate block),
+  cache/fabric, memory controllers, display engine and optional RT block.
+- Both views support mouse and keyboard selection, a selected-element panel,
+  heat tiers (`cool` < 45, `warm` < 72, `hot` >= 72), a hotspot marker and an
+  accessible SVG description.
+- **VRAM modules**: `busBits = clamp(roundUp64(max(64, bandwidth * 4 + capacity * 4)), 64, 512)`;
+  `moduleCount = clamp(floor(busBits / 32), 4, 12)`; capacity is split evenly.
+- **Board size**: `clamp(120 + tdp * 0.22 + dieArea * 0.25, 120, 360)` mm.
+- **Slot width**: 1 slot <= 75 W, 2 slots <= 180 W, otherwise 3.
+- **Power connectors**: 0 <= 75 W, 1 <= 225 W, otherwise 2. Recommended PSU is
+  `max(200, ceil((tdp * 3 + 150) / 50) * 50)` W.
+- **Compute throughput**: `computeUnits * operationsPerCyclePerUnit * clockMHz * 2 / 1e6` TFLOPS.
+- **Heat**: die heat uses TDP/die area, process-node density, clock, compute units
+  and ray tracing; VRM and VRAM heat are derived separately, all clamped to 5..100.
+
 ## UI
 
 - CPU screen has a product-workspace switcher: Processors / Components.
@@ -295,4 +317,8 @@ arrives. Reputation gain includes component units:
   discontinue persistence.
 - `src/features/components/ComponentDesignerPage.test.tsx`: create, save, validate,
   workspace switch.
+- `src/game/models/gpu-board.test.ts`: deterministic default board/die, flagship
+  RT/power/board size, memory bus and module scaling, heat tiers.
+- `src/features/components/GpuBoardPreview.test.tsx`: board modules, die toggle,
+  ray tracing and power connector states.
 - `src/features/market/MarketPage.test.tsx`: component launch form.

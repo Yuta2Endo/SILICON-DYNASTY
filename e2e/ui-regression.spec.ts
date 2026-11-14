@@ -302,6 +302,12 @@ test("compares two saved component versions", async ({ page }) => {
     .click();
   await expect(page.locator("#component-field-computeUnits")).toBeVisible();
 
+  const gpuPreview = page.locator(".gpu-board-preview");
+  await expect(gpuPreview).toBeVisible();
+  await expect(gpuPreview.locator(".gpu-board__module--vram")).toHaveCount(4);
+  await gpuPreview.getByRole("button", { name: "Кристалл", exact: true }).click();
+  await expect(gpuPreview.locator(".gpu-die__block--compute")).toHaveCount(8);
+
   await page.locator("#component-field-computeUnits").fill("16");
   await page.getByRole("button", { name: "Сохранить новую версию" }).click();
 
