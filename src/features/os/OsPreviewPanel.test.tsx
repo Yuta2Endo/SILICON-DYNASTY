@@ -40,6 +40,37 @@ describe("OsPreviewPanel", () => {
     expect(screen.getByText((_, node) => node?.textContent === `${ru.apps}: 1/6`)).toBeTruthy();
   });
 
+  it("runs terminal commands and keeps command history", async () => {
+    const user = userEvent.setup();
+    render(
+      <OsPreviewPanel
+        configuration={createDefaultOsConfiguration()}
+        locale="ru"
+        project={null}
+      />,
+    );
+
+    const input = screen.getByRole("textbox", { name: ru.terminal.inputLabel });
+
+    await user.type(input, "help{Enter}");
+    const log = screen.getByRole("log");
+    expect(log.textContent).toContain(ru.terminal.helpTitle);
+    expect(log.textContent).toContain(ru.terminal.descriptions.neofetch);
+
+    await user.type(input, "bogus{Enter}");
+    expect(screen.getByText(`${ru.terminal.unknown}: bogus`)).toBeTruthy();
+
+    await user.type(input, "neofetch{Enter}");
+    expect(screen.getByText(/SILICON OS 0\.1/)).toBeTruthy();
+
+    await user.type(input, "{ArrowUp}");
+    expect(screen.getByDisplayValue("neofetch")).toBeTruthy();
+
+    await user.type(input, "{Enter}");
+    await user.type(input, "clear{Enter}");
+    expect(screen.getByRole("log").textContent).toBe("");
+  });
+
   it("shows a desktop shell and opens a compatible application", async () => {
     const user = userEvent.setup();
     render(

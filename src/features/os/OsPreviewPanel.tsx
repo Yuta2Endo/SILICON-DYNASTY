@@ -39,7 +39,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { GameState } from "../../game/models/game-state";
 import type { OsConfiguration, OsProject } from "../../game/models/os";
 import {
@@ -114,6 +114,27 @@ const PREVIEW_ACCENT_COLORS: Record<PreviewAccent, string> = {
   green: "#10b981",
   amber: "#f59e0b",
 };
+const TERMINAL_COMMANDS = [
+  "help",
+  "neofetch",
+  "uname",
+  "apps",
+  "ps",
+  "df",
+  "free",
+  "net",
+  "security",
+  "date",
+  "whoami",
+  "reboot",
+  "clear",
+] as const;
+type TerminalLineKind = "input" | "output" | "error";
+interface TerminalLine {
+  id: number;
+  kind: TerminalLineKind;
+  text: string;
+}
 const INITIAL_DESKTOP_WINDOWS: ReadonlyArray<PreviewWindow | null> = Array.from(
   { length: PREVIEW_DESKTOP_COUNT },
   () => null,
@@ -385,12 +406,11 @@ export function OsPreviewPanel({ configuration, project, locale, state }: OsPrev
           >
             {model.shell === "terminal" ? (
               <TerminalView
-                appCount={model.compatibleApps}
-                bootSeconds={model.bootSeconds}
+                configuration={previewConfiguration}
                 copy={copy}
-                kernelType={t.os.options.kernelType[model.kernelType]}
                 locale={locale}
-                totalApps={model.totalApps}
+                model={model}
+                state={state}
               />
             ) : previewScreen === "boot" ? (
               <BootScreen
@@ -1628,38 +1648,236 @@ function SystemWindowView({
 }
 
 function TerminalView({
-  appCount,
-  bootSeconds,
+  configuration,
   copy,
-  kernelType,
   locale,
-  totalApps,
+  model,
+  state,
 }: {
-  appCount: number;
-  bootSeconds: number;
-  copy: {
-    terminalBoot: string;
-    terminalKernel: string;
-    terminalApps: string;
-    terminalHint: string;
-  };
-  kernelType: string;
+  configuration: OsConfiguration;
+  copy: TranslationMessages["os"]["preview"];
   locale: GameState["settings"]["locale"];
-  totalApps: number;
+  model: OsPreviewModel;
+  state: GameState | undefined;
 }) {
+  const t = translations[locale];
+  const terminal = copy.terminal;
+  const metrics = calculateOsKernelMetrics(configuration);
+  const [command, setCommand] = useState("");
+  const [lines, setLines] = useState<TerminalLine[]>([]);
+  const [commandHistory, setCommandHistory] = useState<string[]>([]);
+  const [historyCursor, setHistoryCursor] = useState(-1);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const nextLineId = useRef(0);
+
+  useEffect(() => {
+    const body = bodyRef.current;
+    if (body) {
+      body.scrollTop = body.scrollHeight;
+    }
+  }, [lines]);
+
+  const stageLabel = model.stage === "development"
+    ? copy.development
+    : t.os.releases.stages[model.stage];
+
+  function commandOutput(name: string, fullCommand: string): { kind: TerminalLineKind; text: string } {
+    const appNames = t.os.applications.names;
+    switch (name) {
+      case "help":
+        return {
+          kind: "output",
+          text: [
+            terminal.helpTitle,
+            ...TERMINAL_COMMANDS.map((candidate) => `  ${candidate.padEnd(10)} ${terminal.descriptions[candidate]}`),
+          ].join("\n"),
+        };
+      case "neofetch":
+        return {
+          kind: "output",
+          text: [
+            `   ▄▄▄   SILICON OS ${model.versionLabel}`,
+            `  █████  ${terminal.labels.kernel}: ${t.os.options.kernelType[configuration.kernelType]}`,
+            `  ▀▀▀▀▀  ${terminal.labels.shell}: ${copy.shells[model.shell]}`,
+            `         ${terminal.labels.stage}: ${stageLabel}`,
+            `         ${terminal.labels.apps}: ${model.compatibleApps}/${model.totalApps}`,
+            `         ${terminal.labels.quality}: ${formatDecimal(model.quality, locale, 1)}`,
+          ].join("\n"),
+        };
+      case "uname":
+        return {
+          kind: "output",
+          text: `SiliconOS ${model.versionLabel} ${t.os.options.kernelType[configuration.kernelType]} ${configuration.addressBits}-bit ${configuration.supportedArchitectures.join(" ")}`,
+        };
+      case "apps":
+        return {
+          kind: "output",
+          text: model.apps.map((app) => {
+            const name = appNames[app.id as keyof typeof appNames] ?? app.id;
+            return `${app.compatible ? "●" : "○"} ${name} — ${app.compatible ? terminal.labels.available : terminal.labels.locked}`;
+          }).join("\n"),
+        };
+      case "ps":
+        return {
+          kind: "output",
+          text: [
+            `PID   ${terminal.labels.process.padEnd(18)} ${terminal.labels.state}`,
+            `1     init               ${terminal.labels.running}`,
+            `42    shell              ${terminal.labels.running}`,
+            ...model.apps.filter((app) => app.compatible).map((app, index) => {
+              const name = appNames[app.id as keyof typeof appNames] ?? app.id;
+              return `${String(100 + index).padEnd(6)}${name.padEnd(19)}${terminal.labels.running}`;
+            }),
+          ].join("\n"),
+        };
+      case "df": {
+        const capacityMb = configuration.addressBits === 16
+          ? 16
+          : configuration.addressBits === 32
+            ? 4_096
+            : 1_000_000;
+        return {
+          kind: "output",
+          text: [
+            `${terminal.labels.filesystem}: ${t.os.options.filesystem[configuration.filesystem]}`,
+            `${terminal.labels.capacity}: ${formatNumber(capacityMb, locale)} MB`,
+            `${terminal.labels.used}: ${formatDecimal(metrics.memoryFootprintMb, locale, 1)} MB`,
+          ].join("\n"),
+        };
+      }
+      case "free":
+        return {
+          kind: "output",
+          text: [
+            `${terminal.labels.memory}: ${formatDecimal(metrics.memoryFootprintMb, locale, 1)} MB`,
+            `${terminal.labels.processes}: ${formatNumber(metrics.processCapacity, locale)}`,
+            `${terminal.labels.scheduler}: ${t.os.options.scheduler[configuration.scheduler]}`,
+          ].join("\n"),
+        };
+      case "net":
+        return {
+          kind: "output",
+          text: [
+            `${terminal.labels.network}: ${t.os.options.networkStack[configuration.networkStack]}`,
+            `${terminal.labels.drivers}: ${t.os.options.driverFramework[configuration.driverFramework]}`,
+            `${terminal.labels.architectures}: ${configuration.supportedArchitectures.join(" ")}`,
+          ].join("\n"),
+        };
+      case "security":
+        return {
+          kind: "output",
+          text: [
+            `${terminal.labels.permissions}: ${t.os.options.permissions[configuration.permissions]}`,
+            `${terminal.labels.encryption}: ${t.os.options.encryption[configuration.encryption]}`,
+            `${terminal.labels.updates}: ${t.os.options.updateModel[configuration.updateModel]}`,
+            `${terminal.labels.packages}: ${t.os.options.packageManager[configuration.packageManager]}`,
+            `${terminal.labels.quality}: ${formatDecimal(metrics.securityScore, locale, 1)}`,
+          ].join("\n"),
+        };
+      case "date":
+        return {
+          kind: "output",
+          text: state
+            ? `${terminal.labels.date}: ${formatShortGameDate(state.gameDate, locale)}`
+            : `${terminal.labels.date}: 1995-01-01`,
+        };
+      case "whoami":
+        return {
+          kind: "output",
+          text: state
+            ? `${state.company.name} · ${terminal.labels.balance}: ${formatCurrency(state.company.balance, locale)}`
+            : "ceo",
+        };
+      case "reboot":
+        return { kind: "output", text: terminal.reboot };
+      default:
+        return { kind: "error", text: `${terminal.unknown}: ${fullCommand}` };
+    }
+  }
+
+  function runCommand(raw: string) {
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      return;
+    }
+    setCommand("");
+    setCommandHistory((current) => [...current, trimmed]);
+    setHistoryCursor(-1);
+    const [name] = trimmed.toLowerCase().split(/\s+/);
+    if (name === "clear") {
+      setLines([]);
+      return;
+    }
+    const output = commandOutput(name ?? "", trimmed);
+    setLines((current) => [
+      ...current,
+      { id: nextLineId.current++, kind: "input", text: `> ${trimmed}` },
+      { id: nextLineId.current++, kind: output.kind, text: output.text },
+    ]);
+  }
+
   return (
     <div className="os-preview-terminal" aria-label={copy.terminalBoot}>
       <div className="os-preview-terminal__bar">
         <span /><span /><span />
         <em>tty1</em>
       </div>
-      <div className="os-preview-terminal__body">
+      <div className="os-preview-terminal__body" ref={bodyRef}>
         <p><strong>SILICON/DYNASTY</strong> {copy.terminalBoot}</p>
-        <p>{copy.terminalKernel}: {kernelType} · boot: {formatDecimal(bootSeconds, locale, 1)} s</p>
-        <p>{copy.terminalApps}: {appCount}/{totalApps}</p>
+        <p>{copy.terminalKernel}: {t.os.options.kernelType[model.kernelType]} · boot: {formatDecimal(model.bootSeconds, locale, 1)} s</p>
+        <p>{copy.terminalApps}: {model.compatibleApps}/{model.totalApps}</p>
         <p className="os-preview-terminal__hint">{copy.terminalHint}</p>
-        <p className="os-preview-terminal__prompt">&gt; <span className="os-preview-caret" aria-hidden="true" /></p>
+        <div className="os-preview-terminal__history" role="log" aria-live="polite">
+          {lines.map((line) => (
+            <p className={`os-preview-terminal__line os-preview-terminal__line--${line.kind}`} key={line.id}>
+              {line.text}
+            </p>
+          ))}
+        </div>
       </div>
+      <form
+        className="os-preview-terminal__input"
+        onSubmit={(event) => {
+          event.preventDefault();
+          runCommand(command);
+        }}
+      >
+        <span aria-hidden="true" className="os-preview-terminal__prompt">{terminal.promptUser}:~$</span>
+        <input
+          aria-label={terminal.inputLabel}
+          autoCapitalize="none"
+          autoComplete="off"
+          onChange={(event) => setCommand(event.currentTarget.value)}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowUp") {
+              event.preventDefault();
+              if (commandHistory.length === 0) {
+                return;
+              }
+              const next = historyCursor === -1
+                ? commandHistory.length - 1
+                : Math.max(0, historyCursor - 1);
+              setHistoryCursor(next);
+              setCommand(commandHistory[next] ?? "");
+              return;
+            }
+            if (event.key === "ArrowDown" && historyCursor !== -1) {
+              event.preventDefault();
+              if (historyCursor >= commandHistory.length - 1) {
+                setHistoryCursor(-1);
+                setCommand("");
+                return;
+              }
+              const next = historyCursor + 1;
+              setHistoryCursor(next);
+              setCommand(commandHistory[next] ?? "");
+            }
+          }}
+          placeholder={terminal.placeholder}
+          spellCheck={false}
+          value={command}
+        />
+      </form>
     </div>
   );
 }

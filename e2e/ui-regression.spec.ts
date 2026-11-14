@@ -40,6 +40,12 @@ test("keeps product tabs scrollable and OS editor sections usable on mobile", as
   await page.setViewportSize({ width: 390, height: 844 });
   await openGame(page);
 
+  const skipLinkBox = await page
+    .getByRole("link", { name: "Перейти к содержимому" })
+    .boundingBox();
+  expect(skipLinkBox).not.toBeNull();
+  expect((skipLinkBox?.y ?? 0) + (skipLinkBox?.height ?? 0)).toBeLessThanOrEqual(0);
+
   await page
     .getByRole("navigation", { name: "Основная навигация" })
     .getByRole("button", { name: "Процессор" })
@@ -62,6 +68,11 @@ test("keeps product tabs scrollable and OS editor sections usable on mobile", as
     .getByRole("button", { name: "Создать проект" })
     .click();
   await expect(page.locator("#os-project-name")).toBeVisible();
+
+  const terminalInput = page.getByRole("textbox", { name: "Команда терминала" });
+  await terminalInput.fill("neofetch");
+  await terminalInput.press("Enter");
+  await expect(page.getByRole("log")).toContainText("SILICON OS");
 
   await page.getByRole("tab", { name: "Системы" }).click();
   await expect(page.locator("#os-panel-systems")).toBeVisible();
