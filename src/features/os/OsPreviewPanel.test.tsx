@@ -98,6 +98,34 @@ describe("OsPreviewPanel", () => {
     expect(screen.getByText(system.updates.packages)).toBeTruthy();
   });
 
+  it("changes theme, density and accent from system settings", async () => {
+    const user = userEvent.setup();
+    render(
+      <OsPreviewPanel
+        configuration={{ ...createDefaultOsConfiguration(), gui: "desktop-shell" }}
+        locale="ru"
+        project={null}
+      />,
+    );
+
+    const system = translations.ru.os.preview.systemApps.settings;
+    const previewScreen = document.querySelector(".os-preview-screen") as HTMLElement;
+
+    await user.click(screen.getByRole("button", { name: system.name }));
+    const dialog = screen.getByRole("dialog", { name: system.name });
+    expect(within(dialog).getByText(system.appearance)).toBeTruthy();
+
+    await user.click(within(dialog).getByRole("button", { name: system.themes.light }));
+    expect(previewScreen.classList.contains("os-preview-screen--theme-light")).toBe(true);
+
+    await user.click(screen.getByRole("button", { name: system.densities.compact }));
+    expect(previewScreen.classList.contains("os-preview-screen--density-compact")).toBe(true);
+
+    await user.click(screen.getByRole("button", { name: system.accents.violet }));
+    expect(previewScreen.dataset.accent).toBe("violet");
+    expect(previewScreen.style.getPropertyValue("--os-preview-accent")).toBe("#8b5cf6");
+  });
+
   it("opens the security center and driver manager", async () => {
     const user = userEvent.setup();
     render(

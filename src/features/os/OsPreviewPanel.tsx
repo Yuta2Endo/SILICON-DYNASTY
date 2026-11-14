@@ -36,7 +36,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import type { GameState } from "../../game/models/game-state";
 import type { OsConfiguration, OsProject } from "../../game/models/os";
 import {
@@ -78,6 +78,28 @@ const PREVIEW_DESKTOP_COUNT = 3;
 type PreviewWallpaper = "classic" | "aurora" | "grid";
 const PREVIEW_WALLPAPERS: readonly PreviewWallpaper[] = ["classic", "aurora", "grid"];
 const INITIAL_DESKTOP_WALLPAPERS: readonly PreviewWallpaper[] = ["classic", "aurora", "grid"];
+type PreviewTheme = "dark" | "light";
+type PreviewDensity = "comfortable" | "compact";
+type PreviewAccent = "blue" | "violet" | "green" | "amber";
+interface PreviewAppearance {
+  theme: PreviewTheme;
+  density: PreviewDensity;
+  accent: PreviewAccent;
+}
+const PREVIEW_THEMES: readonly PreviewTheme[] = ["dark", "light"];
+const PREVIEW_DENSITIES: readonly PreviewDensity[] = ["comfortable", "compact"];
+const PREVIEW_ACCENTS: readonly PreviewAccent[] = ["blue", "violet", "green", "amber"];
+const INITIAL_PREVIEW_APPEARANCE: PreviewAppearance = {
+  theme: "dark",
+  density: "comfortable",
+  accent: "blue",
+};
+const PREVIEW_ACCENT_COLORS: Record<PreviewAccent, string> = {
+  blue: "#3b82f6",
+  violet: "#8b5cf6",
+  green: "#10b981",
+  amber: "#f59e0b",
+};
 const INITIAL_DESKTOP_WINDOWS: ReadonlyArray<PreviewWindow | null> = Array.from(
   { length: PREVIEW_DESKTOP_COUNT },
   () => null,
@@ -138,6 +160,9 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
   const [desktopWallpapers, setDesktopWallpapers] = useState<PreviewWallpaper[]>(
     () => [...INITIAL_DESKTOP_WALLPAPERS],
   );
+  const [appearance, setAppearance] = useState<PreviewAppearance>(
+    () => ({ ...INITIAL_PREVIEW_APPEARANCE }),
+  );
   const activeWindow = desktopWindows[activeDesktop] ?? null;
   const activeWallpaper = desktopWallpapers[activeDesktop] ?? "classic";
   const activeAppId = activeWindow?.kind === "catalog" ? activeWindow.id : null;
@@ -188,6 +213,10 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
     );
   }
 
+  function updateAppearance(patch: Partial<PreviewAppearance>) {
+    setAppearance((current) => ({ ...current, ...patch }));
+  }
+
   const openWindows = desktopWindows.flatMap((window, desktop) =>
     window ? [{ desktop, window }] : [],
   );
@@ -213,6 +242,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
   function restartPreview() {
     setDesktopWindows([...INITIAL_DESKTOP_WINDOWS]);
     setDesktopWallpapers([...INITIAL_DESKTOP_WALLPAPERS]);
+    setAppearance({ ...INITIAL_PREVIEW_APPEARANCE });
     setActiveDesktop(0);
     setIsStartOpen(false);
     setIsNotificationsOpen(false);
@@ -224,6 +254,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
   useEffect(() => {
     setDesktopWindows([...INITIAL_DESKTOP_WINDOWS]);
     setDesktopWallpapers([...INITIAL_DESKTOP_WALLPAPERS]);
+    setAppearance({ ...INITIAL_PREVIEW_APPEARANCE });
     setActiveDesktop(0);
     setIsStartOpen(false);
     setIsNotificationsOpen(false);
@@ -308,8 +339,10 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
         <div className="os-preview-device__bezel">
           {model.device === "mobile" && <span className="os-preview-device__notch" aria-hidden="true" />}
           <div
-            className={`os-preview-screen os-preview-screen--${model.shell} os-preview-screen--${model.accent}`}
+            className={`os-preview-screen os-preview-screen--${model.shell} os-preview-screen--${model.accent} os-preview-screen--theme-${appearance.theme} os-preview-screen--density-${appearance.density}`}
+            data-accent={appearance.accent}
             data-wallpaper={activeWallpaper}
+            style={{ "--os-preview-accent": PREVIEW_ACCENT_COLORS[appearance.accent] } as CSSProperties}
           >
             {model.shell === "terminal" ? (
               <TerminalView
@@ -744,10 +777,12 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                   {activeSystemAppId && (
                     <SystemWindowView
                       appId={activeSystemAppId}
+                      appearance={appearance}
                       configuration={previewConfiguration}
                       key={`${activeDesktop}-system-${activeSystemAppId}`}
                       locale={locale}
                       model={model}
+                      onAppearanceChange={updateAppearance}
                       onClose={() => setActiveSystemAppId(null)}
                       onCrash={() => {
                         setActiveAppId(null);
@@ -1155,16 +1190,20 @@ function CrashScreen({
 
 function SystemWindowView({
   appId,
+  appearance,
   configuration,
   locale,
   model,
+  onAppearanceChange,
   onClose,
   onCrash,
 }: {
   appId: SystemAppId;
+  appearance: PreviewAppearance;
   configuration: OsConfiguration;
   locale: GameState["settings"]["locale"];
   model: OsPreviewModel;
+  onAppearanceChange: (patch: Partial<PreviewAppearance>) => void;
   onClose: () => void;
   onCrash: () => void;
 }) {
@@ -1190,11 +1229,66 @@ function SystemWindowView({
       [settingsCopy.drivers, t.os.options.driverFramework[configuration.driverFramework]],
     ];
     content = (
-      <dl className="os-preview-system__rows">
-        {rows.map(([label, value]) => (
-          <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
-        ))}
-      </dl>
+      <>
+        <div className="os-preview-appearance" aria-label={settingsCopy.appearance}>
+          <strong className="os-preview-appearance__title">{settingsCopy.appearance}</strong>
+          <div className="os-preview-appearance__row">
+            <span>{settingsCopy.theme}</span>
+            <div className="os-preview-appearance__options" role="group" aria-label={settingsCopy.theme}>
+              {PREVIEW_THEMES.map((theme) => (
+                <button
+                  aria-pressed={appearance.theme === theme}
+                  className={`os-preview-appearance__option${appearance.theme === theme ? " is-active" : ""}`}
+                  key={theme}
+                  onClick={() => onAppearanceChange({ theme })}
+                  type="button"
+                >
+                  {settingsCopy.themes[theme]}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="os-preview-appearance__row">
+            <span>{settingsCopy.density}</span>
+            <div className="os-preview-appearance__options" role="group" aria-label={settingsCopy.density}>
+              {PREVIEW_DENSITIES.map((density) => (
+                <button
+                  aria-pressed={appearance.density === density}
+                  className={`os-preview-appearance__option${appearance.density === density ? " is-active" : ""}`}
+                  key={density}
+                  onClick={() => onAppearanceChange({ density })}
+                  type="button"
+                >
+                  {settingsCopy.densities[density]}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="os-preview-appearance__row">
+            <span>{settingsCopy.accent}</span>
+            <div className="os-preview-appearance__options" role="group" aria-label={settingsCopy.accent}>
+              {PREVIEW_ACCENTS.map((accent) => (
+                <button
+                  aria-label={settingsCopy.accents[accent]}
+                  aria-pressed={appearance.accent === accent}
+                  className={`os-preview-appearance__accent os-preview-appearance__accent--${accent}${appearance.accent === accent ? " is-active" : ""}`}
+                  key={accent}
+                  onClick={() => onAppearanceChange({ accent })}
+                  title={settingsCopy.accents[accent]}
+                  type="button"
+                >
+                  <span aria-hidden="true" className="os-preview-appearance__swatch" />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <dl className="os-preview-system__rows">
+          {rows.map(([label, value]) => (
+            <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
+          ))}
+        </dl>
+      </>
     );
   } else if (appId === "files") {
     const filesCopy = copy.files;

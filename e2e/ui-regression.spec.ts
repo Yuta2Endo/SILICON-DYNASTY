@@ -91,9 +91,16 @@ test("keeps product tabs scrollable and OS editor sections usable on mobile", as
   await page.keyboard.press("Escape");
 
   await page.getByRole("button", { name: "Настройки", exact: true }).click();
-  await expect(page.getByRole("dialog", { name: "Настройки" })).toBeVisible();
+  const settingsDialog = page.getByRole("dialog", { name: "Настройки" });
+  await expect(settingsDialog).toBeVisible();
+  await settingsDialog.getByRole("button", { name: "Светлая" }).click();
+  await expect(page.locator(".os-preview-screen")).toHaveClass(/os-preview-screen--theme-light/);
+  await settingsDialog.getByRole("button", { name: "Компактная" }).click();
+  await expect(page.locator(".os-preview-screen")).toHaveClass(/os-preview-screen--density-compact/);
+  await settingsDialog.getByRole("button", { name: "Фиолетовый" }).click();
+  await expect(page.locator(".os-preview-screen")).toHaveAttribute("data-accent", "violet");
 
-  await page.getByRole("dialog", { name: "Настройки" }).getByRole("button", { name: "Закрыть" }).click();
+  await settingsDialog.getByRole("button", { name: "Закрыть" }).click();
   await page.getByRole("button", { name: "Безопасность", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Безопасность" })).toBeVisible();
   await page.getByRole("dialog", { name: "Безопасность" }).getByRole("button", { name: "Закрыть" }).click();

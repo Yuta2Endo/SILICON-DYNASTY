@@ -10727,3 +10727,288 @@ textarea {
 @media (min-width: 520px) {
   .os-preview-mission__launch { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+
+/* OS preview appearance controls */
+.os-preview-appearance {
+  display: grid;
+  gap: 4px;
+  padding: 5px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 6px;
+  background: rgb(255 255 255 / 4%);
+}
+
+.os-preview-appearance__title {
+  color: rgb(226 232 240 / 88%);
+  font-size: 0.46rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.os-preview-appearance__row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
+}
+
+.os-preview-appearance__row > span {
+  color: rgb(148 163 184 / 82%);
+  font-size: 0.44rem;
+}
+
+.os-preview-appearance__options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+}
+
+.os-preview-appearance__option {
+  padding: 2px 5px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 4px;
+  color: rgb(226 232 240 / 84%);
+  background: rgb(255 255 255 / 5%);
+  font: inherit;
+  font-size: 0.42rem;
+  cursor: pointer;
+}
+
+.os-preview-appearance__option.is-active {
+  border-color: var(--os-preview-accent);
+  color: #f8fafc;
+  background: color-mix(in srgb, var(--os-preview-accent) 68%, #0f172a);
+}
+
+.os-preview-appearance__accent {
+  display: inline-flex;
+  width: 17px;
+  height: 17px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.os-preview-appearance__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.os-preview-appearance__accent--blue { color: #3b82f6; }
+.os-preview-appearance__accent--violet { color: #8b5cf6; }
+.os-preview-appearance__accent--green { color: #10b981; }
+.os-preview-appearance__accent--amber { color: #f59e0b; }
+
+.os-preview-appearance__accent.is-active {
+  border-color: currentColor;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 34%);
+}
+
+/* OS preview light theme */
+.os-preview-screen--theme-light {
+  color: #0f172a;
+}
+
+.os-preview-screen--theme-light .os-preview-desktop-area {
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0 54%, #f1f5f9);
+}
+
+.os-preview-screen--theme-light .os-preview-desktop-area--wallpaper-aurora {
+  background:
+    radial-gradient(circle at 22% 28%, rgb(16 185 129 / 18%), transparent 36%),
+    radial-gradient(circle at 78% 68%, rgb(56 189 248 / 20%), transparent 40%),
+    linear-gradient(135deg, #f8fafc, #eef2ff);
+}
+
+.os-preview-screen--theme-light .os-preview-desktop-area--wallpaper-grid {
+  background-color: #f8fafc;
+  background-image:
+    linear-gradient(rgb(15 23 42 / 8%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(15 23 42 / 8%) 1px, transparent 1px);
+}
+
+.os-preview-screen--theme-light .os-preview-topbar,
+.os-preview-screen--theme-light .os-preview-taskbar {
+  border-color: rgb(15 23 42 / 12%);
+  color: #0f172a;
+  background: rgb(248 250 252 / 86%);
+}
+
+.os-preview-screen--theme-light .os-preview-brand,
+.os-preview-screen--theme-light .os-preview-start-button {
+  color: #0f172a;
+}
+
+.os-preview-screen--theme-light .os-preview-search,
+.os-preview-screen--theme-light .os-preview-status {
+  border-color: rgb(15 23 42 / 12%);
+  color: #475569;
+  background: rgb(255 255 255 / 64%);
+}
+
+.os-preview-screen--theme-light .os-preview-desktop-dot {
+  border-color: rgb(15 23 42 / 18%);
+  color: #334155;
+  background: rgb(255 255 255 / 72%);
+}
+
+.os-preview-screen--theme-light .os-preview-desktop-dot.is-active {
+  border-color: #2563eb;
+  color: #fff;
+  background: #2563eb;
+}
+
+.os-preview-screen--theme-light .os-preview-widget {
+  border-color: rgb(15 23 42 / 12%);
+  background: rgb(255 255 255 / 72%);
+}
+
+.os-preview-screen--theme-light .os-preview-widget span {
+  color: #64748b;
+}
+
+.os-preview-screen--theme-light .os-preview-widget strong,
+.os-preview-screen--theme-light .os-preview-app,
+.os-preview-screen--theme-light .os-preview-app__name {
+  color: #0f172a;
+}
+
+.os-preview-screen--theme-light .os-preview-app:hover {
+  background: rgb(15 23 42 / 6%);
+}
+
+.os-preview-screen--theme-light .os-preview-start-button {
+  background: rgb(15 23 42 / 6%);
+}
+
+.os-preview-screen--theme-light .os-preview-window,
+.os-preview-screen--theme-light .os-preview-start,
+.os-preview-screen--theme-light .os-preview-notifications,
+.os-preview-screen--theme-light .os-preview-quick-settings,
+.os-preview-screen--theme-light .os-preview-mission {
+  border-color: rgb(15 23 42 / 14%);
+  color: #0f172a;
+  background: rgb(248 250 252 / 97%);
+  box-shadow: 0 18px 40px rgb(15 23 42 / 18%);
+}
+
+.os-preview-screen--theme-light .os-preview-window__bar,
+.os-preview-screen--theme-light .os-preview-system__rows div,
+.os-preview-screen--theme-light .os-preview-security__checks span,
+.os-preview-screen--theme-light .os-preview-drivers__list li,
+.os-preview-screen--theme-light .os-preview-start__item--system {
+  border-color: rgb(15 23 42 / 10%);
+}
+
+.os-preview-screen--theme-light .os-preview-window__title,
+.os-preview-screen--theme-light .os-preview-system__rows dd,
+.os-preview-screen--theme-light .os-preview-start__item,
+.os-preview-screen--theme-light .os-preview-mission__window,
+.os-preview-screen--theme-light .os-preview-mission__desktop,
+.os-preview-screen--theme-light .os-preview-mission__launch-app {
+  color: #0f172a;
+}
+
+.os-preview-screen--theme-light .os-preview-window__body p,
+.os-preview-screen--theme-light .os-preview-window__category,
+.os-preview-screen--theme-light .os-preview-system__rows dt,
+.os-preview-screen--theme-light .os-preview-files__permissions,
+.os-preview-screen--theme-light .os-preview-task__title,
+.os-preview-screen--theme-light .os-preview-task__list em,
+.os-preview-screen--theme-light .os-preview-security__checks span,
+.os-preview-screen--theme-light .os-preview-drivers__list li,
+.os-preview-screen--theme-light .os-preview-mission__empty {
+  color: #475569;
+}
+
+.os-preview-screen--theme-light .os-preview-files__path {
+  border-color: rgb(15 23 42 / 12%);
+  color: #334155;
+  background: rgb(15 23 42 / 4%);
+}
+
+.os-preview-screen--theme-light .os-preview-appearance {
+  border-color: rgb(15 23 42 / 12%);
+  background: rgb(15 23 42 / 3%);
+}
+
+.os-preview-screen--theme-light .os-preview-appearance__title {
+  color: #334155;
+}
+
+.os-preview-screen--theme-light .os-preview-appearance__row > span {
+  color: #64748b;
+}
+
+.os-preview-screen--theme-light .os-preview-appearance__option {
+  border-color: rgb(15 23 42 / 14%);
+  color: #334155;
+  background: rgb(255 255 255 / 72%);
+}
+
+.os-preview-screen--theme-light .os-preview-appearance__option.is-active {
+  color: #fff;
+  background: var(--os-preview-accent);
+}
+
+.os-preview-screen--theme-light .os-preview-mission__window,
+.os-preview-screen--theme-light .os-preview-mission__desktop,
+.os-preview-screen--theme-light .os-preview-mission__launch-app {
+  border-color: rgb(15 23 42 / 12%);
+  background: rgb(255 255 255 / 72%);
+}
+
+/* OS preview compact density */
+.os-preview-screen--density-compact {
+  font-size: 0.6rem;
+}
+
+.os-preview-screen--density-compact .os-preview-topbar {
+  height: 22px;
+  gap: 4px;
+  padding: 0 6px;
+}
+
+.os-preview-screen--density-compact .os-preview-desktop-area {
+  gap: 5px;
+  padding: 7px 7px 34px;
+}
+
+.os-preview-screen--density-compact .os-preview-widgets,
+.os-preview-screen--density-compact .os-preview-app-grid {
+  gap: 3px;
+}
+
+.os-preview-screen--density-compact .os-preview-widget {
+  padding: 4px;
+}
+
+.os-preview-screen--density-compact .os-preview-app {
+  gap: 2px;
+  padding: 2px;
+}
+
+.os-preview-screen--density-compact .os-preview-app__icon {
+  width: 25px;
+  height: 25px;
+}
+
+.os-preview-screen--density-compact .os-preview-window__body {
+  gap: 4px;
+  padding: 6px;
+}
+
+.os-preview-screen--density-compact .os-preview-system__rows {
+  gap: 2px;
+}
+
+.os-preview-screen--density-compact .os-preview-taskbar {
+  height: 27px;
+}
