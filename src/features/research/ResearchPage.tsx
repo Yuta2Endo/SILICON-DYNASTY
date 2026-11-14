@@ -14,6 +14,7 @@ import {
 import type { GameState } from "../../game/models/game-state";
 import { formatCurrency, formatNumber, formatYear } from "../../localization/formatters";
 import { translations } from "../../localization/messages";
+import { ResearchTechTree } from "./ResearchTechTree";
 
 interface ResearchPageProps {
   state: GameState;
@@ -27,6 +28,7 @@ export function ResearchPage({ state, isSaving, onStartResearch }: ResearchPageP
   const locale = state.settings.locale;
   const copy = translations[locale].research;
   const [selectedCategory, setSelectedCategory] = useState<ResearchFilter>("all");
+  const [viewMode, setViewMode] = useState<"cards" | "tree">("cards");
   const currentYear = Number(state.gameDate.slice(0, 4));
   const currentEra = RESEARCH_ERAS.find(
     (era) => currentYear >= era.startYear && (era.endYear === null || currentYear <= era.endYear),
@@ -218,7 +220,35 @@ export function ResearchPage({ state, isSaving, onStartResearch }: ResearchPageP
           ))}
         </div>
 
-        {eraGroups.length === 0 ? (
+        <div aria-label={copy.viewMode} className="research-view-toggle" role="group">
+          <button
+            aria-pressed={viewMode === "cards"}
+            className={viewMode === "cards" ? "is-selected" : ""}
+            onClick={() => setViewMode("cards")}
+            type="button"
+          >
+            {copy.cardsView}
+          </button>
+          <button
+            aria-pressed={viewMode === "tree"}
+            className={viewMode === "tree" ? "is-selected" : ""}
+            onClick={() => setViewMode("tree")}
+            type="button"
+          >
+            {copy.treeView}
+          </button>
+        </div>
+
+        {viewMode === "tree" ? (
+          <ResearchTechTree
+            copy={copy}
+            isSaving={isSaving}
+            locale={locale}
+            onStartResearch={onStartResearch}
+            selectedCategory={selectedCategory}
+            state={state}
+          />
+        ) : eraGroups.length === 0 ? (
           <p className="research-empty-filter">{copy.emptyFilter}</p>
         ) : eraGroups.map(({ era, technologies }) => (
           <section className="research-era-section" key={era.id} aria-labelledby={`research-era-${era.id}`}>

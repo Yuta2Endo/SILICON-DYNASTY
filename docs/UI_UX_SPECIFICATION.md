@@ -315,6 +315,8 @@ Do not overwhelm the initial screen with every advanced parameter simultaneously
 
 Use a visual technology research tree.
 
+Provide a Cards / Tree view toggle. Cards remain the default for scanning; the tree is a dependency map with one column per research era, prerequisite edges between nodes, completed/available/locked/future status, and category dimming. Selecting a node opens a detail panel with cost, duration, prerequisites, unlocks, the unavailable reason and the start action. On narrow screens the tree scrolls horizontally inside its own container; the page itself must not overflow.
+
 Show:
 
 - Research categories.

@@ -49,6 +49,16 @@ Costs are nominal in-game USD. Durations are Next Day ticks; a project starts at
 | Autonomous systems | 2040 | Robotics | $1,500,000 | 240 | Robotics | `robotics.autonomy` |
 | Future computing | 2050 | Future | $3,000,000 | 365 | Autonomous systems | `future.computing` |
 
+## Tech tree view
+
+The Research screen offers two read-only presentations of the same catalog: **Cards** (default) and **Tech tree**. The tree is a derived visualization, not persisted state and not a second source of truth.
+
+`src/game/models/research-tree.ts` lays the 27 catalog technologies out in six era columns, ordered by catalog position. Each node is 164 by 62 units; prerequisite links are drawn as bezier edges between nodes in different eras and as vertical links within the same era. `formatResearchEraRange` renders ranges as `1995–1999` or `2050+`.
+
+`src/features/research/ResearchTechTree.tsx` renders an accessible SVG edge layer and absolute HTML node buttons. Nodes show the category emblem, localized name, category and a status dot. Selecting a node opens a detail panel with era, description, cost, duration, prerequisites, unlocks, availability reason and the same Start Research action as the cards view. Completed, researching, future, locked, busy and unaffordable states use the existing availability rules and colors. The category filter also dims unrelated nodes in the tree.
+
+The tree and detail panel are separate panels on wide screens; the detail panel sticks while the tree scrolls. On narrow screens, the tree has its own horizontal scroll region (`tabIndex=0`) so the page itself never overflows. Keyboard focus and `aria-pressed` expose selection, and hover lift is limited to fine pointers. The tree does not change costs, prerequisites, availability or research progress.
+
 ## Availability, cost and progress
 
 The engine reports one of these availability states: unknown, completed, researching, future, locked, busy, unaffordable, or available. A technology can start only if it exists in the catalog, its availability year has arrived, all prerequisites are completed, no other project is active, and the current company balance covers the full cost. Starting research debits the catalog cost to cents and records it on the active project and in cumulative research spending; insufficient funds never make the balance negative.

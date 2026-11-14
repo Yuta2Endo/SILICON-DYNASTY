@@ -36,6 +36,33 @@ test.describe("mobile navigation", () => {
   });
 });
 
+test("shows the research prerequisite tree and selects a technology", async ({ page }) => {
+  await openGame(page);
+
+  await page
+    .getByRole("navigation", { name: "Основная навигация" })
+    .getByRole("button", { name: "Наука" })
+    .click();
+  await expect(page.getByRole("heading", { name: "Исследования и технологии", level: 1 }))
+    .toBeVisible();
+
+  await page.getByRole("button", { name: "Дерево" }).click();
+  const tree = page.getByRole("region", { name: "Дерево зависимостей исследований" });
+  await expect(tree).toBeVisible();
+  await expect(tree.locator(".research-tree__column-heading")).toHaveCount(6);
+  await expect(tree.locator(".research-tree-node")).toHaveCount(27);
+  await expect(tree.locator(".research-tree__edge")).toHaveCount(25);
+
+  await tree.getByRole("button", { name: /Архитектура ARM/ }).click();
+  await expect(page.getByText("Выбранная технология")).toBeVisible();
+  await expect(page.locator(".research-tree__detail").getByRole("heading", {
+    name: "Архитектура ARM",
+  })).toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expectNoHorizontalOverflow(page);
+});
+
 test("keeps product tabs scrollable and OS editor sections usable on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await openGame(page);
