@@ -98,6 +98,27 @@ describe("OsPreviewPanel", () => {
     expect(screen.getByText(system.updates.packages)).toBeTruthy();
   });
 
+  it("walks through the boot and lock screens before the desktop", async () => {
+    const user = userEvent.setup();
+    render(
+      <OsPreviewPanel
+        configuration={{ ...createDefaultOsConfiguration(), gui: "desktop-shell" }}
+        locale="ru"
+        project={null}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: ru.screens.restart }));
+    expect(screen.getByText(ru.screens.bootTitle)).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: ru.screens.bootContinue }));
+    expect(screen.getByText(ru.screens.lockSubtitle)).toBeTruthy();
+    expect(screen.getByText(ru.screens.lockUser)).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: ru.screens.unlock }));
+    expect(screen.getByText(ru.search)).toBeTruthy();
+  });
+
   it("switches the preview to a saved release from the history selector", async () => {
     const user = userEvent.setup();
     const currentConfiguration = { ...createDefaultOsConfiguration(), gui: "modern-desktop" as const };

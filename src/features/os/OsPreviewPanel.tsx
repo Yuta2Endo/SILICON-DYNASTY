@@ -14,6 +14,7 @@ import {
   LayoutGrid,
   Lock,
   MonitorCog,
+  Power,
   RefreshCw,
   Search,
   Server,
@@ -38,7 +39,7 @@ import {
 } from "../../game/models/os-preview";
 import { calculateOsKernelMetrics } from "../../game/formulas/os";
 import { formatDecimal } from "../../localization/formatters";
-import { translations } from "../../localization/messages";
+import { translations, type TranslationMessages } from "../../localization/messages";
 
 const APP_ICONS: Record<string, LucideIcon> = {
   notes: FileText,
@@ -51,6 +52,7 @@ const APP_ICONS: Record<string, LucideIcon> = {
 
 const SYSTEM_APP_IDS = ["settings", "files", "task-manager", "updates"] as const;
 type SystemAppId = (typeof SYSTEM_APP_IDS)[number];
+type PreviewScreen = "boot" | "lock" | "desktop";
 
 const SYSTEM_APP_ICONS: Record<SystemAppId, LucideIcon> = {
   settings: Settings,
@@ -98,6 +100,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
   const [activeAppId, setActiveAppId] = useState<string | null>(null);
   const [activeSystemAppId, setActiveSystemAppId] = useState<SystemAppId | null>(null);
   const [isStartOpen, setIsStartOpen] = useState(false);
+  const [previewScreen, setPreviewScreen] = useState<PreviewScreen>("desktop");
   const activeApp = model.apps.find((app) => app.id === activeAppId) ?? null;
   const DeviceIcon = DEVICE_ICONS[model.device];
   const ShellIcon = SHELL_ICONS[model.shell];
@@ -108,10 +111,18 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
     ? copy.nextHints[model.shell]
     : copy.maxLevel;
 
+  function restartPreview() {
+    setActiveAppId(null);
+    setActiveSystemAppId(null);
+    setIsStartOpen(false);
+    setPreviewScreen("boot");
+  }
+
   useEffect(() => {
     setActiveAppId(null);
     setActiveSystemAppId(null);
     setIsStartOpen(false);
+    setPreviewScreen("desktop");
   }, [selectedReleaseId]);
 
   useEffect(() => {
@@ -142,6 +153,17 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
         <div className="os-preview-panel__badges">
           <span className={`os-preview-stage os-preview-stage--${model.stage}`}>{stageLabel}</span>
           <span className="os-preview-version">v{model.versionLabel}</span>
+          {model.shell !== "terminal" && (
+            <button
+              aria-label={copy.screens.restart}
+              className="os-preview-power"
+              onClick={restartPreview}
+              title={copy.screens.restart}
+              type="button"
+            >
+              <Power aria-hidden="true" size={14} />
+            </button>
+          )}
         </div>
       </header>
 
@@ -184,6 +206,20 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                 kernelType={t.os.options.kernelType[model.kernelType]}
                 locale={locale}
                 totalApps={model.totalApps}
+              />
+            ) : previewScreen === "boot" ? (
+              <BootScreen
+                configuration={previewConfiguration}
+                copy={copy.screens}
+                locale={locale}
+                onContinue={() => setPreviewScreen("lock")}
+              />
+            ) : previewScreen === "lock" ? (
+              <LockScreen
+                configuration={previewConfiguration}
+                copy={copy.screens}
+                locale={locale}
+                onUnlock={() => setPreviewScreen("desktop")}
               />
             ) : (
               <>
@@ -460,6 +496,84 @@ function AppWindowContent({
         </div>
       );
   }
+}
+
+type PreviewScreensCopy = TranslationMessages["os"]["preview"]["screens"];
+
+function BootScreen({
+  configuration,
+  copy,
+  locale,
+  onContinue,
+}: {
+  configuration: OsConfiguration;
+  copy: PreviewScreensCopy;
+  locale: GameState["settings"]["locale"];
+  onContinue: () => void;
+}) {
+  const t = translations[locale];
+
+  return (
+    <div className="os-preview-boot">
+      <div className="os-preview-boot__brand">
+        <MonitorCog aria-hidden="true" size={17} />
+        <span>SILICON OS</span>
+      </div>
+      <strong>{copy.bootTitle}</strong>
+      <p>{copy.bootHint}</p>
+      <dl className="os-preview-boot__rows">
+        <div><dt>{copy.bootloader}</dt><dd>{t.os.options.bootloader[configuration.bootloader]}</dd></div>
+        <div><dt>{copy.kernel}</dt><dd>{t.os.options.kernelType[configuration.kernelType]}</dd></div>
+        <div><dt>{copy.security}</dt><dd>{t.os.options.permissions[configuration.permissions]}</dd></div>
+      </dl>
+      <div className="os-preview-boot__progress" aria-hidden="true"><span /></div>
+      <span className="os-preview-boot__status">{copy.bootStatus}</span>
+      <button className="os-preview-boot__continue" onClick={onContinue} type="button">
+        {copy.bootContinue}
+      </button>
+    </div>
+  );
+}
+
+function LockScreen({
+  configuration,
+  copy,
+  locale,
+  onUnlock,
+}: {
+  configuration: OsConfiguration;
+  copy: PreviewScreensCopy;
+  locale: GameState["settings"]["locale"];
+  onUnlock: () => void;
+}) {
+  const t = translations[locale];
+  const needsPassword = configuration.permissions !== "none";
+
+  return (
+    <div className="os-preview-lock">
+      <span className="os-preview-lock__subtitle">{copy.lockSubtitle}</span>
+      <time dateTime="09:41">09:41</time>
+      <span className="os-preview-lock__date">{copy.lockDate}</span>
+      <span className="os-preview-lock__avatar" aria-hidden="true"><MonitorCog size={22} /></span>
+      <strong>{copy.lockUser}</strong>
+      <span className="os-preview-lock__hint">
+        {needsPassword ? copy.lockHint : copy.lockNoPassword}
+      </span>
+      {needsPassword && (
+        <span className="os-preview-lock__dots" aria-hidden="true">
+          <i /><i /><i /><i /><i /><i />
+        </span>
+      )}
+      <span className="os-preview-lock__security">
+        <ShieldCheck aria-hidden="true" size={12} />
+        {t.os.options.permissions[configuration.permissions]}
+        {configuration.encryption !== "none" ? ` · ${t.os.options.encryption[configuration.encryption]}` : ""}
+      </span>
+      <button className="os-preview-lock__unlock" onClick={onUnlock} type="button">
+        {copy.unlock}
+      </button>
+    </div>
+  );
 }
 
 function SystemWindowView({
