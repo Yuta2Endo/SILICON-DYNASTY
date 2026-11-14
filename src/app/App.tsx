@@ -82,7 +82,7 @@ export function App({ application, initialMenuOpen }: AppProps = {}) {
   const isGameLoaded = state !== null;
 
   useEffect(() => {
-    if (!isGameLoaded) return;
+    if (!isGameLoaded || import.meta.env.MODE === "test") return;
     const timer = window.setTimeout(prefetchPageChunks, 1_200);
     return () => window.clearTimeout(timer);
   }, [isGameLoaded]);

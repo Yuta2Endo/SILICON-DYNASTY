@@ -12,6 +12,7 @@ import {
   FolderOpen,
   Gamepad2,
   Globe,
+  HardDrive,
   LayoutGrid,
   Lock,
   MonitorCog,
@@ -22,6 +23,7 @@ import {
   Server,
   Settings,
   ShieldCheck,
+  SlidersHorizontal,
   Smartphone,
   Sparkles,
   Store,
@@ -120,6 +122,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
   const [isStartOpen, setIsStartOpen] = useState(false);
   const [previewScreen, setPreviewScreen] = useState<PreviewScreen>("desktop");
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState(false);
   const previewMetrics = calculateOsKernelMetrics(previewConfiguration);
   const notifications = buildPreviewNotifications({
     compatibleApps: model.compatibleApps,
@@ -144,6 +147,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
     setActiveSystemAppId(null);
     setIsStartOpen(false);
     setIsNotificationsOpen(false);
+    setIsQuickSettingsOpen(false);
     setPreviewScreen("boot");
   }
 
@@ -152,6 +156,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
     setActiveSystemAppId(null);
     setIsStartOpen(false);
     setIsNotificationsOpen(false);
+    setIsQuickSettingsOpen(false);
     setPreviewScreen("desktop");
   }, [selectedReleaseId]);
 
@@ -162,6 +167,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
       }
       setIsStartOpen(false);
       setIsNotificationsOpen(false);
+      setIsQuickSettingsOpen(false);
       setActiveAppId(null);
       setActiveSystemAppId(null);
     }
@@ -259,10 +265,25 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                   <span className="os-preview-search"><Search aria-hidden="true" size={12} />{copy.search}</span>
                   <span className="os-preview-status">
                     <button
+                      aria-expanded={isQuickSettingsOpen}
+                      aria-label={copy.quickSettings.open}
+                      className="os-preview-quick-toggle"
+                      onClick={() => {
+                        setIsNotificationsOpen(false);
+                        setIsQuickSettingsOpen((open) => !open);
+                      }}
+                      type="button"
+                    >
+                      <SlidersHorizontal aria-hidden="true" size={12} />
+                    </button>
+                    <button
                       aria-expanded={isNotificationsOpen}
                       aria-label={copy.notifications.open}
                       className="os-preview-bell"
-                      onClick={() => setIsNotificationsOpen((open) => !open)}
+                      onClick={() => {
+                        setIsQuickSettingsOpen(false);
+                        setIsNotificationsOpen((open) => !open);
+                      }}
                       type="button"
                     >
                       <Bell aria-hidden="true" size={12} />
@@ -307,6 +328,42 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                         </li>
                       ))}
                     </ul>
+                  </div>
+                )}
+
+                {isQuickSettingsOpen && (
+                  <div
+                    aria-label={copy.quickSettings.title}
+                    className="os-preview-quick-settings"
+                    role="dialog"
+                  >
+                    <div className="os-preview-quick-settings__header">
+                      <span>{copy.quickSettings.title}</span>
+                      <button
+                        aria-label={copy.quickSettings.close}
+                        className="os-preview-icon-button"
+                        onClick={() => setIsQuickSettingsOpen(false)}
+                        type="button"
+                      >
+                        <X aria-hidden="true" size={13} />
+                      </button>
+                    </div>
+                    <div className="os-preview-quick-settings__grid">
+                      {[
+                        { icon: Wifi, key: "network", value: t.os.options.networkStack[previewConfiguration.networkStack] },
+                        { icon: ShieldCheck, key: "security", value: t.os.options.permissions[previewConfiguration.permissions] },
+                        { icon: RefreshCw, key: "updates", value: t.os.options.updateModel[previewConfiguration.updateModel] },
+                        { icon: HardDrive, key: "storage", value: t.os.options.filesystem[previewConfiguration.filesystem] },
+                        { icon: Store, key: "store", value: t.os.options.appStore[previewConfiguration.appStore] },
+                        { icon: Wrench, key: "drivers", value: t.os.options.driverFramework[previewConfiguration.driverFramework] },
+                      ].map(({ icon: Icon, key, value }) => (
+                        <div className="os-preview-quick-settings__tile" key={key}>
+                          <Icon aria-hidden="true" size={13} />
+                          <span>{copy.quickSettings[key as keyof typeof copy.quickSettings]}</span>
+                          <strong>{value}</strong>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 

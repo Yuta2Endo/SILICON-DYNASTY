@@ -8244,6 +8244,23 @@ textarea {
   line-height: 1;
 }
 
+.os-preview-quick-toggle {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 5px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.os-preview-quick-toggle:hover {
+  background: rgb(255 255 255 / 10%);
+}
+
 .os-preview-notifications {
   position: absolute;
   z-index: 9;
@@ -8260,6 +8277,79 @@ textarea {
   box-shadow: 0 16px 34px rgb(2 6 23 / 48%);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
+}
+
+.os-preview-quick-settings {
+  position: absolute;
+  z-index: 9;
+  top: 30px;
+  right: 27px;
+  display: flex;
+  width: min(236px, calc(100% - 34px));
+  max-height: calc(100% - 38px);
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 9px;
+  background: rgb(6 13 27 / 96%);
+  box-shadow: 0 16px 34px rgb(2 6 23 / 48%);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.os-preview-quick-settings__header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 7px;
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+  color: #f8fafc;
+  font-size: 0.52rem;
+  font-weight: 750;
+}
+
+.os-preview-quick-settings__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  padding: 7px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.os-preview-quick-settings__tile {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid rgb(255 255 255 / 9%);
+  border-radius: 6px;
+  background: rgb(15 23 42 / 64%);
+}
+
+.os-preview-quick-settings__tile svg {
+  color: var(--os-preview-accent);
+}
+
+.os-preview-quick-settings__tile span {
+  min-width: 0;
+  overflow: hidden;
+  color: rgb(148 163 184 / 82%);
+  font-size: 0.43rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.os-preview-quick-settings__tile strong {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  color: #e2e8f0;
+  font-size: 0.48rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .os-preview-notifications__header {

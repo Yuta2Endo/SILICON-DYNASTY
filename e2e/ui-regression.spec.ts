@@ -73,6 +73,10 @@ test("keeps product tabs scrollable and OS editor sections usable on mobile", as
   await page.locator("#os-field-gui").selectOption("desktop-shell");
   await expect(page.locator(".os-preview-app--system")).toHaveCount(6);
 
+  await page.getByRole("button", { name: "Открыть быстрые настройки" }).click();
+  await expect(page.getByRole("dialog", { name: "Быстрые настройки" })).toBeVisible();
+  await page.keyboard.press("Escape");
+
   await page.getByRole("button", { name: "Открыть уведомления" }).click();
   await expect(page.getByRole("dialog", { name: "Уведомления" })).toBeVisible();
   await page.keyboard.press("Escape");

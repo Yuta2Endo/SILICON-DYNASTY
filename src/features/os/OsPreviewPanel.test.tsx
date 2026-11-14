@@ -177,6 +177,33 @@ describe("OsPreviewPanel", () => {
     expect(screen.getByText(/\d+ из 6/)).toBeTruthy();
   });
 
+  it("shows quick settings with configuration values", async () => {
+    const user = userEvent.setup();
+    render(
+      <OsPreviewPanel
+        configuration={{
+          ...createDefaultOsConfiguration(),
+          appStore: "curated",
+          driverFramework: "unified",
+          filesystem: "ext2",
+          gui: "desktop-shell",
+          networkStack: "tcp-ip",
+          permissions: "role-based",
+          updateModel: "staged",
+        }}
+        locale="ru"
+        project={null}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: ru.quickSettings.open }));
+
+    expect(screen.getByRole("dialog", { name: ru.quickSettings.title })).toBeTruthy();
+    expect(screen.getByText(ru.quickSettings.network)).toBeTruthy();
+    expect(screen.getByText(translations.ru.os.options.networkStack["tcp-ip"])).toBeTruthy();
+    expect(screen.getByText(translations.ru.os.options.filesystem.ext2)).toBeTruthy();
+  });
+
   it("walks through the boot and lock screens before the desktop", async () => {
     const user = userEvent.setup();
     render(
