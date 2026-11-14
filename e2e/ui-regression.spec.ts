@@ -69,6 +69,12 @@ test("keeps product tabs scrollable and OS editor sections usable on mobile", as
 
   await page.getByRole("tab", { name: "Экосистема" }).click();
   await expect(page.locator("#os-panel-ecosystem")).toBeVisible();
+
+  await page.locator("#os-field-gui").selectOption("desktop-shell");
+  await expect(page.locator(".os-preview-app--system")).toHaveCount(4);
+  await page.getByRole("button", { name: "Настройки", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Настройки" })).toBeVisible();
+
   await expectNoHorizontalOverflow(page);
 });
 

@@ -56,6 +56,48 @@ describe("OsPreviewPanel", () => {
     expect(screen.getByText(ru.windowContent.notes.title)).toBeTruthy();
   });
 
+  it("opens system settings, files, task manager and updates windows", async () => {
+    const user = userEvent.setup();
+    const configuration = {
+      ...createDefaultOsConfiguration(),
+      gui: "desktop-shell" as const,
+      filesystem: "ext2" as const,
+      updateModel: "package-manager" as const,
+      packageManager: "centralized" as const,
+      encryption: "disk" as const,
+    };
+
+    render(
+      <OsPreviewPanel
+        configuration={configuration}
+        locale="ru"
+        project={null}
+      />,
+    );
+
+    const system = translations.ru.os.preview.systemApps;
+
+    await user.click(screen.getByRole("button", { name: system.settings.name }));
+    expect(screen.getByRole("dialog", { name: system.settings.name })).toBeTruthy();
+    expect(screen.getByText(system.settings.title)).toBeTruthy();
+    expect(screen.getByText(system.settings.display)).toBeTruthy();
+
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", { name: system.files.name }));
+    expect(screen.getByText(system.files.title)).toBeTruthy();
+    expect(screen.getByText(system.files.encrypted)).toBeTruthy();
+
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", { name: system["task-manager"].name }));
+    expect(screen.getByText(system["task-manager"].title)).toBeTruthy();
+    expect(screen.getByText(system["task-manager"].performance)).toBeTruthy();
+
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", { name: system.updates.name }));
+    expect(screen.getByText(system.updates.title)).toBeTruthy();
+    expect(screen.getByText(system.updates.packages)).toBeTruthy();
+  });
+
   it("switches the preview to a saved release from the history selector", async () => {
     const user = userEvent.setup();
     const currentConfiguration = { ...createDefaultOsConfiguration(), gui: "modern-desktop" as const };

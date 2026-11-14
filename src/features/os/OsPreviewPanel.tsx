@@ -1,4 +1,5 @@
 import {
+  Activity,
   AppWindow,
   BatteryFull,
   Boxes,
@@ -7,13 +8,16 @@ import {
   ChevronRight,
   Code2,
   FileText,
+  FolderOpen,
   Gamepad2,
   Globe,
   LayoutGrid,
   Lock,
   MonitorCog,
+  RefreshCw,
   Search,
   Server,
+  Settings,
   ShieldCheck,
   Smartphone,
   Sparkles,
@@ -29,8 +33,10 @@ import {
   buildOsPreviewModel,
   type OsPreviewApp,
   type OsPreviewDevice,
+  type OsPreviewModel,
   type OsPreviewShell,
 } from "../../game/models/os-preview";
+import { calculateOsKernelMetrics } from "../../game/formulas/os";
 import { formatDecimal } from "../../localization/formatters";
 import { translations } from "../../localization/messages";
 
@@ -41,6 +47,16 @@ const APP_ICONS: Record<string, LucideIcon> = {
   "developer-studio": Code2,
   "game-runtime": Gamepad2,
   "enterprise-console": Building2,
+};
+
+const SYSTEM_APP_IDS = ["settings", "files", "task-manager", "updates"] as const;
+type SystemAppId = (typeof SYSTEM_APP_IDS)[number];
+
+const SYSTEM_APP_ICONS: Record<SystemAppId, LucideIcon> = {
+  settings: Settings,
+  files: FolderOpen,
+  "task-manager": Activity,
+  updates: RefreshCw,
 };
 
 const DEVICE_ICONS: Record<OsPreviewDevice, LucideIcon> = {
@@ -72,12 +88,15 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
     : [];
   const [selectedReleaseId, setSelectedReleaseId] = useState<string | null>(null);
   const selectedRelease = releases.find((release) => release.id === selectedReleaseId) ?? null;
+  const previewConfiguration = selectedRelease?.configuration ?? configuration;
   const model = buildOsPreviewModel(
-    selectedRelease?.configuration ?? configuration,
+    previewConfiguration,
     project,
     selectedRelease,
   );
+  const systemAppCopy = copy.systemApps;
   const [activeAppId, setActiveAppId] = useState<string | null>(null);
+  const [activeSystemAppId, setActiveSystemAppId] = useState<SystemAppId | null>(null);
   const [isStartOpen, setIsStartOpen] = useState(false);
   const activeApp = model.apps.find((app) => app.id === activeAppId) ?? null;
   const DeviceIcon = DEVICE_ICONS[model.device];
@@ -91,6 +110,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
 
   useEffect(() => {
     setActiveAppId(null);
+    setActiveSystemAppId(null);
     setIsStartOpen(false);
   }, [selectedReleaseId]);
 
@@ -101,6 +121,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
       }
       setIsStartOpen(false);
       setActiveAppId(null);
+      setActiveSystemAppId(null);
     }
 
     window.addEventListener("keydown", handleEscape);
@@ -203,11 +224,41 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                         lockedLabel={copy.locked}
                         onOpen={() => {
                           setIsStartOpen(false);
+                          setActiveSystemAppId(null);
                           setActiveAppId(app.id);
                         }}
                       />
                     ))}
+                    {SYSTEM_APP_IDS.map((appId) => {
+                      const Icon = SYSTEM_APP_ICONS[appId];
+                      return (
+                        <button
+                          aria-label={systemAppCopy[appId].name}
+                          className="os-preview-app os-preview-app--system"
+                          key={appId}
+                          onClick={() => {
+                            setIsStartOpen(false);
+                            setActiveAppId(null);
+                            setActiveSystemAppId(appId);
+                          }}
+                          type="button"
+                        >
+                          <span className="os-preview-app__icon"><Icon aria-hidden="true" size={18} /></span>
+                          <span className="os-preview-app__name">{systemAppCopy[appId].name}</span>
+                        </button>
+                      );
+                    })}
                   </div>
+
+                  {activeSystemAppId && (
+                    <SystemWindowView
+                      appId={activeSystemAppId}
+                      configuration={previewConfiguration}
+                      locale={locale}
+                      model={model}
+                      onClose={() => setActiveSystemAppId(null)}
+                    />
+                  )}
 
                   {activeApp && (
                     <AppWindowView
@@ -247,6 +298,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                               key={app.id}
                               onClick={() => {
                                 setIsStartOpen(false);
+                                setActiveSystemAppId(null);
                                 setActiveAppId(app.id);
                               }}
                               type="button"
@@ -254,6 +306,24 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                               <Icon aria-hidden="true" size={15} />
                               <span>{name}</span>
                               {!app.compatible && <Lock aria-hidden="true" size={12} />}
+                            </button>
+                          );
+                        })}
+                        {SYSTEM_APP_IDS.map((appId) => {
+                          const Icon = SYSTEM_APP_ICONS[appId];
+                          return (
+                            <button
+                              className="os-preview-start__item os-preview-start__item--system"
+                              key={appId}
+                              onClick={() => {
+                                setIsStartOpen(false);
+                                setActiveAppId(null);
+                                setActiveSystemAppId(appId);
+                              }}
+                              type="button"
+                            >
+                              <Icon aria-hidden="true" size={15} />
+                              <span>{systemAppCopy[appId].name}</span>
                             </button>
                           );
                         })}
@@ -390,6 +460,146 @@ function AppWindowContent({
         </div>
       );
   }
+}
+
+function SystemWindowView({
+  appId,
+  configuration,
+  locale,
+  model,
+  onClose,
+}: {
+  appId: SystemAppId;
+  configuration: OsConfiguration;
+  locale: GameState["settings"]["locale"];
+  model: OsPreviewModel;
+  onClose: () => void;
+}) {
+  const t = translations[locale];
+  const copy = t.os.preview.systemApps;
+  const app = copy[appId];
+  const metrics = calculateOsKernelMetrics(configuration);
+  const Icon = SYSTEM_APP_ICONS[appId];
+  const stageLabel = model.stage === "development"
+    ? t.os.preview.development
+    : t.os.releases.stages[model.stage];
+
+  let content;
+
+  if (appId === "settings") {
+    const settingsCopy = copy.settings;
+    const rows = [
+      [settingsCopy.display, t.os.options.gui[configuration.gui]],
+      [settingsCopy.network, t.os.options.networkStack[configuration.networkStack]],
+      [settingsCopy.storage, t.os.options.filesystem[configuration.filesystem]],
+      [settingsCopy.updates, t.os.options.updateModel[configuration.updateModel]],
+      [settingsCopy.privacy, t.os.options.permissions[configuration.permissions]],
+      [settingsCopy.drivers, t.os.options.driverFramework[configuration.driverFramework]],
+    ];
+    content = (
+      <dl className="os-preview-system__rows">
+        {rows.map(([label, value]) => (
+          <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
+        ))}
+      </dl>
+    );
+  } else if (appId === "files") {
+    const filesCopy = copy.files;
+    content = (
+      <div className="os-preview-files">
+        <div className="os-preview-files__path">
+          <span>{filesCopy.path} / {t.os.options.filesystem[configuration.filesystem]}</span>
+          <strong className={configuration.encryption === "none" ? "" : "is-secure"}>
+            {configuration.encryption === "none" ? filesCopy.unencrypted : filesCopy.encrypted}
+          </strong>
+        </div>
+        <div className="os-preview-files__grid">
+          <div>
+            <strong>{filesCopy.foldersLabel}</strong>
+            <ul>{filesCopy.folders.map((folder) => <li key={folder}>{folder}</li>)}</ul>
+          </div>
+          <div>
+            <strong>{filesCopy.filesLabel}</strong>
+            <ul>{filesCopy.files.map((file) => <li key={file}>{file}</li>)}</ul>
+          </div>
+        </div>
+        <span className="os-preview-files__permissions">
+          {filesCopy.permissions}: {t.os.options.permissions[configuration.permissions]}
+        </span>
+      </div>
+    );
+  } else if (appId === "task-manager") {
+    const taskCopy = copy["task-manager"];
+    const processRows = [
+      [taskCopy.performance, formatDecimal(metrics.performanceScore, locale, 0)],
+      [taskCopy.memory, `${formatDecimal(metrics.memoryFootprintMb, locale, 0)} MB`],
+      [taskCopy.processCapacity, String(metrics.processCapacity)],
+      [taskCopy.ipc, `${formatDecimal(metrics.ipcLatencyMicroseconds, locale, 1)} µs`],
+      [taskCopy.scheduler, t.os.options.scheduler[configuration.scheduler]],
+    ];
+    content = (
+      <div className="os-preview-task">
+        <dl className="os-preview-system__rows">
+          {processRows.map(([label, value]) => (
+            <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
+          ))}
+        </dl>
+        <strong className="os-preview-task__title">{taskCopy.processes}</strong>
+        <div className="os-preview-task__list">
+          {taskCopy.processList.map((process, index) => (
+            <div key={process}>
+              <span>{process}</span>
+              <span className="os-preview-task__bar"><i style={{ width: `${[48, 26, 16, 10][index] ?? 8}%` }} /></span>
+              <em>{[48, 26, 16, 10][index] ?? 8}%</em>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  } else {
+    const updatesCopy = copy.updates;
+    const ready = metrics.updateReadinessScore >= 60;
+    content = (
+      <div className="os-preview-updates">
+        <strong className={`os-preview-updates__status${ready ? " is-ready" : ""}`}>
+          {ready ? updatesCopy.ready : updatesCopy.current}
+        </strong>
+        <dl className="os-preview-system__rows">
+          <div><dt>{updatesCopy.channel}</dt><dd>{t.os.options.updateModel[configuration.updateModel]}</dd></div>
+          <div><dt>{updatesCopy.packages}</dt><dd>{t.os.options.packageManager[configuration.packageManager]}</dd></div>
+          <div><dt>{updatesCopy.latency}</dt><dd>{metrics.updateLatencyDays} {t.os.units.days}</dd></div>
+          <div><dt>{updatesCopy.stage}</dt><dd>{stageLabel}</dd></div>
+        </dl>
+        <div className="os-preview-updates__meter" aria-hidden="true">
+          <span style={{ width: `${metrics.updateReadinessScore}%` }} />
+        </div>
+        <strong className="os-preview-task__title">{updatesCopy.historyTitle}</strong>
+        <ul className="os-preview-updates__history">
+          {updatesCopy.history.map((entry) => <li key={entry}>{entry}</li>)}
+        </ul>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      aria-label={app.name}
+      className="os-preview-window os-preview-window--system"
+      role="dialog"
+    >
+      <div className="os-preview-window__bar">
+        <span className="os-preview-window__title"><Icon aria-hidden="true" size={14} />{app.name}</span>
+        <button aria-label={t.os.preview.close} className="os-preview-icon-button" onClick={onClose} type="button">
+          <X aria-hidden="true" size={14} />
+        </button>
+      </div>
+      <div className="os-preview-window__body">
+        <span className="os-preview-window__category">{copy.systemCategory}</span>
+        <strong className="os-preview-window__status"><span className="os-preview-dot" aria-hidden="true" />{app.title}</strong>
+        {content}
+      </div>
+    </div>
+  );
 }
 
 function TerminalView({
