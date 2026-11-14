@@ -77,6 +77,10 @@ Devices and cloud are the fifth product-development tab. `src/game/models/device
 
 `src/game/formulas/press.ts` derives deterministic press reviews from a released CPU product's price, performance, segment and company reputation. Reviews begin after 30 days and refresh every 90 days; their score maps to a bounded appeal multiplier used by market simulation and demand estimates. Reviews are not persisted, so there is no schema change or second source of truth. The dashboard shows the three latest reviews. Details are in [`PRESS_REVIEWS.md`](PRESS_REVIEWS.md).
 
+## Company legacy and doctrine
+
+`src/game/models/legacy.ts` owns the permanent doctrine IDs, trade-off multipliers, reputation tiers and the legacy score formula. `src/game/formulas/legacy.ts` derives the campaign score from saved projects, releases, deployments, contracts, research and market share. `src/game/engine/legacy.ts` allows choosing a doctrine once and rejects later or invalid choices. Doctrine multipliers are applied in existing systems: CPU/component production cost, commercial offer revenue, positive reputation gains and CPU market appeal. The Company screen shows the score, tier progress and doctrine confirmation flow. Schema v16 adds `legacy`; details are in [`LEGACY.md`](LEGACY.md).
+
 ## Worker boundary
 Workers receive serializable snapshots and explicit commands. They must not access React state or mutate the database outside a documented protocol.
 

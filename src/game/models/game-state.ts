@@ -37,10 +37,15 @@ import {
   parseManufacturingState,
   type ManufacturingState,
 } from "./manufacturing";
+import {
+  createInitialLegacyState,
+  parseLegacyState,
+  type LegacyState,
+} from "./legacy";
 
-export const SAVE_SCHEMA_VERSION = 15 as const;
+export const SAVE_SCHEMA_VERSION = 16 as const;
 
-const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, SAVE_SCHEMA_VERSION] as const;
+const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, SAVE_SCHEMA_VERSION] as const;
 
 export type Locale = "ru" | "en";
 export type Theme = "light" | "dark";
@@ -54,6 +59,7 @@ export interface GameState {
   schemaVersion: typeof SAVE_SCHEMA_VERSION;
   gameDate: string;
   company: Company;
+  legacy: LegacyState;
   cpuProjects: CpuProject[];
   componentProjects: ComponentProject[];
   osProjects: OsProject[];
@@ -102,6 +108,7 @@ export function createInitialGameState(): GameState {
       reputation: 10,
       employeeCount: 1,
     },
+    legacy: createInitialLegacyState(),
     settings: {
       locale: "ru",
       theme: "light",
@@ -155,6 +162,17 @@ export function parseGameState(value: unknown): GameState {
 
   if (!companyValidation.valid) {
     throw new InvalidGameStateError("Save data contains an invalid company record.");
+  }
+
+  let legacy: LegacyState;
+  if (sourceSchemaVersion >= 16) {
+    try {
+      legacy = parseLegacyState(value.legacy);
+    } catch {
+      throw new InvalidGameStateError("Save data contains invalid legacy data.");
+    }
+  } else {
+    legacy = createInitialLegacyState();
   }
 
   if (!isRecord(value.settings)) {
@@ -358,6 +376,7 @@ export function parseGameState(value: unknown): GameState {
     schemaVersion: SAVE_SCHEMA_VERSION,
     gameDate: value.gameDate,
     company: { ...company },
+    legacy,
     cpuProjects,
     componentProjects,
     osProjects,

@@ -172,9 +172,20 @@ export function createSchema14Fixture(): unknown {
 
 export function createSchema15Fixture(): unknown {
   const current = createInitialGameState();
+  const legacy = { ...current } as Record<string, unknown>;
+  delete legacy.legacy;
+  return {
+    ...legacy,
+    schemaVersion: 15,
+    company: { ...current.company, name: "Pre-Legacy Co" },
+  };
+}
+
+export function createSchema16Fixture(): unknown {
+  const current = createInitialGameState();
   return {
     ...current,
-    schemaVersion: 15,
+    schemaVersion: 16,
     company: { ...current.company, name: "Current Save Co" },
   };
 }

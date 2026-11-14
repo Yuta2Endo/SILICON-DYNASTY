@@ -54,6 +54,8 @@ import {
   type DeviceReferenceContext,
 } from "../models/devices";
 import { startResearchProject } from "../engine/research";
+import { chooseCompanyDoctrine } from "../engine/legacy";
+import type { CompanyDoctrineId } from "../models/legacy";
 import {
   discontinueProduct,
   orderProduction,
@@ -95,6 +97,7 @@ export interface GameApplication {
   advanceDay(): Promise<GameState>;
   startResearch(technologyId: ResearchTechnologyId): Promise<GameState>;
   renameCompany(name: string): Promise<GameState>;
+  chooseDoctrine(doctrine: CompanyDoctrineId): Promise<GameState>;
   updateSettings(settings: Partial<GameSettings>): Promise<GameState>;
   getSaveInfo(): Promise<SaveOverview>;
   saveToSlot(slotId: string): Promise<SaveOverview>;
@@ -232,6 +235,10 @@ export function createGameApplication(repository: GameStateRepository): GameAppl
       }
 
       return commit({ ...state, company });
+    },
+
+    async chooseDoctrine(doctrine) {
+      return commit(chooseCompanyDoctrine(await ensureLoaded(), doctrine));
     },
 
     async updateSettings(settings) {

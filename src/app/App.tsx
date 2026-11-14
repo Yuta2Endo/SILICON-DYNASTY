@@ -7,6 +7,7 @@ import type { CpuConfiguration } from "../game/models/cpu";
 import type { AiConfiguration, AiDataset, AiOptimizationType } from "../game/models/ai";
 import type { DeviceConfiguration } from "../game/models/devices";
 import type { CloudConfiguration } from "../game/models/cloud";
+import type { CompanyDoctrineId } from "../game/models/legacy";
 import type { GameSettings } from "../game/models/game-state";
 import { createBrowserGameStateRepository } from "../storage/repositories/BrowserGameStateRepository";
 import { translations } from "../localization/messages";
@@ -228,6 +229,9 @@ export function App({ application, initialMenuOpen }: AppProps = {}) {
         <CompanyPage
           isSaving={isSaving}
           onRename={(name) => void runCommand(() => gameApplication.renameCompany(name))}
+          onChooseDoctrine={async (doctrine: CompanyDoctrineId) =>
+            (await runCommand(() => gameApplication.chooseDoctrine(doctrine))) !== null
+          }
           state={state}
         />
       )}

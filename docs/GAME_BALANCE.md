@@ -340,3 +340,15 @@ save management and a derived experience layer; full details are in
 - Leftover segment demand is allocated to active rivals by appeal. Rival revenue is `units × segment reference price × 0.12`; daily operating cost is charged against balance.
 - Competitor reputation moves by `(marketShare - 1/6) × 0.35` per day, clamped 0–100. A balance at or below zero retires the rival permanently and records a `market-exit` action.
 - Schema v15 adds competitor finance/status fields; v1–v14 saves migrate with profile defaults. Full details: `COMPETITORS.md`.
+
+## Company legacy and doctrine (Stage 4)
+
+- Four permanent doctrines:
+  - Innovator: manufacturing ×1.10, commercial ×1.00, reputation ×1.00, appeal ×1.12.
+  - Cost leader: manufacturing ×0.82, commercial ×1.00, reputation ×0.90, appeal ×0.94.
+  - Ecosystem: manufacturing ×1.05, commercial ×1.18, reputation ×1.05, appeal ×0.98.
+  - Prestige: manufacturing ×1.08, commercial ×1.08, reputation ×1.30, appeal ×1.03.
+- Doctrine manufacturing multipliers apply to CPU and component production orders; commercial multipliers apply to generated contract offers; reputation multipliers apply to positive reputation gains; appeal multipliers apply to CPU product demand.
+- Reputation tiers unlock contract revenue multipliers: unknown ×1.00 (0), rising ×1.02 (25), respected ×1.05 (50), elite ×1.08 (75), legend ×1.12 (90).
+- Legacy score is clamped 0–1000: reputation×2 + min(180, lifetime revenue / $1M × 18) + market share×400 + completed research×4 + CPU products×3 + component products×2 + OS releases×8 + AI deployments×8 + device projects×6 + cloud projects×6 + commercial contracts×5.
+- Schema v16 adds `legacy.doctrine`; v1–v15 saves migrate with null. Full details: `LEGACY.md`.

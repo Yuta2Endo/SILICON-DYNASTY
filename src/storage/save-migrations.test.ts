@@ -11,6 +11,7 @@ import {
   createSchema13Fixture,
   createSchema14Fixture,
   createSchema15Fixture,
+  createSchema16Fixture,
 } from "./fixtures/legacy-saves";
 
 describe("save migrations with fixture saves", () => {
@@ -99,14 +100,20 @@ describe("save migrations with fixture saves", () => {
     });
   });
 
+  it("migrates a schema-15 save by initializing company legacy", () => {
+    const state = parseGameState(createSchema15Fixture());
+    expect(state.company.name).toBe("Pre-Legacy Co");
+    expect(state.legacy).toEqual({ doctrine: null });
+  });
+
   it("round-trips a current schema save and rejects a future schema", () => {
-    const current = parseGameState(createSchema15Fixture());
+    const current = parseGameState(createSchema16Fixture());
     expect(current.company.name).toBe("Current Save Co");
     expect(parseGameState(JSON.parse(JSON.stringify(current)))).toEqual(current);
 
     expect(() => parseGameState({
-      ...createSchema15Fixture() as Record<string, unknown>,
-      schemaVersion: 16,
+      ...createSchema16Fixture() as Record<string, unknown>,
+      schemaVersion: 17,
     })).toThrow("unsupported schema version");
   });
 

@@ -8,6 +8,7 @@ import {
   type ComponentProductionOrder,
 } from "../models/manufacturing";
 import { postFinanceTransaction } from "./finance";
+import { getDoctrineEffects } from "../models/legacy";
 
 export type ManufacturingOperationCode =
   | "product-not-found"
@@ -49,7 +50,11 @@ export function orderComponentProduction(
     throw new ManufacturingOperationError("order-limit", "The production queue is full.");
   }
 
-  const totalCostUsd = roundUsd(quantity * product.manufacturingCostUsd);
+  const unitCostUsd = roundUsd(
+    product.manufacturingCostUsd
+    * getDoctrineEffects(state.legacy.doctrine).manufacturingCostMultiplier,
+  );
+  const totalCostUsd = roundUsd(quantity * unitCostUsd);
   const charged = postFinanceTransaction(
     state,
     "manufacturing",
@@ -60,7 +65,7 @@ export function orderComponentProduction(
     id: nextOrderId(state.manufacturing.componentOrders),
     productId: product.id,
     quantity,
-    unitCostUsd: product.manufacturingCostUsd,
+    unitCostUsd,
     totalCostUsd,
     orderedOn: state.gameDate,
     readyOn: getComponentOrderReadyOn(

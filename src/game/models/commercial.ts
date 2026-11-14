@@ -100,6 +100,7 @@ export interface CommercialOfferContext {
   date: string;
   reputation: number;
   assets: readonly CommercialAsset[];
+  revenueMultiplier?: number;
 }
 
 export class InvalidCommercialDataError extends Error {
@@ -193,9 +194,10 @@ export function generateCommercialOffer(
 
   const durationDays = 180 + (seed % 3) * 90;
   const base = COMMERCIAL_CHANNEL_BASE_DAILY_USD[asset.channel];
+  const revenueMultiplier = Math.max(0.1, context.revenueMultiplier ?? 1);
   const dailyRevenueUsd = roundUsd(Math.max(
     25,
-    base * (0.35 + asset.qualityScore / 100) * (0.5 + asset.appealScore / 100),
+    base * (0.35 + asset.qualityScore / 100) * (0.5 + asset.appealScore / 100) * revenueMultiplier,
   ));
   const signingBonusUsd = roundUsd(dailyRevenueUsd * (10 + (seed % 6)));
 

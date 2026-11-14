@@ -279,6 +279,29 @@ test("accepts an OEM design-win offer for a released processor", async ({ page }
   await expectNoHorizontalOverflow(page);
 });
 
+test("chooses a permanent company doctrine from the legacy panel", async ({ page }) => {
+  await openGame(page);
+
+  await page
+    .getByRole("navigation", { name: "Основная навигация" })
+    .getByRole("button", { name: "Компания" })
+    .click();
+
+  await expect(page.getByRole("heading", { name: "Профиль компании", level: 1 })).toBeVisible();
+  const legacy = page.locator(".company-legacy");
+  await expect(legacy.getByRole("heading", { name: "Наследие компании" })).toBeVisible();
+
+  const innovator = legacy.locator(".company-doctrine").filter({ hasText: "Инноватор" });
+  await innovator.getByRole("button", { name: "Выбрать доктрину" }).click();
+  await page.getByRole("button", { name: "Закрепить", exact: true }).click();
+
+  await expect(innovator.getByRole("button", { name: "Активна" })).toBeDisabled();
+  await expect(legacy.locator(".company-legacy__active-pill")).toContainText("Активна");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expectNoHorizontalOverflow(page);
+});
+
 test("compares two saved device versions", async ({ page }) => {
   await openGame(page);
   await page.getByRole("button", { name: "Следующий день" }).click();

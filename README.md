@@ -15,6 +15,7 @@ Version 2.0 | Android | React + TypeScript + Vite + Capacitor | RU/EN
 - docs/COMMERCIAL_CHANNELS.md - OS/AI/device/cloud/app-store recurring contracts
 - docs/MANUFACTURING.md - factory capacity, component production and inventory
 - docs/COMPETITORS.md - rival finances, aggression and market exit
+- docs/LEGACY.md - reputation tiers, permanent doctrine and legacy score
 - docs/CPU_DESIGN.md — CPU project model and validation limits
 - docs/QA_STRATEGY.md — testing strategy
 - docs/SAVE_SYSTEM.md — persistence and migrations
@@ -56,7 +57,7 @@ backup, import/export and recovery; tutorial, achievements and RU/EN localizatio
 
 Save data is validated when read and written. IndexedDB is the primary browser
 store; localStorage is used only where IndexedDB is unavailable. The current
-save schema is 15 and older saves migrate without discarding existing data.
+save schema is 16 and older saves migrate without discarding existing data.
 
 Game-domain code is kept outside React:
 

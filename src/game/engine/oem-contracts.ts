@@ -8,6 +8,7 @@ import {
   type OemContractState,
 } from "../models/oem-contracts";
 import { postFinanceTransaction } from "./finance";
+import { getDoctrineEffects } from "../models/legacy";
 
 export type OemContractOperationCode =
   | "offer-not-found"
@@ -90,7 +91,13 @@ export function acceptOemContract(state: GameState, offerId: string): GameState 
     ...state,
     company: {
       ...state.company,
-      reputation: Math.min(100, Math.round((state.company.reputation + 0.5) * 100) / 100),
+      reputation: Math.min(
+        100,
+        Math.round(
+          (state.company.reputation
+            + 0.5 * getDoctrineEffects(state.legacy.doctrine).reputationGainMultiplier) * 100,
+        ) / 100,
+      ),
     },
     oemContracts: {
       ...state.oemContracts,

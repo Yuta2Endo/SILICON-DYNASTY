@@ -221,6 +221,17 @@ Important financial and production indicators should be immediately visible.
 
 Avoid excessive scrolling for the most important company information.
 
+### Company legacy
+
+The Company screen shows:
+
+- Reputation tier and progress to the next tier, with the contract revenue multiplier.
+- Derived legacy score from 0 to 1000 and current standing.
+- Four permanent doctrine cards with exact trade-offs: Innovator, Cost leader, Ecosystem, Prestige.
+- A clear “choose once” warning and confirmation sheet before locking a doctrine.
+- Active doctrine state and locked cards after selection.
+- A permanent choice must never be presented as reversible.
+
 ## 6. Designer Screens
 
 Each designer includes:

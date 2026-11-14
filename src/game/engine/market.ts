@@ -30,6 +30,7 @@ import {
 import { getEconomicCycle } from "../formulas/economy";
 import { getPressDemandFactor, getPressReview } from "../formulas/press";
 import { getOemContractDemandBonus } from "../models/oem-contracts";
+import { getDoctrineEffects } from "../models/legacy";
 import { postFinanceTransaction } from "./finance";
 import { recordDailyUnits, roundUsd } from "../models/finance";
 
@@ -158,7 +159,11 @@ export function orderProduction(state: GameState, productId: string, quantity: n
     throw new MarketOperationError("too-many-orders", "Too many production orders are open.");
   }
 
-  const totalCostUsd = roundUsd(product.manufacturingCostUsd * quantity);
+  const manufacturingMultiplier = getDoctrineEffects(
+    state.legacy.doctrine,
+  ).manufacturingCostMultiplier;
+  const unitCostUsd = roundUsd(product.manufacturingCostUsd * manufacturingMultiplier);
+  const totalCostUsd = roundUsd(unitCostUsd * quantity);
   if (state.company.balance < totalCostUsd) {
     throw new MarketOperationError("insufficient-funds", "The company cannot fund this production order.");
   }
@@ -173,7 +178,7 @@ export function orderProduction(state: GameState, productId: string, quantity: n
     id: nextProductionOrderId(withCost.market.productionOrders),
     productId: product.id,
     quantity,
-    unitCostUsd: product.manufacturingCostUsd,
+    unitCostUsd,
     orderedOn: state.gameDate,
     readyOn: addDays(state.gameDate, MARKET_RULES.productionLeadTimeDays),
     status: "in-production",
@@ -429,7 +434,8 @@ export function simulateMarketDay(state: GameState, date: string): GameState {
           date,
           reputation: state.company.reputation,
           marketingBudgetUsdPerDay: state.market.marketingBudgetUsdPerDay,
-        }) * (1 + contractBonus / 100) * pressFactor,
+        }) * (1 + contractBonus / 100) * pressFactor
+          * getDoctrineEffects(state.legacy.doctrine).marketAppealMultiplier,
       };
     });
     const playerAppeal = playerAppeals.reduce((total, entry) => total + entry.appeal, 0);
@@ -574,7 +580,8 @@ export function simulateMarketDay(state: GameState, date: string): GameState {
 }
 
 export function updateMarketReputation(state: GameState, summary: MarketDaySummary): GameState {
-  const reputationGain = Math.min(0.1, (summary.playerUnits + summary.componentUnits) / 5_000);
+  const reputationGain = Math.min(0.1, (summary.playerUnits + summary.componentUnits) / 5_000)
+    * getDoctrineEffects(state.legacy.doctrine).reputationGainMultiplier;
   const stockoutPenalty = state.market.products.some(
     (product) =>
       product.status === "active"
@@ -654,7 +661,8 @@ export function estimateProductDailyDemand(
     date,
     reputation: state.company.reputation,
     marketingBudgetUsdPerDay: state.market.marketingBudgetUsdPerDay,
-  }) * (1 + contractBonus / 100) * pressFactor;
+  }) * (1 + contractBonus / 100) * pressFactor
+    * getDoctrineEffects(state.legacy.doctrine).marketAppealMultiplier;
   const totalAppeal = appeal + competitorAppeal;
   const marketDemandUnits = getSegmentDailyDemand(segment, date);
   const share = totalAppeal > 0 ? appeal / totalAppeal : 0;

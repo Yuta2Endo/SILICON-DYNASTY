@@ -12,6 +12,10 @@ import {
 import { calculateCloudMetrics } from "../formulas/cloud";
 import { calculateDeviceMetrics } from "../formulas/devices";
 import { calculateOsEcosystemMetrics, calculateOsKernelMetrics } from "../formulas/os";
+import {
+  getDoctrineEffects,
+  getReputationContractMultiplier,
+} from "../models/legacy";
 import { postFinanceTransaction } from "./finance";
 
 export type CommercialOperationCode =
@@ -147,6 +151,9 @@ export function runCommercialDay(state: GameState, date: string): GameState {
       date,
       reputation: nextState.company.reputation,
       assets: buildCommercialAssets(nextState),
+      revenueMultiplier:
+        getDoctrineEffects(nextState.legacy.doctrine).commercialRevenueMultiplier
+        * getReputationContractMultiplier(nextState.company.reputation),
     });
 
     if (offer) {
@@ -201,7 +208,13 @@ export function acceptCommercialOffer(state: GameState, offerId: string): GameSt
     ...state,
     company: {
       ...state.company,
-      reputation: Math.min(100, Math.round((state.company.reputation + 0.5) * 100) / 100),
+      reputation: Math.min(
+        100,
+        Math.round(
+          (state.company.reputation
+            + 0.5 * getDoctrineEffects(state.legacy.doctrine).reputationGainMultiplier) * 100,
+        ) / 100,
+      ),
     },
     commercialContracts: {
       ...state.commercialContracts,
