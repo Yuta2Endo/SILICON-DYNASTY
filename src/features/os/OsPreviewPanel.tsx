@@ -1,6 +1,7 @@
 import {
   Activity,
   AppWindow,
+  ArrowRightLeft,
   BatteryFull,
   Bell,
   Boxes,
@@ -69,6 +70,14 @@ const SYSTEM_APP_IDS = [
 ] as const;
 type SystemAppId = (typeof SYSTEM_APP_IDS)[number];
 type PreviewScreen = "boot" | "lock" | "desktop" | "crash";
+type PreviewWindow =
+  | { kind: "catalog"; id: string }
+  | { kind: "system"; id: SystemAppId };
+const PREVIEW_DESKTOP_COUNT = 3;
+const INITIAL_DESKTOP_WINDOWS: ReadonlyArray<PreviewWindow | null> = Array.from(
+  { length: PREVIEW_DESKTOP_COUNT },
+  () => null,
+);
 const SYSTEM_APP_GRID_IDS: readonly SystemAppId[] = SYSTEM_APP_IDS.slice(0, 6);
 
 const SYSTEM_APP_ICONS: Record<SystemAppId, LucideIcon> = {
@@ -118,13 +127,56 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
     selectedRelease,
   );
   const systemAppCopy = copy.systemApps;
-  const [activeAppId, setActiveAppId] = useState<string | null>(null);
-  const [activeSystemAppId, setActiveSystemAppId] = useState<SystemAppId | null>(null);
+  const [desktopWindows, setDesktopWindows] = useState<Array<PreviewWindow | null>>(
+    () => [...INITIAL_DESKTOP_WINDOWS],
+  );
+  const [activeDesktop, setActiveDesktop] = useState(0);
+  const activeWindow = desktopWindows[activeDesktop] ?? null;
+  const activeAppId = activeWindow?.kind === "catalog" ? activeWindow.id : null;
+  const activeSystemAppId = activeWindow?.kind === "system" ? activeWindow.id : null;
   const [isStartOpen, setIsStartOpen] = useState(false);
   const [previewScreen, setPreviewScreen] = useState<PreviewScreen>("desktop");
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState(false);
   const [isMissionControlOpen, setIsMissionControlOpen] = useState(false);
+
+  function setActiveWindowOnDesktop(window: PreviewWindow | null) {
+    setDesktopWindows((current) =>
+      current.map((value, index) => (index === activeDesktop ? window : value)),
+    );
+  }
+
+  function setActiveAppId(appId: string | null) {
+    setActiveWindowOnDesktop(appId ? { kind: "catalog", id: appId } : null);
+  }
+
+  function setActiveSystemAppId(appId: SystemAppId | null) {
+    setActiveWindowOnDesktop(appId ? { kind: "system", id: appId } : null);
+  }
+
+  function switchDesktop(index: number) {
+    setActiveDesktop(index);
+    setIsStartOpen(false);
+  }
+
+  function moveWindow(from: number, to: number) {
+    if (from === to) {
+      return;
+    }
+    setDesktopWindows((current) => {
+      const next = [...current];
+      const fromWindow = next[from] ?? null;
+      const toWindow = next[to] ?? null;
+      next[from] = toWindow;
+      next[to] = fromWindow;
+      return next;
+    });
+    setActiveDesktop(to);
+  }
+
+  const openWindows = desktopWindows.flatMap((window, desktop) =>
+    window ? [{ desktop, window }] : [],
+  );
   const previewMetrics = calculateOsKernelMetrics(previewConfiguration);
   const notifications = buildPreviewNotifications({
     compatibleApps: model.compatibleApps,
@@ -145,8 +197,8 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
     : copy.maxLevel;
 
   function restartPreview() {
-    setActiveAppId(null);
-    setActiveSystemAppId(null);
+    setDesktopWindows([...INITIAL_DESKTOP_WINDOWS]);
+    setActiveDesktop(0);
     setIsStartOpen(false);
     setIsNotificationsOpen(false);
     setIsQuickSettingsOpen(false);
@@ -155,8 +207,8 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
   }
 
   useEffect(() => {
-    setActiveAppId(null);
-    setActiveSystemAppId(null);
+    setDesktopWindows([...INITIAL_DESKTOP_WINDOWS]);
+    setActiveDesktop(0);
     setIsStartOpen(false);
     setIsNotificationsOpen(false);
     setIsQuickSettingsOpen(false);
@@ -274,6 +326,24 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
               <>
                 <div className="os-preview-topbar">
                   <span className="os-preview-brand"><MonitorCog aria-hidden="true" size={13} />SILICON OS</span>
+                  <span
+                    aria-label={copy.missionControl.desktops}
+                    className="os-preview-desktops"
+                    role="group"
+                  >
+                    {desktopWindows.map((window, index) => (
+                      <button
+                        aria-label={copy.missionControl.desktop.replace("{number}", String(index + 1))}
+                        aria-pressed={activeDesktop === index}
+                        className={`os-preview-desktop-dot${activeDesktop === index ? " is-active" : ""}${window ? " has-window" : ""}`}
+                        key={index}
+                        onClick={() => switchDesktop(index)}
+                        type="button"
+                      >
+                        {index + 1}
+                      </button>
+                    ))}
+                  </span>
                   <span className="os-preview-search"><Search aria-hidden="true" size={12} />{copy.search}</span>
                   <span className="os-preview-status">
                     <button
@@ -416,51 +486,115 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                     </div>
                     <div className="os-preview-mission__summary">
                       <span>
-                        {copy.missionControl.windows}: {activeApp || activeSystemAppId ? 1 : 0}
+                        {copy.missionControl.windows}: {openWindows.length}
                       </span>
                       <button
                         className="os-preview-mission__minimize"
-                        disabled={!activeApp && !activeSystemAppId}
-                        onClick={() => {
-                          setActiveAppId(null);
-                          setActiveSystemAppId(null);
-                        }}
+                        disabled={openWindows.length === 0}
+                        onClick={() => setDesktopWindows([...INITIAL_DESKTOP_WINDOWS])}
                         type="button"
                       >
                         {copy.missionControl.minimizeAll}
                       </button>
                     </div>
+                    <div
+                      aria-label={copy.missionControl.desktops}
+                      className="os-preview-mission__desktops"
+                      role="group"
+                    >
+                      {desktopWindows.map((window, index) => (
+                        <button
+                          aria-label={`${copy.missionControl.desktop.replace("{number}", String(index + 1))} · ${window ? copy.missionControl.opened : copy.missionControl.empty}`}
+                          aria-pressed={activeDesktop === index}
+                          className={`os-preview-mission__desktop${activeDesktop === index ? " is-active" : ""}${window ? " has-window" : ""}`}
+                          key={index}
+                          onClick={() => switchDesktop(index)}
+                          onDragOver={(event) => event.preventDefault()}
+                          onDrop={(event) => {
+                            event.preventDefault();
+                            const from = Number(event.dataTransfer.getData("text/plain"));
+                            if (Number.isInteger(from) && from >= 0 && from < desktopWindows.length) {
+                              moveWindow(from, index);
+                            }
+                          }}
+                          type="button"
+                        >
+                          <PanelsTopLeft aria-hidden="true" size={13} />
+                          <strong>{index + 1}</strong>
+                          <small>{window ? copy.missionControl.opened : copy.missionControl.empty}</small>
+                        </button>
+                      ))}
+                    </div>
+                    <p className="os-preview-mission__move-hint">
+                      <ArrowRightLeft aria-hidden="true" size={11} />
+                      {copy.missionControl.moveHint}
+                    </p>
                     <div className="os-preview-mission__windows">
-                      {activeApp ? (
-                        <button
-                          className="os-preview-mission__window"
-                          onClick={() => setIsMissionControlOpen(false)}
-                          type="button"
-                        >
-                          {(() => {
-                            const Icon = APP_ICONS[activeApp.id] ?? AppWindow;
-                            return <span className="os-preview-mission__window-icon"><Icon aria-hidden="true" size={20} /></span>;
-                          })()}
-                          <span>
-                            <strong>{appCopy.names[activeApp.id as keyof typeof appCopy.names] ?? activeApp.id}</strong>
-                            <small>{appCopy.categories[activeApp.category as keyof typeof appCopy.categories]} · {copy.missionControl.opened}</small>
-                          </span>
-                        </button>
-                      ) : activeSystemAppId ? (
-                        <button
-                          className="os-preview-mission__window"
-                          onClick={() => setIsMissionControlOpen(false)}
-                          type="button"
-                        >
-                          {(() => {
-                            const Icon = SYSTEM_APP_ICONS[activeSystemAppId];
-                            return <span className="os-preview-mission__window-icon"><Icon aria-hidden="true" size={20} /></span>;
-                          })()}
-                          <span>
-                            <strong>{systemAppCopy[activeSystemAppId].title}</strong>
-                            <small>{copy.missionControl.system} · {copy.missionControl.opened}</small>
-                          </span>
-                        </button>
+                      {openWindows.length > 0 ? (
+                        openWindows.map(({ desktop, window }) => {
+                          const Icon = window.kind === "catalog"
+                            ? APP_ICONS[window.id] ?? AppWindow
+                            : SYSTEM_APP_ICONS[window.id];
+                          const catalogApp = window.kind === "catalog"
+                            ? model.apps.find((candidate) => candidate.id === window.id) ?? null
+                            : null;
+                          const name = window.kind === "catalog"
+                            ? appCopy.names[window.id as keyof typeof appCopy.names] ?? window.id
+                            : systemAppCopy[window.id].title;
+                          const meta = window.kind === "catalog"
+                            ? catalogApp
+                              ? appCopy.categories[catalogApp.category as keyof typeof appCopy.categories]
+                              : copy.missionControl.system
+                            : copy.missionControl.system;
+                          return (
+                            <article
+                              className={`os-preview-mission__window${desktop === activeDesktop ? " is-active" : ""}`}
+                              draggable
+                              key={`${desktop}-${window.kind}-${window.id}`}
+                              onDragStart={(event) => {
+                                event.dataTransfer.effectAllowed = "move";
+                                event.dataTransfer.setData("text/plain", String(desktop));
+                              }}
+                            >
+                              <span className="os-preview-mission__window-icon"><Icon aria-hidden="true" size={20} /></span>
+                              <span className="os-preview-mission__window-copy">
+                                <strong>{name}</strong>
+                                <small>
+                                  {copy.missionControl.desktop.replace("{number}", String(desktop + 1))}
+                                  {" · "}
+                                  {meta}
+                                </small>
+                              </span>
+                              <div className="os-preview-mission__window-actions">
+                                <button
+                                  className="os-preview-mission__window-open"
+                                  onClick={() => {
+                                    setActiveDesktop(desktop);
+                                    setIsMissionControlOpen(false);
+                                  }}
+                                  type="button"
+                                >
+                                  {copy.missionControl.opened}
+                                </button>
+                                <span className="os-preview-mission__window-moves">
+                                  {desktopWindows.map((_, target) =>
+                                    target === desktop ? null : (
+                                      <button
+                                        aria-label={`${copy.missionControl.moveTo} ${copy.missionControl.desktop.replace("{number}", String(target + 1))}`}
+                                        className="os-preview-mission__window-move"
+                                        key={target}
+                                        onClick={() => moveWindow(desktop, target)}
+                                        type="button"
+                                      >
+                                        {target + 1}
+                                      </button>
+                                    ),
+                                  )}
+                                </span>
+                              </div>
+                            </article>
+                          );
+                        })
                       ) : (
                         <div className="os-preview-mission__empty">
                           <PanelsTopLeft aria-hidden="true" size={24} />

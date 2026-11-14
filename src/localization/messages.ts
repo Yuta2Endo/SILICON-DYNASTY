@@ -672,6 +672,10 @@ const ru = {
         emptyHint: "Запустите приложение из быстрого доступа.",
         quickLaunch: "Быстрый запуск",
         minimizeAll: "Свернуть всё",
+        desktops: "Рабочие столы",
+        desktop: "Рабочий стол {number}",
+        moveHint: "Перетащите окно на рабочий стол или используйте кнопки с номером.",
+        moveTo: "Переместить на",
       },
       next: "Следующий шаг",
       nextHints: {
@@ -3067,6 +3071,10 @@ const en: Translation = {
         emptyHint: "Launch an app from quick access.",
         quickLaunch: "Quick launch",
         minimizeAll: "Minimize all",
+        desktops: "Desktops",
+        desktop: "Desktop {number}",
+        moveHint: "Drag a window onto a desktop or use the numbered buttons.",
+        moveTo: "Move to",
       },
       next: "Next step",
       nextHints: {

@@ -202,10 +202,59 @@ describe("OsPreviewPanel", () => {
 
     const mission = screen.getByRole("dialog", { name: ru.missionControl.title });
     await user.click(within(mission).getByRole("button", { name: ru.missionControl.minimizeAll }));
-    expect(screen.getByText(ru.missionControl.empty)).toBeTruthy();
+    expect(mission.querySelector(".os-preview-mission__empty strong")?.textContent).toBe(
+      ru.missionControl.empty,
+    );
 
     await user.click(within(mission).getByRole("button", { name: ru.systemApps.settings.name }));
     expect(screen.getByRole("dialog", { name: ru.systemApps.settings.name })).toBeTruthy();
+  });
+
+  it("keeps windows on separate desktops and moves a window between them", async () => {
+    const user = userEvent.setup();
+    render(
+      <OsPreviewPanel
+        configuration={{ ...createDefaultOsConfiguration(), gui: "desktop-shell" }}
+        locale="ru"
+        project={null}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Заметки" }));
+    expect(screen.getByRole("dialog", { name: "Заметки" })).toBeTruthy();
+
+    await user.click(
+      screen.getByRole("button", {
+        name: ru.missionControl.desktop.replace("{number}", "2"),
+      }),
+    );
+    expect(screen.queryByRole("dialog", { name: "Заметки" })).toBeNull();
+
+    await user.click(
+      screen.getByRole("button", { name: translations.ru.os.preview.systemApps.settings.name }),
+    );
+    expect(
+      screen.getByRole("dialog", { name: translations.ru.os.preview.systemApps.settings.name }),
+    ).toBeTruthy();
+
+    await user.click(
+      screen.getByRole("button", {
+        name: ru.missionControl.desktop.replace("{number}", "1"),
+      }),
+    );
+    expect(screen.getByRole("dialog", { name: "Заметки" })).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: ru.missionControl.open }));
+    const mission = screen.getByRole("dialog", { name: ru.missionControl.title });
+    expect(within(mission).getByText(new RegExp(`${ru.missionControl.windows}: 2`))).toBeTruthy();
+
+    await user.click(
+      within(mission).getByRole("button", {
+        name: `${ru.missionControl.moveTo} ${ru.missionControl.desktop.replace("{number}", "2")}`,
+      }),
+    );
+    await user.click(within(mission).getByRole("button", { name: ru.missionControl.close }));
+    expect(screen.getByRole("dialog", { name: "Заметки" })).toBeTruthy();
   });
 
   it("shows quick settings with configuration values", async () => {

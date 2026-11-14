@@ -82,8 +82,12 @@ test("keeps product tabs scrollable and OS editor sections usable on mobile", as
   await page.keyboard.press("Escape");
 
   await page.getByRole("button", { name: "Открыть обзор окон" }).click();
-  await expect(page.getByRole("dialog", { name: "Обзор окон" })).toBeVisible();
-  await expect(page.getByText("Нет открытых окон")).toBeVisible();
+  const mission = page.getByRole("dialog", { name: "Обзор окон" });
+  await expect(mission).toBeVisible();
+  await expect(mission.locator(".os-preview-mission__empty")).toContainText("Нет открытых окон");
+  const desktopTwo = mission.getByRole("button", { name: /Рабочий стол 2/ });
+  await desktopTwo.click();
+  await expect(desktopTwo).toHaveAttribute("aria-pressed", "true");
   await page.keyboard.press("Escape");
 
   await page.getByRole("button", { name: "Настройки", exact: true }).click();
