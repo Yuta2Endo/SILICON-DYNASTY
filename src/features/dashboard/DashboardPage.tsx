@@ -34,6 +34,7 @@ import {
   getCommercialDailyRevenueByChannel,
 } from "../../game/models/commercial";
 import { getPressReview, type PressReview } from "../../game/formulas/press";
+import { buildDailyBriefing } from "../../game/formulas/daily-briefing";
 import {
   formatCurrency,
   formatDecimal,
@@ -76,6 +77,14 @@ export function DashboardPage({
   const t = translations[locale];
   const latestMarket = state.market.dailySummaries.at(-1);
   const latestFinance = state.finance.dailyRecords.at(-1);
+  const briefing = buildDailyBriefing(state);
+  const deltaPrefix = (value: number) => (value > 0 ? "+" : value < 0 ? "−" : "");
+  const deltaCurrency = (value: number) =>
+    `${deltaPrefix(value)}${formatCurrency(Math.abs(value), locale)}`;
+  const deltaNumber = (value: number) =>
+    `${deltaPrefix(value)}${formatNumber(Math.abs(value), locale)}`;
+  const deltaShare = (value: number) =>
+    `${deltaPrefix(value)}${formatDecimal(Math.abs(value), locale, 2)}`;
   const financeHistory = state.finance.dailyRecords.slice(-PULSE_DAYS);
   const marketHistory = state.market.dailySummaries.slice(-PULSE_DAYS);
   const pulseCards: Array<{
@@ -353,33 +362,93 @@ export function DashboardPage({
         />
         <MetricCard
           accent="green"
-          detail={t.dashboard.dailyRevenueHint}
+          detail={briefing
+            ? `${deltaCurrency(briefing.revenueDeltaUsd)} · ${t.dashboard.briefingVsPrevious}`
+            : t.dashboard.dailyRevenueHint}
           icon={Banknote}
           label={t.dashboard.dailyRevenue}
           value={formatCurrency(latestFinance?.revenueUsd ?? 0, locale)}
         />
         <MetricCard
           accent="blue"
-          detail={t.dashboard.netProfitHint}
+          detail={briefing
+            ? `${deltaCurrency(briefing.profitDeltaUsd)} · ${t.dashboard.briefingVsPrevious}`
+            : t.dashboard.netProfitHint}
           icon={TrendingUp}
           label={t.dashboard.netProfit}
           value={formatCurrency(latestFinance?.netProfitUsd ?? 0, locale)}
         />
         <MetricCard
           accent="violet"
-          detail={t.dashboard.marketShareHint}
+          detail={briefing
+            ? `${deltaShare(briefing.marketShareDeltaPoints)} ${t.dashboard.briefingShareUnit} · ${t.dashboard.briefingVsPrevious}`
+            : t.dashboard.marketShareHint}
           icon={Percent}
           label={t.dashboard.marketShare}
           value={`${formatDecimal((latestMarket?.marketShare ?? 0) * 100, locale, 2)}%`}
         />
         <MetricCard
           accent="amber"
-          detail={t.dashboard.dailyUnitsHint}
+          detail={briefing
+            ? `${deltaNumber(briefing.unitsDelta)} · ${t.dashboard.briefingVsPrevious}`
+            : t.dashboard.dailyUnitsHint}
           icon={ShoppingCart}
           label={t.dashboard.dailyUnits}
           value={formatNumber((latestMarket?.playerUnits ?? 0) + (latestMarket?.componentUnits ?? 0), locale)}
         />
       </section>
+
+      {briefing && (
+        <section className="dashboard-briefing" aria-labelledby="dashboard-briefing-title">
+          <div className="dashboard-briefing__header">
+            <span className="dashboard-briefing__icon" aria-hidden="true">
+              <History size={18} strokeWidth={1.8} />
+            </span>
+            <div className="dashboard-briefing__copy">
+              <h2 id="dashboard-briefing-title">{t.dashboard.briefingTitle}</h2>
+              <p>
+                {formatShortGameDate(briefing.date, locale)} · {t.dashboard.briefingHint}
+              </p>
+            </div>
+            <strong className={briefing.netProfitUsd < 0 ? "is-negative" : ""}>
+              {formatCurrency(briefing.netProfitUsd, locale)}
+            </strong>
+          </div>
+          <div className="dashboard-briefing__events">
+            {briefing.oemOffers > 0 && (
+              <span>{t.dashboard.briefingOemOffers.replace("{count}", String(briefing.oemOffers))}</span>
+            )}
+            {briefing.commercialOffers > 0 && (
+              <span>{t.dashboard.briefingCommercialOffers.replace("{count}", String(briefing.commercialOffers))}</span>
+            )}
+            {briefing.competitorExits > 0 && (
+              <span>{t.dashboard.briefingExits.replace("{count}", String(briefing.competitorExits))}</span>
+            )}
+            {briefing.stockouts > 0 && (
+              <span>{t.dashboard.briefingStockouts.replace("{count}", String(briefing.stockouts))}</span>
+            )}
+            {briefing.oemOffers === 0
+              && briefing.commercialOffers === 0
+              && briefing.competitorExits === 0
+              && briefing.stockouts === 0 && (
+                <span className="is-quiet">{t.dashboard.briefingQuiet}</span>
+              )}
+          </div>
+          <div className="dashboard-briefing__actions">
+            <Button
+              onClick={() => onNavigate("market")}
+              size="sm"
+              trailingIcon={<ArrowUpRight aria-hidden="true" size={15} />}
+              variant="ghost"
+            >
+              {t.dashboard.briefingMarket}
+            </Button>
+            <Button onClick={() => onNavigate("finance")} size="sm" variant="ghost">
+              {t.dashboard.briefingFinance}
+            </Button>
+          </div>
+        </section>
+      )}
 
       <Panel
         className="dashboard-pulse"

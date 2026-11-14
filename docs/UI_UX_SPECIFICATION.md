@@ -205,6 +205,7 @@ Show:
 - A command center with quick actions and actionable signals, including pending OEM design-win and commercial contract offers.
 - A commercial revenue mix for the current day across OS licensing, AI API, device supply, cloud capacity and app store channels, derived from active contracts.
 - A company pulse with 14-day trends for revenue, net profit and market share, derived from real finance and market records.
+- A daily briefing that compares the latest day with the previous one: revenue, expenses, net profit, units, market share, pending offers, competitor exits and stockouts, with links to Market and Finance.
 - A press panel with up to three current product reviews, scores, outlets, localized headlines and a link to the market. Reviews are derived from real products and affect demand after the first month on sale.
 - First-run quick start guidance until the tutorial is complete or the player dismisses it.
 - Research.

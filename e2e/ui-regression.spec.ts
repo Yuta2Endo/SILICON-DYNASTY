@@ -72,6 +72,17 @@ test("keeps product tabs scrollable and OS editor sections usable on mobile", as
   await expectNoHorizontalOverflow(page);
 });
 
+test("shows the daily briefing after advancing a day", async ({ page }) => {
+  await openGame(page);
+  await page.getByRole("button", { name: "Следующий день" }).click();
+
+  await expect(page.getByRole("heading", { name: "Итоги дня" })).toBeVisible();
+  await expect(page.getByText(/к прошлому дню/).first()).toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expectNoHorizontalOverflow(page);
+});
+
 test("keeps market tabs in one row and renders the 14-day market pulse", async ({ page }) => {
   await openGame(page);
 

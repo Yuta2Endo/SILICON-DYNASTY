@@ -76,6 +76,18 @@ describe("DashboardPage", () => {
     expect(screen.getAllByText("За 14 дней")).toHaveLength(3);
   });
 
+  it("shows a daily briefing with deltas and quiet-day guidance", () => {
+    let state = createInitialGameState();
+    state = advanceGameDay(state);
+    state = advanceGameDay(state);
+
+    renderDashboard(state);
+
+    expect(screen.getByText("Итоги дня")).toBeTruthy();
+    expect(screen.getAllByText(/к прошлому дню/).length).toBeGreaterThan(0);
+    expect(screen.getByText("Без резких изменений — можно планировать следующий шаг.")).toBeTruthy();
+  });
+
   it("shows press reviews once a released product reaches the market", () => {
     let state = createInitialGameState();
     state = {
