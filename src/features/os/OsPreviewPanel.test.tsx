@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import { createDefaultOsConfiguration, createOsProject, type OsRelease } from "../../game/models/os";
@@ -181,6 +181,31 @@ describe("OsPreviewPanel", () => {
     expect(screen.getByRole("dialog", { name: ru.notifications.title })).toBeTruthy();
     expect(screen.getByText(ru.notifications.appsTitle)).toBeTruthy();
     expect(screen.getByText(/\d+ из 6/)).toBeTruthy();
+  });
+
+  it("opens mission control, minimizes windows and launches a system app", async () => {
+    const user = userEvent.setup();
+    render(
+      <OsPreviewPanel
+        configuration={{ ...createDefaultOsConfiguration(), gui: "desktop-shell" }}
+        locale="ru"
+        project={null}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Заметки" }));
+    await user.click(screen.getByRole("button", { name: ru.missionControl.open }));
+
+    expect(screen.getByRole("dialog", { name: ru.missionControl.title })).toBeTruthy();
+    expect(screen.getAllByText("Заметки").length).toBeGreaterThan(0);
+    expect(screen.getByText(/Открытых окон: 1/)).toBeTruthy();
+
+    const mission = screen.getByRole("dialog", { name: ru.missionControl.title });
+    await user.click(within(mission).getByRole("button", { name: ru.missionControl.minimizeAll }));
+    expect(screen.getByText(ru.missionControl.empty)).toBeTruthy();
+
+    await user.click(within(mission).getByRole("button", { name: ru.systemApps.settings.name }));
+    expect(screen.getByRole("dialog", { name: ru.systemApps.settings.name })).toBeTruthy();
   });
 
   it("shows quick settings with configuration values", async () => {

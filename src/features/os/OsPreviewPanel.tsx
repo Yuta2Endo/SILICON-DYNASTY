@@ -16,6 +16,7 @@ import {
   LayoutGrid,
   Lock,
   MonitorCog,
+  PanelsTopLeft,
   Power,
   RefreshCw,
   RotateCcw,
@@ -123,6 +124,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
   const [previewScreen, setPreviewScreen] = useState<PreviewScreen>("desktop");
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState(false);
+  const [isMissionControlOpen, setIsMissionControlOpen] = useState(false);
   const previewMetrics = calculateOsKernelMetrics(previewConfiguration);
   const notifications = buildPreviewNotifications({
     compatibleApps: model.compatibleApps,
@@ -148,6 +150,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
     setIsStartOpen(false);
     setIsNotificationsOpen(false);
     setIsQuickSettingsOpen(false);
+    setIsMissionControlOpen(false);
     setPreviewScreen("boot");
   }
 
@@ -157,6 +160,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
     setIsStartOpen(false);
     setIsNotificationsOpen(false);
     setIsQuickSettingsOpen(false);
+    setIsMissionControlOpen(false);
     setPreviewScreen("desktop");
   }, [selectedReleaseId]);
 
@@ -168,6 +172,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
       setIsStartOpen(false);
       setIsNotificationsOpen(false);
       setIsQuickSettingsOpen(false);
+      setIsMissionControlOpen(false);
       setActiveAppId(null);
       setActiveSystemAppId(null);
     }
@@ -272,11 +277,25 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                   <span className="os-preview-search"><Search aria-hidden="true" size={12} />{copy.search}</span>
                   <span className="os-preview-status">
                     <button
+                      aria-expanded={isMissionControlOpen}
+                      aria-label={copy.missionControl.open}
+                      className="os-preview-mission-toggle"
+                      onClick={() => {
+                        setIsNotificationsOpen(false);
+                        setIsQuickSettingsOpen(false);
+                        setIsMissionControlOpen((open) => !open);
+                      }}
+                      type="button"
+                    >
+                      <PanelsTopLeft aria-hidden="true" size={12} />
+                    </button>
+                    <button
                       aria-expanded={isQuickSettingsOpen}
                       aria-label={copy.quickSettings.open}
                       className="os-preview-quick-toggle"
                       onClick={() => {
                         setIsNotificationsOpen(false);
+                        setIsMissionControlOpen(false);
                         setIsQuickSettingsOpen((open) => !open);
                       }}
                       type="button"
@@ -289,6 +308,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                       className="os-preview-bell"
                       onClick={() => {
                         setIsQuickSettingsOpen(false);
+                        setIsMissionControlOpen(false);
                         setIsNotificationsOpen((open) => !open);
                       }}
                       type="button"
@@ -370,6 +390,123 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                           <strong>{value}</strong>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {isMissionControlOpen && (
+                  <div
+                    aria-label={copy.missionControl.title}
+                    className="os-preview-mission"
+                    role="dialog"
+                  >
+                    <div className="os-preview-mission__header">
+                      <div>
+                        <strong>{copy.missionControl.title}</strong>
+                        <span>{copy.missionControl.hint}</span>
+                      </div>
+                      <button
+                        aria-label={copy.missionControl.close}
+                        className="os-preview-icon-button"
+                        onClick={() => setIsMissionControlOpen(false)}
+                        type="button"
+                      >
+                        <X aria-hidden="true" size={13} />
+                      </button>
+                    </div>
+                    <div className="os-preview-mission__summary">
+                      <span>
+                        {copy.missionControl.windows}: {activeApp || activeSystemAppId ? 1 : 0}
+                      </span>
+                      <button
+                        className="os-preview-mission__minimize"
+                        disabled={!activeApp && !activeSystemAppId}
+                        onClick={() => {
+                          setActiveAppId(null);
+                          setActiveSystemAppId(null);
+                        }}
+                        type="button"
+                      >
+                        {copy.missionControl.minimizeAll}
+                      </button>
+                    </div>
+                    <div className="os-preview-mission__windows">
+                      {activeApp ? (
+                        <button
+                          className="os-preview-mission__window"
+                          onClick={() => setIsMissionControlOpen(false)}
+                          type="button"
+                        >
+                          {(() => {
+                            const Icon = APP_ICONS[activeApp.id] ?? AppWindow;
+                            return <span className="os-preview-mission__window-icon"><Icon aria-hidden="true" size={20} /></span>;
+                          })()}
+                          <span>
+                            <strong>{appCopy.names[activeApp.id as keyof typeof appCopy.names] ?? activeApp.id}</strong>
+                            <small>{appCopy.categories[activeApp.category as keyof typeof appCopy.categories]} · {copy.missionControl.opened}</small>
+                          </span>
+                        </button>
+                      ) : activeSystemAppId ? (
+                        <button
+                          className="os-preview-mission__window"
+                          onClick={() => setIsMissionControlOpen(false)}
+                          type="button"
+                        >
+                          {(() => {
+                            const Icon = SYSTEM_APP_ICONS[activeSystemAppId];
+                            return <span className="os-preview-mission__window-icon"><Icon aria-hidden="true" size={20} /></span>;
+                          })()}
+                          <span>
+                            <strong>{systemAppCopy[activeSystemAppId].title}</strong>
+                            <small>{copy.missionControl.system} · {copy.missionControl.opened}</small>
+                          </span>
+                        </button>
+                      ) : (
+                        <div className="os-preview-mission__empty">
+                          <PanelsTopLeft aria-hidden="true" size={24} />
+                          <strong>{copy.missionControl.empty}</strong>
+                          <span>{copy.missionControl.emptyHint}</span>
+                        </div>
+                      )}
+                    </div>
+                    <strong className="os-preview-mission__launch-title">{copy.missionControl.quickLaunch}</strong>
+                    <div className="os-preview-mission__launch">
+                      {model.apps.map((app) => {
+                        const Icon = APP_ICONS[app.id] ?? AppWindow;
+                        return (
+                          <button
+                            className={`os-preview-mission__launch-app${app.compatible ? "" : " is-locked"}`}
+                            key={app.id}
+                            onClick={() => {
+                              setActiveSystemAppId(null);
+                              setActiveAppId(app.id);
+                              setIsMissionControlOpen(false);
+                            }}
+                            type="button"
+                          >
+                            <Icon aria-hidden="true" size={14} />
+                            <span>{appCopy.names[app.id as keyof typeof appCopy.names] ?? app.id}</span>
+                          </button>
+                        );
+                      })}
+                      {SYSTEM_APP_IDS.map((appId) => {
+                        const Icon = SYSTEM_APP_ICONS[appId];
+                        return (
+                          <button
+                            className="os-preview-mission__launch-app os-preview-mission__launch-app--system"
+                            key={appId}
+                            onClick={() => {
+                              setActiveAppId(null);
+                              setActiveSystemAppId(appId);
+                              setIsMissionControlOpen(false);
+                            }}
+                            type="button"
+                          >
+                            <Icon aria-hidden="true" size={14} />
+                            <span>{systemAppCopy[appId].name}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
