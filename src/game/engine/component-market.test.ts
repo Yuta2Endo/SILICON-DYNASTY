@@ -47,6 +47,20 @@ function withMatureRelease(state: GameState): GameState {
   };
 }
 
+function withInventory(state: GameState, units = 1_000): GameState {
+  return {
+    ...state,
+    market: {
+      ...state.market,
+      componentProducts: state.market.componentProducts.map((product) => ({
+        ...product,
+        inventoryUnits: units,
+        unitsProduced: product.unitsSold + units,
+      })),
+    },
+  };
+}
+
 describe("component market", () => {
   it("charges a launch fee and creates a manufactured product", () => {
     const state = releasedGpuState();
@@ -73,49 +87,47 @@ describe("component market", () => {
     })).toThrow(ComponentMarketOperationError);
   });
 
-  it("sells components just in time and records revenue, cost, and units", () => {
-    const released = withMatureRelease(releasedGpuState());
+  it("sells components from inventory and records revenue and units", () => {
+    const released = withInventory(withMatureRelease(releasedGpuState()));
     const before = released.company.balance;
-    const unitCost = released.market.componentProducts[0]?.manufacturingCostUsd ?? 0;
     const simulated = simulateComponentMarketDay(released, "1995-01-01");
     const product = simulated.market.componentProducts[0];
     const summary = simulated.market.dailySummaries.at(-1);
     const units = product?.unitsSold ?? 0;
 
     expect(units).toBeGreaterThan(0);
+    expect(product?.inventoryUnits).toBe(1_000 - units);
+    expect(product?.unitsProduced).toBe(1_000);
     expect(product?.revenueUsd).toBe(units * 400);
     expect(summary).toEqual(expect.objectContaining({
       date: "1995-01-01",
       componentUnits: units,
       componentRevenueUsd: units * 400,
-      componentManufacturingUsd: Math.round(units * unitCost * 100) / 100,
+      componentManufacturingUsd: 0,
     }));
     expect(summary?.componentDemandUnits).toBeGreaterThan(0);
-    expect(simulated.company.balance).toBeCloseTo(
-      before - units * unitCost + units * 400,
-      2,
-    );
+    expect(simulated.company.balance).toBeCloseTo(before + units * 400, 2);
     expect(simulated.finance.dailyRecords.at(-1)?.unitsSold).toBe(units);
     expect(simulated.finance.transactions.some((transaction) => transaction.category === "sales")).toBe(true);
-    expect(simulated.finance.transactions.some((transaction) => transaction.category === "manufacturing")).toBe(true);
   });
 
   it("sells fewer units at a higher price", () => {
-    const cheap = simulateComponentMarketDay(withMatureRelease(releasedGpuState(120)), "1995-01-01");
-    const expensive = simulateComponentMarketDay(withMatureRelease(releasedGpuState(900)), "1995-01-01");
+    const cheap = simulateComponentMarketDay(withInventory(withMatureRelease(releasedGpuState(120))), "1995-01-01");
+    const expensive = simulateComponentMarketDay(withInventory(withMatureRelease(releasedGpuState(900))), "1995-01-01");
 
     expect(cheap.market.componentProducts[0]?.unitsSold ?? 0)
       .toBeGreaterThan(expensive.market.componentProducts[0]?.unitsSold ?? 0);
   });
 
-  it("caps just-in-time production at available cash", () => {
-    const released = withMatureRelease(releasedGpuState());
-    const poorState = { ...released, company: { ...released.company, balance: 1 } };
-    const simulated = simulateComponentMarketDay(poorState, "1995-01-01");
+  it("caps sales at available inventory", () => {
+    const released = withInventory(withMatureRelease(releasedGpuState()), 5);
+    const before = released.company.balance;
+    const simulated = simulateComponentMarketDay(released, "1995-01-01");
 
-    expect(simulated.market.componentProducts[0]?.unitsSold).toBe(0);
-    expect(simulated.market.dailySummaries.at(-1)?.componentUnits).toBe(0);
-    expect(simulated.company.balance).toBe(1);
+    expect(simulated.market.componentProducts[0]?.unitsSold).toBe(5);
+    expect(simulated.market.componentProducts[0]?.inventoryUnits).toBe(0);
+    expect(simulated.market.dailySummaries.at(-1)?.componentUnits).toBe(5);
+    expect(simulated.company.balance).toBe(before + 5 * 400);
   });
 
   it("updates prices and stops sales for a discontinued product", () => {

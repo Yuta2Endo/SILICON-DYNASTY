@@ -52,6 +52,12 @@ import {
   type CommercialOffer,
 } from "../../game/models/commercial";
 import {
+  MANUFACTURING_ORDER_LIMITS,
+  getComponentProductionLeadTime,
+  getFactoryCapacity,
+  getFactoryUpgradeCost,
+} from "../../game/models/manufacturing";
+import {
   calculateCpuMarketPerformanceScore,
   calculateGrossMargin,
   calculateSuggestedPrice,
@@ -97,6 +103,8 @@ interface MarketPageProps {
   onUpdatePrice: (productId: string, priceUsd: number) => Promise<boolean>;
   onUpdateComponentPrice: (productId: string, priceUsd: number) => Promise<boolean>;
   onOrderProduction: (productId: string, quantity: number) => Promise<boolean>;
+  onOrderComponentProduction: (productId: string, quantity: number) => Promise<boolean>;
+  onUpgradeFactory: () => Promise<boolean>;
   onDiscontinueProduct: (productId: string) => Promise<boolean>;
   onDiscontinueComponentProduct: (productId: string) => Promise<boolean>;
   onUpdateMarketingBudget: (amountUsd: number) => Promise<boolean>;
@@ -118,6 +126,8 @@ export function MarketPage({
   onUpdatePrice,
   onUpdateComponentPrice,
   onOrderProduction,
+  onOrderComponentProduction,
+  onUpgradeFactory,
   onDiscontinueProduct,
   onDiscontinueComponentProduct,
   onUpdateMarketingBudget,
@@ -191,6 +201,8 @@ export function MarketPage({
             onAcceptCommercialOffer={onAcceptCommercialOffer}
             onDeclineCommercialOffer={onDeclineCommercialOffer}
             onOrderProduction={onOrderProduction}
+            onOrderComponentProduction={onOrderComponentProduction}
+            onUpgradeFactory={onUpgradeFactory}
             onReleaseProduct={onReleaseProduct}
             onReleaseComponentProduct={onReleaseComponentProduct}
             onUpdatePrice={onUpdatePrice}
@@ -224,6 +236,8 @@ function MarketOverview({
   onUpdatePrice,
   onUpdateComponentPrice,
   onOrderProduction,
+  onOrderComponentProduction,
+  onUpgradeFactory,
   onDiscontinueProduct,
   onDiscontinueComponentProduct,
   onAcceptOemContract,
@@ -239,6 +253,8 @@ function MarketOverview({
   onUpdatePrice: (productId: string, priceUsd: number) => Promise<boolean>;
   onUpdateComponentPrice: (productId: string, priceUsd: number) => Promise<boolean>;
   onOrderProduction: (productId: string, quantity: number) => Promise<boolean>;
+  onOrderComponentProduction: (productId: string, quantity: number) => Promise<boolean>;
+  onUpgradeFactory: () => Promise<boolean>;
   onDiscontinueProduct: (productId: string) => Promise<boolean>;
   onDiscontinueComponentProduct: (productId: string) => Promise<boolean>;
   onAcceptOemContract: (offerId: string) => Promise<boolean>;
@@ -414,10 +430,18 @@ function MarketOverview({
         state={state}
       />
 
+      <ManufacturingPanel
+        copy={copy}
+        isSaving={isSaving}
+        onUpgradeFactory={onUpgradeFactory}
+        state={state}
+      />
+
       <ComponentMarketSection
         copy={copy}
         isSaving={isSaving}
         onDiscontinueComponentProduct={onDiscontinueComponentProduct}
+        onOrderComponentProduction={onOrderComponentProduction}
         onReleaseComponentProduct={onReleaseComponentProduct}
         onUpdateComponentPrice={onUpdateComponentPrice}
         state={state}
@@ -827,11 +851,84 @@ function CommercialContractsSection({
   );
 }
 
+function ManufacturingPanel({
+  copy,
+  state,
+  isSaving,
+  onUpgradeFactory,
+}: {
+  copy: MarketCopy;
+  state: GameState;
+  isSaving: boolean;
+  onUpgradeFactory: () => Promise<boolean>;
+}) {
+  const locale = state.settings.locale;
+  const manufacturingCopy = copy.componentMarket.manufacturing;
+  const level = state.manufacturing.factoryLevel;
+  const capacity = getFactoryCapacity(level);
+  const upgradeCost = getFactoryUpgradeCost(level);
+  const activeOrders = state.manufacturing.componentOrders;
+
+  return (
+    <section className="market-section manufacturing-panel" aria-labelledby="manufacturing-title">
+      <SectionHeading
+        copy={manufacturingCopy.hint}
+        icon={Factory}
+        id="manufacturing-title"
+        title={manufacturingCopy.title}
+      />
+      <div className="market-release-summary component-market-summary">
+        <SummaryStat label={manufacturingCopy.level} value={formatNumber(level, locale)} />
+        <SummaryStat label={manufacturingCopy.capacity} value={`${formatNumber(capacity, locale)}${manufacturingCopy.unitsPerDay}`} />
+        <SummaryStat label={manufacturingCopy.activeOrders} value={formatNumber(activeOrders.length, locale)} />
+        <SummaryStat
+          label={manufacturingCopy.upgradeCost}
+          value={upgradeCost === null ? manufacturingCopy.maxLevel : formatCurrency(upgradeCost, locale)}
+        />
+      </div>
+      {activeOrders.length === 0 ? (
+        <p className="manufacturing-queue-empty">{manufacturingCopy.queueEmpty}</p>
+      ) : (
+        <ul className="manufacturing-queue">
+          {activeOrders.map((order) => {
+            const product = state.market.componentProducts.find(
+              (candidate) => candidate.id === order.productId,
+            );
+            return (
+              <li key={order.id}>
+                <strong>{product?.name ?? order.productId}</strong>
+                <span>
+                  {manufacturingCopy.orderLine
+                    .replace("{quantity}", formatNumber(order.quantity, locale))
+                    .replace("{date}", formatShortGameDate(order.readyOn, locale))}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <button
+        className="button button--primary"
+        disabled={
+          isSaving
+          || upgradeCost === null
+          || (upgradeCost !== null && upgradeCost > state.company.balance)
+        }
+        onClick={() => void onUpgradeFactory()}
+        type="button"
+      >
+        {upgradeCost === null ? manufacturingCopy.maxLevel : manufacturingCopy.upgrade}
+      </button>
+    </section>
+  );
+}
+
 function ComponentMarketSection({
   state,
   copy,
   isSaving,
   onReleaseComponentProduct,
+  onOrderComponentProduction,
   onUpdateComponentPrice,
   onDiscontinueComponentProduct,
 }: {
@@ -839,6 +936,7 @@ function ComponentMarketSection({
   copy: MarketCopy;
   isSaving: boolean;
   onReleaseComponentProduct: (input: ReleaseComponentProductInput) => Promise<boolean>;
+  onOrderComponentProduction: (productId: string, quantity: number) => Promise<boolean>;
   onUpdateComponentPrice: (productId: string, priceUsd: number) => Promise<boolean>;
   onDiscontinueComponentProduct: (productId: string) => Promise<boolean>;
 }) {
@@ -879,6 +977,7 @@ function ComponentMarketSection({
               isSaving={isSaving}
               key={product.id}
               onDiscontinue={onDiscontinueComponentProduct}
+              onOrderProduction={onOrderComponentProduction}
               onUpdatePrice={onUpdateComponentPrice}
               product={product}
               state={state}
@@ -1095,6 +1194,7 @@ function ComponentProductCard({
   copy,
   isSaving,
   onUpdatePrice,
+  onOrderProduction,
   onDiscontinue,
 }: {
   product: ComponentMarketProduct;
@@ -1102,16 +1202,30 @@ function ComponentProductCard({
   copy: MarketCopy;
   isSaving: boolean;
   onUpdatePrice: (productId: string, priceUsd: number) => Promise<boolean>;
+  onOrderProduction: (productId: string, quantity: number) => Promise<boolean>;
   onDiscontinue: (productId: string) => Promise<boolean>;
 }) {
   const locale = state.settings.locale;
   const productCopy = copy.componentMarket.products;
   const [price, setPrice] = useState(String(product.priceUsd));
+  const [quantity, setQuantity] = useState("100");
   const [error, setError] = useState<string | null>(null);
+  const [orderError, setOrderError] = useState<string | null>(null);
   const priceNumber = Number(price);
+  const quantityNumber = Number(quantity);
   const invalidPrice = !Number.isFinite(priceNumber)
     || priceNumber < MARKET_LIMITS.minPriceUsd
     || priceNumber > MARKET_LIMITS.maxPriceUsd;
+  const invalidQuantity = !Number.isInteger(quantityNumber)
+    || quantityNumber < MANUFACTURING_ORDER_LIMITS.minQuantity
+    || quantityNumber > MANUFACTURING_ORDER_LIMITS.maxQuantity;
+  const orderCost = invalidQuantity ? 0 : quantityNumber * product.manufacturingCostUsd;
+  const leadDays = invalidQuantity
+    ? 0
+    : getComponentProductionLeadTime(quantityNumber, state.manufacturing.factoryLevel);
+  const activeOrders = state.manufacturing.componentOrders.filter(
+    (order) => order.productId === product.id,
+  );
   const estimate = product.status === "active"
     ? estimateComponentProductDailyDemand(state, product.id, state.gameDate)
     : null;
@@ -1124,6 +1238,19 @@ function ComponentProductCard({
     }
     setError(null);
     await onUpdatePrice(product.id, priceNumber);
+  }
+
+  async function submitOrder(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (invalidQuantity) {
+      setOrderError(copy.componentMarket.manufacturing.invalidQuantity);
+      return;
+    }
+    setOrderError(null);
+    const succeeded = await onOrderProduction(product.id, quantityNumber);
+    if (!succeeded) {
+      setOrderError(copy.componentMarket.manufacturing.orderError);
+    }
   }
 
   return (
@@ -1151,6 +1278,8 @@ function ComponentProductCard({
           value={formatShare((product.priceUsd - product.manufacturingCostUsd) / product.priceUsd, locale)}
         />
         <SummaryStat label={productCopy.performance} value={formatDecimal(product.performanceScore, locale, 3)} />
+        <SummaryStat label={productCopy.inventory} value={formatNumber(product.inventoryUnits, locale)} />
+        <SummaryStat label={productCopy.produced} value={formatNumber(product.unitsProduced, locale)} />
         <SummaryStat label={copy.products.sold} value={formatNumber(product.unitsSold, locale)} />
         <SummaryStat label={copy.products.revenue} value={formatCurrency(product.revenueUsd, locale)} />
         <SummaryStat
@@ -1169,6 +1298,49 @@ function ComponentProductCard({
 
       {product.status === "active" && (
         <>
+          {product.inventoryUnits === 0 && (
+            <p className="component-stockout">{copy.componentMarket.manufacturing.stockout}</p>
+          )}
+          {activeOrders.length > 0 && (
+            <ul className="component-production-orders">
+              {activeOrders.map((order) => (
+                <li key={order.id}>
+                  {copy.componentMarket.manufacturing.orderLine
+                    .replace("{quantity}", formatNumber(order.quantity, locale))
+                    .replace("{date}", formatShortGameDate(order.readyOn, locale))}
+                </li>
+              ))}
+            </ul>
+          )}
+          <form className="component-production-form" onSubmit={(event) => void submitOrder(event)}>
+            <div className="field-group">
+              <label htmlFor={`component-order-${product.id}`}>
+                {copy.componentMarket.manufacturing.quantity}
+              </label>
+              <input
+                id={`component-order-${product.id}`}
+                inputMode="numeric"
+                min={MANUFACTURING_ORDER_LIMITS.minQuantity}
+                onChange={(event) => setQuantity(event.target.value)}
+                step="1"
+                type="number"
+                value={quantity}
+              />
+            </div>
+            <button
+              className="button button--primary"
+              disabled={isSaving || invalidQuantity || orderCost > state.company.balance}
+              type="submit"
+            >
+              {copy.componentMarket.manufacturing.order}
+            </button>
+            <p className="component-production-form__hint">
+              {copy.componentMarket.manufacturing.orderHint
+                .replace("{cost}", formatCurrency(orderCost, locale))
+                .replace("{days}", formatNumber(leadDays, locale))}
+            </p>
+            {orderError && <p className="field-error">{orderError}</p>}
+          </form>
           <div className="market-product-actions">
             <form className="market-inline-form" onSubmit={(event) => void updatePrice(event)}>
               <div className="field-group">

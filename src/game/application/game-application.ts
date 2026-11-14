@@ -69,6 +69,7 @@ import {
   updateComponentProductPrice,
   type ReleaseComponentProductInput,
 } from "../engine/component-market";
+import { orderComponentProduction, upgradeFactory } from "../engine/manufacturing";
 import { advanceOsRelease, startOsRelease } from "../engine/os-release";
 import { acceptOemContract, declineOemContract } from "../engine/oem-contracts";
 import { acceptCommercialOffer, declineCommercialOffer } from "../engine/commercial";
@@ -140,6 +141,8 @@ export interface GameApplication {
   releaseComponentProduct(input: ReleaseComponentProductInput): Promise<GameState>;
   updateComponentProductPrice(productId: string, priceUsd: number): Promise<GameState>;
   discontinueComponentProduct(productId: string): Promise<GameState>;
+  orderComponentProduction(productId: string, quantity: number): Promise<GameState>;
+  upgradeFactory(): Promise<GameState>;
   updateProductPrice(productId: string, priceUsd: number): Promise<GameState>;
   orderProduction(productId: string, quantity: number): Promise<GameState>;
   discontinueProduct(productId: string): Promise<GameState>;
@@ -358,6 +361,14 @@ export function createGameApplication(repository: GameStateRepository): GameAppl
 
     async discontinueComponentProduct(productId) {
       return commit(discontinueComponentProduct(await ensureLoaded(), productId));
+    },
+
+    async orderComponentProduction(productId, quantity) {
+      return commit(orderComponentProduction(await ensureLoaded(), productId, quantity));
+    },
+
+    async upgradeFactory() {
+      return commit(upgradeFactory(await ensureLoaded()));
     },
 
     async createOsProject(name, configuration) {

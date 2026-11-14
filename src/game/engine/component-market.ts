@@ -99,6 +99,8 @@ export function releaseComponentProduct(
     priceUsd: roundUsd(input.priceUsd),
     manufacturingCostUsd: manufacturing.unitCostUsd,
     performanceScore: calculateComponentPerformanceScore(version.configuration),
+    inventoryUnits: 0,
+    unitsProduced: 0,
     unitsSold: 0,
     revenueUsd: 0,
     status: "active",
@@ -160,7 +162,7 @@ export function simulateComponentMarketDay(state: GameState, date: string): Game
   let componentDemandUnits = 0;
   let componentUnits = 0;
   let componentRevenueUsd = 0;
-  let componentManufacturingUsd = 0;
+  const componentManufacturingUsd = 0;
 
   for (const componentType of COMPONENT_SALE_ORDER) {
     const activeProducts = nextState.market.componentProducts.filter(
@@ -197,20 +199,12 @@ export function simulateComponentMarketDay(state: GameState, date: string): Game
       if (demandedUnits <= 0) {
         continue;
       }
-      const affordableUnits = Math.floor(nextState.company.balance / entry.product.manufacturingCostUsd);
-      const soldUnits = Math.min(demandedUnits, affordableUnits);
+      const soldUnits = Math.min(demandedUnits, entry.product.inventoryUnits);
       if (soldUnits <= 0) {
         continue;
       }
 
-      const manufacturingUsd = roundUsd(soldUnits * entry.product.manufacturingCostUsd);
       const revenueUsd = roundUsd(soldUnits * entry.product.priceUsd);
-      nextState = postFinanceTransaction(
-        nextState,
-        "manufacturing",
-        -manufacturingUsd,
-        `Component production: ${entry.product.name}`,
-      );
       nextState = postFinanceTransaction(
         nextState,
         "sales",
@@ -219,7 +213,6 @@ export function simulateComponentMarketDay(state: GameState, date: string): Game
       );
       componentUnits += soldUnits;
       componentRevenueUsd = roundUsd(componentRevenueUsd + revenueUsd);
-      componentManufacturingUsd = roundUsd(componentManufacturingUsd + manufacturingUsd);
 
       nextState = {
         ...nextState,
@@ -229,6 +222,7 @@ export function simulateComponentMarketDay(state: GameState, date: string): Game
             product.id === entry.product.id
               ? {
                 ...product,
+                inventoryUnits: product.inventoryUnits - soldUnits,
                 unitsSold: product.unitsSold + soldUnits,
                 revenueUsd: roundUsd(product.revenueUsd + revenueUsd),
               }

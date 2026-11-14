@@ -246,6 +246,8 @@ export interface ComponentMarketProduct {
   priceUsd: number;
   manufacturingCostUsd: number;
   performanceScore: number;
+  inventoryUnits: number;
+  unitsProduced: number;
   unitsSold: number;
   revenueUsd: number;
   status: MarketProductStatus;
@@ -488,6 +490,11 @@ function parseComponentMarketProduct(value: unknown): ComponentMarketProduct {
   ) {
     throw new InvalidMarketDataError("Component product is incomplete.");
   }
+  const inventoryUnits = typeof value.inventoryUnits === "number" ? value.inventoryUnits : 0;
+  const unitsProduced = typeof value.unitsProduced === "number"
+    ? value.unitsProduced
+    : value.unitsSold + inventoryUnits;
+
   if (
     value.id.trim().length === 0
     || validateComponentName(value.name) !== null
@@ -499,6 +506,9 @@ function parseComponentMarketProduct(value: unknown): ComponentMarketProduct {
     || !isPositive(value.manufacturingCostUsd)
     || !isPositive(value.performanceScore)
     || !isNonNegativeInteger(value.unitsSold)
+    || !isNonNegativeInteger(inventoryUnits)
+    || !isNonNegativeInteger(unitsProduced)
+    || unitsProduced !== value.unitsSold + inventoryUnits
     || !isNonNegative(value.revenueUsd)
   ) {
     throw new InvalidMarketDataError("Component product fields are invalid.");
@@ -520,6 +530,8 @@ function parseComponentMarketProduct(value: unknown): ComponentMarketProduct {
     priceUsd: roundUsd(value.priceUsd),
     manufacturingCostUsd: roundUsd(value.manufacturingCostUsd),
     performanceScore: roundScore(value.performanceScore),
+    inventoryUnits,
+    unitsProduced,
     unitsSold: value.unitsSold,
     revenueUsd: roundUsd(value.revenueUsd),
     status: value.status,

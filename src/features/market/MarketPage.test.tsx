@@ -8,6 +8,7 @@ import type { MarketDaySummary } from "../../game/models/market";
 import type { CommercialOffer } from "../../game/models/commercial";
 import type { ReleaseProductInput } from "../../game/engine/market";
 import type { ReleaseComponentProductInput } from "../../game/engine/component-market";
+import { releaseComponentProduct } from "../../game/engine/component-market";
 import { translations } from "../../localization/messages";
 import { MarketPage } from "./MarketPage";
 
@@ -40,6 +41,8 @@ function renderMarket(overrides: Partial<Parameters<typeof MarketPage>[0]> = {})
       onDiscontinueProduct={noop}
       onDiscontinueComponentProduct={noop}
       onOrderProduction={noop}
+      onOrderComponentProduction={noop}
+      onUpgradeFactory={noop}
       onReleaseProduct={noop}
       onReleaseComponentProduct={noop}
       onRepayLoan={noop}
@@ -97,6 +100,30 @@ describe("Market screen", () => {
       name: "Dynasty Graphics 100",
       priceUsd: expect.any(Number),
     }));
+  });
+
+  it("orders a component production batch from the product card", async () => {
+    const user = userEvent.setup();
+    const onOrderComponentProduction = vi.fn(async () => true);
+    const released = releaseComponentProduct(stateWithComponentProject, {
+      projectId: "component-1",
+      projectVersion: 1,
+      name: "Dynasty Graphics 100",
+      priceUsd: 400,
+    });
+
+    renderMarket({
+      state: released,
+      onOrderComponentProduction,
+    });
+
+    await user.click(
+      screen.getByRole("button", { name: ru.market.componentMarket.manufacturing.order }),
+    );
+
+    await waitFor(() =>
+      expect(onOrderComponentProduction).toHaveBeenCalledWith("component-product-1", 100),
+    );
   });
 
   it("shows a clear empty state when there is no saved CPU version", () => {
@@ -253,6 +280,8 @@ describe("Market screen", () => {
         onDiscontinueProduct={noop}
         onDiscontinueComponentProduct={noop}
         onOrderProduction={noop}
+        onOrderComponentProduction={noop}
+        onUpgradeFactory={noop}
         onReleaseProduct={noop}
         onReleaseComponentProduct={noop}
         onRepayLoan={noop}

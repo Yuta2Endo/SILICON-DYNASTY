@@ -3,6 +3,7 @@ import { addDays } from "../models/date";
 import { advanceResearchDay } from "./research";
 import { runCompetitorDay, runProductionDay, simulateMarketDay, updateMarketReputation } from "./market";
 import { simulateComponentMarketDay } from "./component-market";
+import { runComponentProductionDay } from "./manufacturing";
 import { runOemContractDay } from "./oem-contracts";
 import { runCommercialDay } from "./commercial";
 import { advanceAiTrainingDay } from "./ai-training";
@@ -17,6 +18,7 @@ export function advanceGameDay(state: GameState): GameState {
   };
 
   nextState = runProductionDay(nextState, simulationDate);
+  nextState = runComponentProductionDay(nextState, simulationDate);
   nextState = runOemContractDay(nextState, simulationDate);
   nextState = runCommercialDay(nextState, simulationDate);
   nextState = runCompetitorDay(nextState, simulationDate);

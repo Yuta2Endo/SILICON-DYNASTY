@@ -60,6 +60,8 @@ describe("advanceGameDay", () => {
         componentProducts: released.market.componentProducts.map((product) => ({
           ...product,
           releaseDate: "1994-01-01",
+          inventoryUnits: 1_000,
+          unitsProduced: 1_000,
         })),
       },
     };
@@ -73,6 +75,6 @@ describe("advanceGameDay", () => {
     expect(summary?.componentRevenueUsd).toBe((summary?.componentUnits ?? 0) * 400);
     expect(record?.unitsSold).toBe(summary?.componentUnits);
     expect(record?.revenueUsd).toBe(summary?.componentRevenueUsd);
-    expect(record?.manufacturingUsd).toBeGreaterThan(0);
+    expect(record?.manufacturingUsd).toBe(0);
   });
 });

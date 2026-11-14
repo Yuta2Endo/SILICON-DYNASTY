@@ -391,6 +391,8 @@ The Market overview must include OEM design-win contracts. Pending offers must s
 
 The Market overview must also include commercial contracts for five channels: OS licensing, AI API, device supply, cloud capacity and app store. Offers must show the partner, channel, underlying asset, signing bonus, daily revenue, term, expiry, quality and minimum reputation, with accept and decline actions. Active contracts must show remaining days, daily revenue, signing bonus and accumulated revenue. Revenue must come from the finance ledger, and the dashboard must show the current-day revenue mix across all five channels.
 
+The Market overview must include a manufacturing panel with factory level, daily capacity, upgrade cost and the active component production queue. Component product cards must show inventory, produced/sold counters, an out-of-stock state, estimated batch cost and lead time, and an order action. Sales must be limited by real inventory; manufacturing cost is charged when a batch is ordered.
+
 All monetary values must use consistent formatting.
 
 ### Analytics

@@ -406,3 +406,34 @@ test("compares two saved cloud versions", async ({ page }) => {
   await expect(cloudCompare).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
+
+test("orders component production and sees the factory queue", async ({ page }) => {
+  await openGame(page);
+
+  await page
+    .getByRole("navigation", { name: "Основная навигация" })
+    .getByRole("button", { name: "Процессор" })
+    .click();
+  await page.locator(".product-workspace-tabs").getByRole("button", { name: "Компоненты" }).click();
+  await page.locator("#component-new-project-name").fill("E2E Manufacturing GPU");
+  await page.getByRole("button", { name: "Создать проект компонента" }).click();
+  await expect(page.locator("#component-project-name")).toBeVisible();
+
+  await page
+    .getByRole("navigation", { name: "Основная навигация" })
+    .getByRole("button", { name: "Рынок" })
+    .click();
+  await page.locator("#component-release-name").fill("E2E Manufacturing GPU 100");
+  await page.getByRole("button", { name: "Выпустить компонент" }).click();
+  await expect(page.getByText("E2E Manufacturing GPU 100")).toBeVisible();
+
+  const manufacturing = page.locator(".manufacturing-panel");
+  await expect(manufacturing.getByRole("heading", { name: "Производство" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Заказать производство" }).click();
+  await expect(page.locator(".component-production-orders")).toContainText("Партия 100");
+  await expectNoHorizontalOverflow(page);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expectNoHorizontalOverflow(page);
+});

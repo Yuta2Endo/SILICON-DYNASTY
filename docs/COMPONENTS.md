@@ -54,9 +54,10 @@ products are stored in `MarketState.componentProducts`:
 }
 ```
 
-Component products use just-in-time production: there is no component inventory
-or production order in Stage 06. Each sold unit charges manufacturing cost on the
-same day before sales revenue is posted.
+Component products are manufactured in batches. The factory level sets daily
+capacity and lead time; ordering a batch charges manufacturing cost immediately
+and delivers into inventory on the ready date. Stage 2 details are in
+[`MANUFACTURING.md`](MANUFACTURING.md).
 
 ## Configuration fields and bounds
 
@@ -241,13 +242,13 @@ Player units per type = `floor(demand * playerAppeal / (playerAppeal +
 competitorAppeal + siblingProductAppeals))`. Units are then capped by available
 cash: `floor(balance / manufacturingCost)`.
 
-For each sale the engine posts manufacturing cost first, then sales revenue, and
-records units sold in the daily finance record. Sales are aggregated into
+Component sales are capped by `inventoryUnits`; manufacturing cost is charged when
+a production batch is ordered, not again on the sale day. Sales are aggregated into
 `MarketDaySummary.componentDemandUnits`, `componentUnits`,
-`componentRevenueUsd` and `componentManufacturingUsd`.
+`componentRevenueUsd` and `componentManufacturingUsd` (zero on sale days).
 
-Component products have no inventory and no production lead time in Stage 06, so
-there is no stockout penalty. Reputation gain includes component units:
+Zero inventory means an out-of-stock product earns nothing until the next batch
+arrives. Reputation gain includes component units:
 `min(0.1, (CPU units + component units) / 5000)`.
 
 ## UI
@@ -284,8 +285,10 @@ there is no stockout penalty. Reputation gain includes component units:
   workloads; cost growth from die/memory; suggested price; demand sensitivity to
   price, performance and time.
 - `src/game/engine/component-market.test.ts`: launch fee, duplicate rejection,
-  JIT sales, finance posting, price sensitivity, cash cap, reprice/discontinue.
-- `src/game/engine/time.test.ts`: component sales run inside the daily pipeline.
+  inventory-capped sales, finance posting, price sensitivity, reprice/discontinue.
+- `src/game/models/manufacturing.test.ts`: capacity, lead time, upgrades and parser.
+- `src/game/engine/manufacturing.test.ts`: batch cost, delivery, inventory and upgrades.
+- `src/game/engine/time.test.ts`: component production and sales run inside the daily pipeline.
 - `src/game/models/game-state.test.ts`: v4 -> v5 migration and component project
   validation.
 - `src/game/application/game-application.test.ts`: create/version/release/reprice/

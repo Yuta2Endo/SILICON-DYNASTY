@@ -29,7 +29,7 @@ describe("LocalStorageGameStateRepository", () => {
     expect(window.localStorage.getItem("silicon-dynasty:save:v1")).toBe("{not-json");
   });
 
-  it("persists the Stage 1 to Stage 13 schema migration", async () => {
+  it("persists the Stage 1 to Stage 14 schema migration", async () => {
     const repository = new LocalStorageGameStateRepository(window.localStorage);
     const current = createInitialGameState();
     const legacySave = {
@@ -44,14 +44,14 @@ describe("LocalStorageGameStateRepository", () => {
     const persisted = JSON.parse(window.localStorage.getItem("silicon-dynasty:save") ?? "null") as { schemaVersion?: number };
     const legacy = JSON.parse(window.localStorage.getItem("silicon-dynasty:save:v1") ?? "null") as { schemaVersion?: number };
 
-    expect(migrated?.schemaVersion).toBe(13);
+    expect(migrated?.schemaVersion).toBe(14);
     expect(migrated?.research).toEqual(createInitialGameState().research);
     expect(migrated?.company).toEqual(current.company);
     expect(migrated?.cpuProjects).toEqual([]);
     expect(migrated?.osProjects).toEqual([]);
     expect(migrated?.finance).toEqual(current.finance);
     expect(migrated?.market).toEqual(current.market);
-    expect(persisted.schemaVersion).toBe(13);
+    expect(persisted.schemaVersion).toBe(14);
     expect(legacy.schemaVersion).toBe(1);
   });
 
@@ -79,7 +79,7 @@ describe("LocalStorageGameStateRepository", () => {
       schemaVersion: number;
     };
 
-    expect(migrated?.schemaVersion).toBe(13);
+    expect(migrated?.schemaVersion).toBe(14);
     expect(migrated?.cpuProjects).toEqual([project]);
     expect(migrated?.finance).toEqual(current.finance);
     expect(migrated?.market).toEqual(current.market);
@@ -90,7 +90,7 @@ describe("LocalStorageGameStateRepository", () => {
       "memory.ddr",
       "cpu.neon",
     ]));
-    expect(persisted.schemaVersion).toBe(13);
+    expect(persisted.schemaVersion).toBe(14);
   });
 
   it("keeps the previous valid autosave as a recovery backup", async () => {
@@ -128,7 +128,7 @@ describe("LocalStorageGameStateRepository", () => {
       slotId: "slot-1",
       companyName: "Slot Dynasty",
       gameDate: "1995-01-01",
-      schemaVersion: 13,
+      schemaVersion: 14,
     });
     expect(await repository.loadSlot("slot-1")).toEqual(state);
 

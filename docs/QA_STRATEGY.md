@@ -1,15 +1,15 @@
 # QA Strategy
 
 ## Unit tests
-CPU/GPU formulas, benchmark, power/thermal, economy, research dependencies, market, press reviews, commercial contracts, OS quality, AI training simulation, compatibility and save migrations.
+CPU/GPU formulas, benchmark, power/thermal, economy, research dependencies, market, press reviews, commercial contracts, manufacturing capacity/inventory, OS quality, AI training simulation, compatibility and save migrations.
 
 ## Integration tests
-Hardware + benchmark; hardware + manufacturing; research + unlocks; OS + devices; AI + GPU; cloud + AI; ecosystem + market; finance + manufacturing; OEM contracts + market demand and finance; commercial contracts + finance ledger and expiry.
+Hardware + benchmark; hardware + manufacturing; research + unlocks; OS + devices; AI + GPU; cloud + AI; ecosystem + market; finance + manufacturing; component production + inventory + sales; OEM contracts + market demand and finance; commercial contracts + finance ledger and expiry.
 
 ## End-to-end scenario
 New game → create company → research technology → design CPU → benchmark → manufacture → release → sales → create OS → create AI project → assemble device → save → restart → load → continue.
 
-Current Playwright coverage: `e2e/core-loop.spec.ts` verifies analytics CSV and settings JSON export flows; `e2e/ui-regression.spec.ts` verifies mobile navigation/More sheet, horizontally scrollable product tabs, market tabs and 14-day pulse, OS editor sections, saved-version comparison, and accepting an OEM design-win offer. Both run in desktop Chromium only.
+Current Playwright coverage: `e2e/core-loop.spec.ts` verifies analytics CSV and settings JSON export flows; `e2e/commercial.spec.ts` verifies an OS commercial contract and dashboard revenue mix; `e2e/ui-regression.spec.ts` verifies mobile navigation/More sheet, horizontally scrollable product tabs, market tabs and 14-day pulse, OS editor sections, saved-version comparison, accepting an OEM design-win offer, and ordering a component production batch. All run in desktop Chromium only.
 
 ## Save QA
 Test each data type, corrupted data, interrupted writes, autosave restart, migrations, invalid imports and backup recovery.

@@ -136,9 +136,24 @@ export function createSchema12Fixture(): unknown {
 
 export function createSchema13Fixture(): unknown {
   const current = createInitialGameState();
+  const {
+    manufacturing: _manufacturing,
+    ...legacyState
+  } = current;
+  void _manufacturing;
+
+  return {
+    ...legacyState,
+    schemaVersion: 13,
+    company: { ...current.company, name: "Pre-Manufacturing Co" },
+  };
+}
+
+export function createSchema14Fixture(): unknown {
+  const current = createInitialGameState();
   return {
     ...current,
-    schemaVersion: 13,
+    schemaVersion: 14,
     company: { ...current.company, name: "Current Save Co" },
   };
 }

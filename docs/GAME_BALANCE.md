@@ -324,3 +324,11 @@ save management and a derived experience layer; full details are in
 - Cloud contracts charge their modeled daily operating cost as `overhead`; device-supply contracts charge the referenced device unit cost. Daily net is revenue minus cost.
 - Offers are deterministic for the same game date/state/assets and skip assets already offered or under contract.
 - Schema v13 adds `commercialContracts`; v1-v12 saves migrate with an empty state. Full details: `COMMERCIAL_CHANNELS.md`.
+
+## Component manufacturing and inventory (Stage 2)
+
+- Factory levels 1-5 provide 1,000 / 2,000 / 4,000 / 8,000 / 16,000 component units per day. Upgrades cost $150,000 × current level, up to level 5.
+- Component production charges `quantity × unit manufacturing cost` immediately as `manufacturing`. Lead time is `4 + ceil(quantity / capacity)` days; the batch arrives whole on the ready date.
+- Component sales are capped by `inventoryUnits`; revenue is posted as `sales`. Out-of-stock products earn nothing until a batch arrives.
+- Delivered batches increment `unitsProduced` and the finance daily `unitsProduced` counter. Inventory invariant: `unitsProduced = unitsSold + inventoryUnits`.
+- Schema v14 adds `manufacturing`; older component products migrate with zero inventory and `unitsProduced = unitsSold`. Full details: `MANUFACTURING.md`.

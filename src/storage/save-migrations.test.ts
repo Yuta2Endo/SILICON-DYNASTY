@@ -9,6 +9,7 @@ import {
   createSchema11Fixture,
   createSchema12Fixture,
   createSchema13Fixture,
+  createSchema14Fixture,
 } from "./fixtures/legacy-saves";
 
 describe("save migrations with fixture saves", () => {
@@ -78,14 +79,20 @@ describe("save migrations with fixture saves", () => {
     });
   });
 
+  it("migrates a schema-13 save by initializing manufacturing", () => {
+    const state = parseGameState(createSchema13Fixture());
+    expect(state.company.name).toBe("Pre-Manufacturing Co");
+    expect(state.manufacturing).toEqual({ factoryLevel: 1, componentOrders: [] });
+  });
+
   it("round-trips a current schema save and rejects a future schema", () => {
-    const current = parseGameState(createSchema13Fixture());
+    const current = parseGameState(createSchema14Fixture());
     expect(current.company.name).toBe("Current Save Co");
     expect(parseGameState(JSON.parse(JSON.stringify(current)))).toEqual(current);
 
     expect(() => parseGameState({
-      ...createSchema13Fixture() as Record<string, unknown>,
-      schemaVersion: 14,
+      ...createSchema14Fixture() as Record<string, unknown>,
+      schemaVersion: 15,
     })).toThrow("unsupported schema version");
   });
 

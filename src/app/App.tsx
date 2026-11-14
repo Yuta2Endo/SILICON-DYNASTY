@@ -381,6 +381,12 @@ export function App({ application, initialMenuOpen }: AppProps = {}) {
           onOrderProduction={async (productId, quantity) =>
             (await runCommand(() => gameApplication.orderProduction(productId, quantity))) !== null
           }
+          onOrderComponentProduction={async (productId, quantity) =>
+            (await runCommand(() => gameApplication.orderComponentProduction(productId, quantity))) !== null
+          }
+          onUpgradeFactory={async () =>
+            (await runCommand(() => gameApplication.upgradeFactory())) !== null
+          }
           onReleaseProduct={async (input) =>
             (await runCommand(() => gameApplication.releaseProduct(input))) !== null
           }
