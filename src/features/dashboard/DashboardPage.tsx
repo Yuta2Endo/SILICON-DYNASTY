@@ -29,6 +29,10 @@ import type { ScreenId } from "../../app/navigation";
 import { getTutorialSteps, type TutorialStepId } from "../../game/models/game-experience";
 import type { GameState } from "../../game/models/game-state";
 import { getCompetitor, getMarketSegment } from "../../game/models/market";
+import {
+  COMMERCIAL_CHANNELS,
+  getCommercialDailyRevenueByChannel,
+} from "../../game/models/commercial";
 import { getPressReview, type PressReview } from "../../game/formulas/press";
 import {
   formatCurrency,
@@ -147,6 +151,14 @@ export function DashboardPage({
       right.publishedOn.localeCompare(left.publishedOn) || right.score - left.score
     ))
     .slice(0, 3);
+  const commercialRevenue = getCommercialDailyRevenueByChannel(
+    state.commercialContracts.active,
+    state.gameDate,
+  );
+  const commercialTotal = COMMERCIAL_CHANNELS.reduce(
+    (total, channel) => total + commercialRevenue[channel],
+    0,
+  );
   const hasActiveProduct = activeProducts.length > 0 || activeComponentProducts.length > 0;
   const hasStockout = activeProducts.some((product) => product.inventoryUnits === 0);
   const alerts = [
@@ -168,6 +180,16 @@ export function DashboardPage({
         message: t.dashboard.alertOemOffers.replace(
           "{count}",
           String(state.oemContracts.offers.length),
+        ),
+        screen: "market" as ScreenId,
+      }
+      : null,
+    state.commercialContracts.offers.length > 0
+      ? {
+        id: "commercial-offers",
+        message: t.dashboard.alertCommercialOffers.replace(
+          "{count}",
+          String(state.commercialContracts.offers.length),
         ),
         screen: "market" as ScreenId,
       }
@@ -445,6 +467,33 @@ export function DashboardPage({
               </article>
             ))}
           </div>
+        )}
+      </Panel>
+
+      <Panel
+        className="dashboard-commercial"
+        description={t.dashboard.commercialMixHint}
+        icon={CircleDollarSign}
+        title={t.dashboard.commercialMixTitle}
+      >
+        {commercialTotal <= 0 ? (
+          <p className="dashboard-commercial-empty">{t.dashboard.commercialMixEmpty}</p>
+        ) : (
+          <>
+            <div className="dashboard-commercial-total">
+              <span>{t.dashboard.commercialMixTotal}</span>
+              <strong>{formatCurrency(commercialTotal, locale)}</strong>
+            </div>
+            <div className="dashboard-commercial-grid">
+              {COMMERCIAL_CHANNELS.map((channel) => (
+                <article className="dashboard-commercial-card" key={channel}>
+                  <span>{t.market.commercial.channels[channel]}</span>
+                  <strong>{formatCurrency(commercialRevenue[channel], locale)}</strong>
+                  <small>{t.market.commercial.perDay}</small>
+                </article>
+              ))}
+            </div>
+          </>
         )}
       </Panel>
 

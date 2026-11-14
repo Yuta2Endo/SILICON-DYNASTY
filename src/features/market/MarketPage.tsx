@@ -47,6 +47,11 @@ import {
   type OemContractOffer,
 } from "../../game/models/oem-contracts";
 import {
+  getCommercialContractDaysRemaining,
+  type CommercialContract,
+  type CommercialOffer,
+} from "../../game/models/commercial";
+import {
   calculateCpuMarketPerformanceScore,
   calculateGrossMargin,
   calculateSuggestedPrice,
@@ -97,6 +102,8 @@ interface MarketPageProps {
   onUpdateMarketingBudget: (amountUsd: number) => Promise<boolean>;
   onAcceptOemContract: (offerId: string) => Promise<boolean>;
   onDeclineOemContract: (offerId: string) => Promise<boolean>;
+  onAcceptCommercialOffer: (offerId: string) => Promise<boolean>;
+  onDeclineCommercialOffer: (offerId: string) => Promise<boolean>;
   onTakeLoan: (amountUsd: number) => Promise<boolean>;
   onRepayLoan: (amountUsd: number) => Promise<boolean>;
 }
@@ -116,6 +123,8 @@ export function MarketPage({
   onUpdateMarketingBudget,
   onAcceptOemContract,
   onDeclineOemContract,
+  onAcceptCommercialOffer,
+  onDeclineCommercialOffer,
   onTakeLoan,
   onRepayLoan,
 }: MarketPageProps) {
@@ -179,6 +188,8 @@ export function MarketPage({
             onDiscontinueComponentProduct={onDiscontinueComponentProduct}
             onAcceptOemContract={onAcceptOemContract}
             onDeclineOemContract={onDeclineOemContract}
+            onAcceptCommercialOffer={onAcceptCommercialOffer}
+            onDeclineCommercialOffer={onDeclineCommercialOffer}
             onOrderProduction={onOrderProduction}
             onReleaseProduct={onReleaseProduct}
             onReleaseComponentProduct={onReleaseComponentProduct}
@@ -217,6 +228,8 @@ function MarketOverview({
   onDiscontinueComponentProduct,
   onAcceptOemContract,
   onDeclineOemContract,
+  onAcceptCommercialOffer,
+  onDeclineCommercialOffer,
 }: {
   state: GameState;
   copy: MarketCopy;
@@ -230,6 +243,8 @@ function MarketOverview({
   onDiscontinueComponentProduct: (productId: string) => Promise<boolean>;
   onAcceptOemContract: (offerId: string) => Promise<boolean>;
   onDeclineOemContract: (offerId: string) => Promise<boolean>;
+  onAcceptCommercialOffer: (offerId: string) => Promise<boolean>;
+  onDeclineCommercialOffer: (offerId: string) => Promise<boolean>;
 }) {
   const locale = state.settings.locale;
   const latest = state.market.dailySummaries.at(-1);
@@ -388,6 +403,14 @@ function MarketOverview({
         isSaving={isSaving}
         onAccept={onAcceptOemContract}
         onDecline={onDeclineOemContract}
+        state={state}
+      />
+
+      <CommercialContractsSection
+        copy={copy}
+        isSaving={isSaving}
+        onAccept={onAcceptCommercialOffer}
+        onDecline={onDeclineCommercialOffer}
         state={state}
       />
 
@@ -676,6 +699,128 @@ function OemContractsSection({
               </div>
             </div>
           ) : null}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function CommercialContractsSection({
+  copy,
+  state,
+  isSaving,
+  onAccept,
+  onDecline,
+}: {
+  copy: MarketCopy;
+  state: GameState;
+  isSaving: boolean;
+  onAccept: (offerId: string) => Promise<boolean>;
+  onDecline: (offerId: string) => Promise<boolean>;
+}) {
+  const contractCopy = copy.commercial;
+  const { offers, active } = state.commercialContracts;
+  const locale = state.settings.locale;
+
+  return (
+    <section className="market-section oem-contracts" aria-labelledby="market-commercial-title">
+      <SectionHeading
+        copy={contractCopy.hint}
+        icon={Handshake}
+        id="market-commercial-title"
+        title={contractCopy.title}
+      />
+      <p className="oem-contracts__summary">
+        {contractCopy.summary
+          .replace("{offers}", formatNumber(offers.length, locale))
+          .replace("{active}", formatNumber(active.length, locale))}
+      </p>
+      {offers.length === 0 && active.length === 0 ? (
+        <EmptyState body={contractCopy.emptyHint} title={contractCopy.emptyTitle} />
+      ) : (
+        <div className="oem-contracts__columns">
+          <div className="oem-contracts__group">
+            <h3>{contractCopy.offersTitle}</h3>
+            {offers.length === 0 ? (
+              <p className="oem-contracts__empty">{contractCopy.emptyHint}</p>
+            ) : (
+              <div className="oem-offer-list">
+                {offers.map((offer: CommercialOffer) => (
+                  <article className="oem-offer" key={offer.id}>
+                    <header className="oem-offer__header">
+                      <div className="oem-offer__customer">
+                        <strong>{offer.partnerName}</strong>
+                        <span>{contractCopy.channels[offer.channel]} · {offer.assetName}</span>
+                      </div>
+                      <span className="market-status market-status--active">
+                        {formatCurrency(offer.dailyRevenueUsd, locale)}{contractCopy.perDay}
+                      </span>
+                    </header>
+                    <dl className="oem-offer__terms">
+                      <div><dt>{contractCopy.signingBonus}</dt><dd>{formatCurrency(offer.signingBonusUsd, locale)}</dd></div>
+                      <div><dt>{contractCopy.dailyCost}</dt><dd>{formatCurrency(offer.dailyCostUsd, locale)}</dd></div>
+                      <div><dt>{contractCopy.netPerDay}</dt><dd>{formatCurrency(offer.dailyRevenueUsd - offer.dailyCostUsd, locale)}</dd></div>
+                      <div><dt>{contractCopy.duration}</dt><dd>{formatNumber(offer.durationDays, locale)}</dd></div>
+                      <div><dt>{contractCopy.expires}</dt><dd>{formatShortGameDate(offer.expiresOn, locale)}</dd></div>
+                      <div><dt>{contractCopy.minReputation}</dt><dd>{formatNumber(offer.minimumReputation, locale)}</dd></div>
+                    </dl>
+                    <p className="oem-offer__requirement">{contractCopy.quality}: {formatNumber(offer.qualityScore, locale)}/100</p>
+                    <div className="oem-offer__actions">
+                      <button
+                        className="button button--primary"
+                        disabled={isSaving}
+                        onClick={() => void onAccept(offer.id)}
+                        type="button"
+                      >
+                        {contractCopy.accept}
+                      </button>
+                      <button
+                        className="button button--secondary"
+                        disabled={isSaving}
+                        onClick={() => void onDecline(offer.id)}
+                        type="button"
+                      >
+                        {contractCopy.decline}
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="oem-contracts__group">
+            <h3>{contractCopy.activeTitle}</h3>
+            {active.length === 0 ? (
+              <p className="oem-contracts__empty">{contractCopy.emptyHint}</p>
+            ) : (
+              <div className="oem-contract-list">
+                {active.map((contract: CommercialContract) => {
+                  const days = getCommercialContractDaysRemaining(contract, state.gameDate);
+                  return (
+                    <article className="oem-contract" key={contract.id}>
+                      <header className="oem-offer__header">
+                        <div className="oem-offer__customer">
+                          <strong>{contract.partnerName}</strong>
+                          <span>{contractCopy.channels[contract.channel]} · {contract.assetName}</span>
+                        </div>
+                        <span className="market-status market-status--active">
+                          {contractCopy.daysLeft.replace("{days}", formatNumber(days, locale))}
+                        </span>
+                      </header>
+                      <dl className="oem-offer__terms">
+                        <div><dt>{contractCopy.perDay}</dt><dd>{formatCurrency(contract.dailyRevenueUsd, locale)}</dd></div>
+                        <div><dt>{contractCopy.dailyCost}</dt><dd>{formatCurrency(contract.dailyCostUsd, locale)}</dd></div>
+                        <div><dt>{contractCopy.netPerDay}</dt><dd>{formatCurrency(contract.dailyRevenueUsd - contract.dailyCostUsd, locale)}</dd></div>
+                        <div><dt>{contractCopy.totalRevenue}</dt><dd>{formatCurrency(contract.totalRevenueUsd, locale)}</dd></div>
+                        <div><dt>{contractCopy.expires}</dt><dd>{formatShortGameDate(contract.expiresOn, locale)}</dd></div>
+                      </dl>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </section>

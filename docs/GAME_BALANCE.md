@@ -314,3 +314,13 @@ save management and a derived experience layer; full details are in
 - Demand multiplier is `0.92 + score * 0.0016`, clamped to 0.90-1.10. It applies to market simulation and demand estimates, and stacks with OEM bonuses.
 - Sentiment thresholds: positive at 70+, mixed at 45-69, negative below 45.
 - Dashboard shows up to three current reviews. Full details: `PRESS_REVIEWS.md`.
+
+## Commercial contracts (Stage 1)
+
+- Five channels connect existing assets to recurring revenue: OS licensing ($60/day base), AI API ($85), device supply ($120), cloud capacity ($100) and app store ($40).
+- Daily revenue is `max(25, base × (0.35 + quality / 100) × (0.5 + appeal / 100))`, rounded to cents. Quality and appeal come from the existing OS/AI/device/cloud metrics.
+- Signing bonus is `daily revenue × (10 + seed % 6)`. Offer duration is 180, 270 or 360 days; offers expire after 21 days. At most 6 offers and 10 active contracts exist.
+- Accepting pays the signing bonus as `sales`, adds the contract and grants +0.5 reputation. Daily contract revenue is posted as `sales` before finance settlement.
+- Cloud contracts charge their modeled daily operating cost as `overhead`; device-supply contracts charge the referenced device unit cost. Daily net is revenue minus cost.
+- Offers are deterministic for the same game date/state/assets and skip assets already offered or under contract.
+- Schema v13 adds `commercialContracts`; v1-v12 saves migrate with an empty state. Full details: `COMMERCIAL_CHANNELS.md`.

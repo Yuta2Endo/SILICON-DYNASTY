@@ -402,6 +402,12 @@ export function App({ application, initialMenuOpen }: AppProps = {}) {
           onDeclineOemContract={async (offerId) =>
             (await runCommand(() => gameApplication.declineOemContract(offerId))) !== null
           }
+          onAcceptCommercialOffer={async (offerId) =>
+            (await runCommand(() => gameApplication.acceptCommercialOffer(offerId))) !== null
+          }
+          onDeclineCommercialOffer={async (offerId) =>
+            (await runCommand(() => gameApplication.declineCommercialOffer(offerId))) !== null
+          }
           onTakeLoan={async (amountUsd) =>
             (await runCommand(() => gameApplication.takeLoan(amountUsd))) !== null
           }

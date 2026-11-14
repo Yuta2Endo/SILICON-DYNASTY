@@ -71,6 +71,7 @@ import {
 } from "../engine/component-market";
 import { advanceOsRelease, startOsRelease } from "../engine/os-release";
 import { acceptOemContract, declineOemContract } from "../engine/oem-contracts";
+import { acceptCommercialOffer, declineCommercialOffer } from "../engine/commercial";
 import {
   applyAiOptimization,
   deployAiModel,
@@ -145,6 +146,8 @@ export interface GameApplication {
   updateMarketingBudget(amountUsd: number): Promise<GameState>;
   acceptOemContract(offerId: string): Promise<GameState>;
   declineOemContract(offerId: string): Promise<GameState>;
+  acceptCommercialOffer(offerId: string): Promise<GameState>;
+  declineCommercialOffer(offerId: string): Promise<GameState>;
   takeLoan(amountUsd: number): Promise<GameState>;
   repayLoan(amountUsd: number): Promise<GameState>;
 }
@@ -519,6 +522,14 @@ export function createGameApplication(repository: GameStateRepository): GameAppl
 
     async declineOemContract(offerId) {
       return commit(declineOemContract(await ensureLoaded(), offerId));
+    },
+
+    async acceptCommercialOffer(offerId) {
+      return commit(acceptCommercialOffer(await ensureLoaded(), offerId));
+    },
+
+    async declineCommercialOffer(offerId) {
+      return commit(declineCommercialOffer(await ensureLoaded(), offerId));
     },
 
     async takeLoan(amountUsd) {

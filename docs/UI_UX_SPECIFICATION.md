@@ -202,7 +202,8 @@ Show:
 - Market value and share.
 - Sales.
 - Active products.
-- A command center with quick actions and actionable signals, including pending OEM design-win offers.
+- A command center with quick actions and actionable signals, including pending OEM design-win and commercial contract offers.
+- A commercial revenue mix for the current day across OS licensing, AI API, device supply, cloud capacity and app store channels, derived from active contracts.
 - A company pulse with 14-day trends for revenue, net profit and market share, derived from real finance and market records.
 - A press panel with up to three current product reviews, scores, outlets, localized headlines and a link to the market. Reviews are derived from real products and affect demand after the first month on sale.
 - First-run quick start guidance until the tutorial is complete or the player dismisses it.
@@ -387,6 +388,8 @@ Use charts, comparison panels and compact financial cards.
 The Market overview must include a 14-day market pulse with accessible sparklines for market share, player revenue and units sold, derived from real daily summaries. Show an empty state until the first simulated market day.
 
 The Market overview must include OEM design-win contracts. Pending offers must show the customer, product, segment, upfront payment, demand bonus, term and expiry, with accept and decline actions. Active contracts must show remaining days, bonus, payment and expiry. Use an empty state when no offers or contracts exist. Contract income and demand effects must come from real game state, not a separate preview state.
+
+The Market overview must also include commercial contracts for five channels: OS licensing, AI API, device supply, cloud capacity and app store. Offers must show the partner, channel, underlying asset, signing bonus, daily revenue, term, expiry, quality and minimum reputation, with accept and decline actions. Active contracts must show remaining days, daily revenue, signing bonus and accumulated revenue. Revenue must come from the finance ledger, and the dashboard must show the current-day revenue mix across all five channels.
 
 All monetary values must use consistent formatting.
 

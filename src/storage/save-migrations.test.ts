@@ -8,6 +8,7 @@ import {
   createSchema10Fixture,
   createSchema11Fixture,
   createSchema12Fixture,
+  createSchema13Fixture,
 } from "./fixtures/legacy-saves";
 
 describe("save migrations with fixture saves", () => {
@@ -67,14 +68,24 @@ describe("save migrations with fixture saves", () => {
     expect(state.oemContracts).toEqual({ offers: [], active: [], lastOfferOn: null });
   });
 
+  it("migrates a schema-12 save by initializing commercial contracts", () => {
+    const state = parseGameState(createSchema12Fixture());
+    expect(state.company.name).toBe("Pre-Commercial Co");
+    expect(state.commercialContracts).toEqual({
+      offers: [],
+      active: [],
+      lastOfferOn: null,
+    });
+  });
+
   it("round-trips a current schema save and rejects a future schema", () => {
-    const current = parseGameState(createSchema12Fixture());
+    const current = parseGameState(createSchema13Fixture());
     expect(current.company.name).toBe("Current Save Co");
     expect(parseGameState(JSON.parse(JSON.stringify(current)))).toEqual(current);
 
     expect(() => parseGameState({
-      ...createSchema12Fixture() as Record<string, unknown>,
-      schemaVersion: 13,
+      ...createSchema13Fixture() as Record<string, unknown>,
+      schemaVersion: 14,
     })).toThrow("unsupported schema version");
   });
 

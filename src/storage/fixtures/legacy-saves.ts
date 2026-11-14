@@ -121,8 +121,24 @@ export function createSchema11Fixture(): unknown {
 
 export function createSchema12Fixture(): unknown {
   const current = createInitialGameState();
+  const {
+    commercialContracts: _commercialContracts,
+    ...legacyState
+  } = current;
+  void _commercialContracts;
+
+  return {
+    ...legacyState,
+    schemaVersion: 12,
+    company: { ...current.company, name: "Pre-Commercial Co" },
+  };
+}
+
+export function createSchema13Fixture(): unknown {
+  const current = createInitialGameState();
   return {
     ...current,
+    schemaVersion: 13,
     company: { ...current.company, name: "Current Save Co" },
   };
 }

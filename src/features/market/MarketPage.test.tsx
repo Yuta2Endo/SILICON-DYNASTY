@@ -5,6 +5,7 @@ import { createDefaultCpuConfiguration, createCpuProject } from "../../game/mode
 import { createComponentProject, createDefaultComponentConfiguration } from "../../game/models/components";
 import { createInitialGameState } from "../../game/models/game-state";
 import type { MarketDaySummary } from "../../game/models/market";
+import type { CommercialOffer } from "../../game/models/commercial";
 import type { ReleaseProductInput } from "../../game/engine/market";
 import type { ReleaseComponentProductInput } from "../../game/engine/component-market";
 import { translations } from "../../localization/messages";
@@ -45,6 +46,8 @@ function renderMarket(overrides: Partial<Parameters<typeof MarketPage>[0]> = {})
       onTakeLoan={noop}
       onAcceptOemContract={noop}
       onDeclineOemContract={noop}
+      onAcceptCommercialOffer={noop}
+      onDeclineCommercialOffer={noop}
       onUpdateMarketingBudget={noop}
       onUpdateComponentPrice={noop}
       onUpdatePrice={noop}
@@ -109,6 +112,43 @@ describe("Market screen", () => {
     expect(screen.getByRole("heading", { name: ru.market.cycle.title })).toBeTruthy();
     expect(screen.getByText(ru.market.cycle.phases.stable)).toBeTruthy();
     expect(screen.getByText(ru.market.cycle.demand)).toBeTruthy();
+  });
+
+  it("shows and accepts a commercial contract offer", async () => {
+    const user = userEvent.setup();
+    const onAcceptCommercialOffer = vi.fn(async () => true);
+    const offer: CommercialOffer = {
+      id: "commercial-offer-1",
+      partnerId: "orbit-devices",
+      partnerName: "Orbit Devices",
+      channel: "os-license",
+      assetId: "os-license:os-1:os-release-1",
+      assetName: "Dynasty OS",
+      createdOn: "1995-01-01",
+      expiresOn: "1995-01-22",
+      durationDays: 180,
+      signingBonusUsd: 2_000,
+      dailyRevenueUsd: 120,
+      dailyCostUsd: 0,
+      minimumReputation: 0,
+      qualityScore: 72,
+    };
+
+    renderMarket({
+      onAcceptCommercialOffer,
+      state: {
+        ...stateWithProject,
+        commercialContracts: {
+          offers: [offer],
+          active: [],
+          lastOfferOn: "1995-01-01",
+        },
+      },
+    });
+
+    expect(screen.getByRole("heading", { name: ru.market.commercial.title })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: ru.market.commercial.accept }));
+    await waitFor(() => expect(onAcceptCommercialOffer).toHaveBeenCalledWith("commercial-offer-1"));
   });
 
   it("shows market pulse sparklines from recent daily summaries", () => {
@@ -218,8 +258,10 @@ describe("Market screen", () => {
         onRepayLoan={noop}
         onTakeLoan={noop}
         onAcceptOemContract={noop}
-      onDeclineOemContract={noop}
-      onUpdateMarketingBudget={noop}
+        onDeclineOemContract={noop}
+        onAcceptCommercialOffer={noop}
+        onDeclineCommercialOffer={noop}
+        onUpdateMarketingBudget={noop}
         onUpdateComponentPrice={noop}
         onUpdatePrice={noop}
         onViewChange={onViewChange}
