@@ -130,6 +130,36 @@ describe("OsPreviewPanel", () => {
     expect(screen.getByText("InfiniBand")).toBeTruthy();
   });
 
+  it("opens the App Store and Recovery mode from the Start menu", async () => {
+    const user = userEvent.setup();
+    render(
+      <OsPreviewPanel
+        configuration={{
+          ...createDefaultOsConfiguration(),
+          gui: "desktop-shell",
+          appStore: "open",
+          sdk: "full",
+          api: "hybrid",
+        }}
+        locale="ru"
+        project={null}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: ru.start }));
+    await user.click(screen.getByRole("button", { name: "Магазин" }));
+    expect(screen.getByRole("dialog", { name: "Магазин" })).toBeTruthy();
+    expect(screen.getByText("Магазин приложений")).toBeTruthy();
+    expect(screen.getByText("Совместимые приложения")).toBeTruthy();
+
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", { name: ru.start }));
+    await user.click(screen.getByRole("button", { name: "Восстановление" }));
+    expect(screen.getByRole("dialog", { name: "Восстановление" })).toBeTruthy();
+    expect(screen.getByText("Режим восстановления")).toBeTruthy();
+    expect(screen.getByText("Целостность данных")).toBeTruthy();
+  });
+
   it("walks through the boot and lock screens before the desktop", async () => {
     const user = userEvent.setup();
     render(

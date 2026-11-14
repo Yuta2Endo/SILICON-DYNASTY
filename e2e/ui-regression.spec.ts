@@ -79,6 +79,10 @@ test("keeps product tabs scrollable and OS editor sections usable on mobile", as
   await page.getByRole("button", { name: "Безопасность", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Безопасность" })).toBeVisible();
   await page.getByRole("dialog", { name: "Безопасность" }).getByRole("button", { name: "Закрыть" }).click();
+  await page.getByRole("button", { name: "Пуск" }).click();
+  await page.getByRole("button", { name: "Магазин", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Магазин" })).toBeVisible();
+  await page.getByRole("dialog", { name: "Магазин" }).getByRole("button", { name: "Закрыть" }).click();
   await page.getByRole("button", { name: "Перезагрузить" }).click();
   await expect(page.getByText("Загрузка системы")).toBeVisible();
   await page.getByRole("button", { name: "Продолжить" }).click();

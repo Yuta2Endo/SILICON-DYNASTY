@@ -16,12 +16,14 @@ import {
   MonitorCog,
   Power,
   RefreshCw,
+  RotateCcw,
   Search,
   Server,
   Settings,
   ShieldCheck,
   Smartphone,
   Sparkles,
+  Store,
   Terminal,
   Wifi,
   Wrench,
@@ -51,8 +53,18 @@ const APP_ICONS: Record<string, LucideIcon> = {
   "enterprise-console": Building2,
 };
 
-const SYSTEM_APP_IDS = ["settings", "files", "task-manager", "updates", "security-center", "driver-manager"] as const;
+const SYSTEM_APP_IDS = [
+  "settings",
+  "files",
+  "task-manager",
+  "updates",
+  "security-center",
+  "driver-manager",
+  "app-store",
+  "recovery",
+] as const;
 type SystemAppId = (typeof SYSTEM_APP_IDS)[number];
+const SYSTEM_APP_GRID_IDS: readonly SystemAppId[] = SYSTEM_APP_IDS.slice(0, 6);
 type PreviewScreen = "boot" | "lock" | "desktop";
 
 const SYSTEM_APP_ICONS: Record<SystemAppId, LucideIcon> = {
@@ -62,6 +74,8 @@ const SYSTEM_APP_ICONS: Record<SystemAppId, LucideIcon> = {
   updates: RefreshCw,
   "security-center": ShieldCheck,
   "driver-manager": Wrench,
+  "app-store": Store,
+  recovery: RotateCcw,
 };
 
 const DEVICE_ICONS: Record<OsPreviewDevice, LucideIcon> = {
@@ -268,7 +282,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                         }}
                       />
                     ))}
-                    {SYSTEM_APP_IDS.map((appId) => {
+                    {SYSTEM_APP_GRID_IDS.map((appId) => {
                       const Icon = SYSTEM_APP_ICONS[appId];
                       return (
                         <button
@@ -729,7 +743,7 @@ function SystemWindowView({
         </dl>
       </div>
     );
-  } else {
+  } else if (appId === "driver-manager") {
     const driverCopy = copy["driver-manager"];
     const driverLevel = { legacy: 0, acpi: 1, unified: 2, certified: 3 }[configuration.driverFramework];
     const hardware = [
@@ -759,6 +773,58 @@ function SystemWindowView({
             </li>
           ))}
         </ul>
+      </div>
+    );
+  } else if (appId === "app-store") {
+    const storeCopy = copy["app-store"];
+    const appNames = t.os.applications.names;
+    const appCategories = t.os.applications.categories;
+    content = (
+      <div className="os-preview-store">
+        <div className={`os-preview-store__banner${configuration.appStore === "none" ? " is-warn" : ""}`}>
+          <Store aria-hidden="true" size={13} />
+          <span>{configuration.appStore === "none" ? storeCopy.noStore : storeCopy.connected}</span>
+          <strong>{t.os.options.appStore[configuration.appStore]}</strong>
+        </div>
+        <dl className="os-preview-system__rows">
+          <div><dt>{storeCopy.storeType}</dt><dd>{t.os.options.appStore[configuration.appStore]}</dd></div>
+          <div><dt>{storeCopy.sdk}</dt><dd>{t.os.options.sdk[configuration.sdk]}</dd></div>
+          <div><dt>{storeCopy.api}</dt><dd>{t.os.options.api[configuration.api]}</dd></div>
+          <div><dt>{storeCopy.compatible}</dt><dd>{model.compatibleApps}/{model.totalApps}</dd></div>
+        </dl>
+        <div className="os-preview-store__grid">
+          {model.apps.map((app) => (
+            <div className={`os-preview-store__card${app.compatible ? "" : " is-locked"}`} key={app.id}>
+              <span>{appNames[app.id as keyof typeof appNames] ?? app.id}</span>
+              <em>{appCategories[app.category as keyof typeof appCategories] ?? app.category}</em>
+              <strong>{app.compatible ? storeCopy.available : storeCopy.requires}</strong>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  } else {
+    const recoveryCopy = copy.recovery;
+    content = (
+      <div className="os-preview-recovery">
+        <strong className="os-preview-updates__status is-ready">{recoveryCopy.status}</strong>
+        <dl className="os-preview-system__rows">
+          <div><dt>{recoveryCopy.bootloader}</dt><dd>{t.os.options.bootloader[configuration.bootloader]}</dd></div>
+          <div><dt>{recoveryCopy.filesystem}</dt><dd>{t.os.options.filesystem[configuration.filesystem]}</dd></div>
+          <div><dt>{recoveryCopy.encryption}</dt><dd>{t.os.options.encryption[configuration.encryption]}</dd></div>
+          <div><dt>{recoveryCopy.updates}</dt><dd>{t.os.options.updateModel[configuration.updateModel]}</dd></div>
+          <div><dt>{recoveryCopy.packages}</dt><dd>{t.os.options.packageManager[configuration.packageManager]}</dd></div>
+        </dl>
+        <strong className="os-preview-task__title">{recoveryCopy.points}</strong>
+        <ul className="os-preview-recovery__points">
+          <li><RotateCcw aria-hidden="true" size={11} /><span>{recoveryCopy.current}</span><em>v{model.versionLabel}</em></li>
+          <li><ShieldCheck aria-hidden="true" size={11} /><span>{recoveryCopy.safeMode}</span><em>{recoveryCopy.available}</em></li>
+          <li><FolderOpen aria-hidden="true" size={11} /><span>{recoveryCopy.recoveryMedia}</span><em>{recoveryCopy.available}</em></li>
+        </ul>
+        <div className="os-preview-recovery__integrity">
+          <span>{recoveryCopy.integrity}</span>
+          <strong>{formatDecimal(metrics.dataIntegrityScore, locale, 0)}</strong>
+        </div>
       </div>
     );
   }
