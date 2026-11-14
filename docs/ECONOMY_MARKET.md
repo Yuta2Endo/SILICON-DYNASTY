@@ -275,8 +275,8 @@ Strict parsing rejects invalid transaction signs, inconsistent daily totals, dup
 
 ## UI
 
-- **Market** (`MarketPage`, tab `market`): share, daily units/revenue, active products, release form with live cost/performance estimate, product pricing and production controls, orders, segments, competitor strategies/actions, recent market days.
-- **Finance** (same page, tab `finance`): balance, lifetime revenue/expenses, latest profit, debt, 14-day SVG revenue/expense chart, latest daily breakdown, loan controls, marketing budget, recent transactions.
+- **Market** (`MarketPage`, tab `market`): share, daily units/revenue, active products, release form with live cost/performance estimate, product pricing and production controls, orders, segments, competitor strategies/actions, recent market days, a 14-day pulse and an accessible price-performance scatter of player and competitor products.
+- **Finance** (same page, tab `finance`): balance, lifetime revenue/expenses, latest profit, debt, 14-day SVG revenue/expense chart, latest daily breakdown, a cash-flow bridge for the latest day, loan controls, marketing budget, recent transactions.
 - **Dashboard**: adds daily revenue, daily net profit, market share and daily units; activity shows recent competitor actions.
 
 The Finance tab is not a separate bottom-nav item. Finance highlights Market in navigation, keeping the mobile bar at six destinations.
@@ -292,8 +292,13 @@ The Finance tab is not a separate bottom-nav item. Finance highlights Market in 
 | Daily pipeline and date advancement | `src/game/engine/time.test.ts` |
 | Schema 3→4 migration | `src/game/models/game-state.test.ts`, `src/storage/repositories/BrowserGameStateRepository.test.ts` |
 | Market UI release, empty state, Finance tab | `src/features/market/MarketPage.test.tsx` |
+| Price-performance point construction | `src/game/formulas/market-visuals.test.ts` |
+| Cash-flow bridge construction | `src/game/formulas/finance-visuals.test.ts` |
+| Scatter selection and empty state | `src/features/market/PricePerformanceScatter.test.tsx` |
+| Waterfall labels, signed flows and zero-flow case | `src/features/market/CashFlowWaterfall.test.tsx` |
+| Desktop scatter and waterfall flow at 390 px | `e2e/ui-regression.spec.ts` |
 
-Run `npm run test`, `npm run typecheck`, `npm run lint` and `npm run build`. There is no end-to-end test script in this repository.
+Run `npm run test`, `npm run typecheck`, `npm run lint`, `npm run build` and `npm run test:e2e`.
 
 ## Balance constraints
 

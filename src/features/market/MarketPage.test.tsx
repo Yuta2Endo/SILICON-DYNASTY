@@ -325,6 +325,6 @@ describe("Market screen", () => {
     );
 
     expect(screen.getByRole("tab", { name: ru.market.tabFinance }).getAttribute("aria-selected")).toBe("true");
-    expect(screen.getByText(ru.market.finance.noRecord)).toBeTruthy();
+    expect(screen.getAllByText(ru.market.finance.noRecord).length).toBeGreaterThan(0);
   });
 });

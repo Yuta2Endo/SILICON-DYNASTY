@@ -401,6 +401,8 @@ Use charts, comparison panels and compact financial cards.
 
 The Market overview must include a 14-day market pulse with accessible sparklines for market share, player revenue and units sold, derived from real daily summaries. Show an empty state until the first simulated market day.
 
+The Market overview must include an accessible price-performance scatter. Plot active player products and active competitor products on shared price and performance axes, distinguish player and competitor points, identify segments by color, and show the selected model's name, source, price, performance and segment. The chart must be keyboard operable and show an empty state when no comparable products exist.
+
 The Market overview must include OEM design-win contracts. Pending offers must show the customer, product, segment, upfront payment, demand bonus, term and expiry, with accept and decline actions. Active contracts must show remaining days, bonus, payment and expiry. Use an empty state when no offers or contracts exist. Contract income and demand effects must come from real game state, not a separate preview state.
 
 The Market overview must also include commercial contracts for five channels: OS licensing, AI API, device supply, cloud capacity and app store. Offers must show the partner, channel, underlying asset, signing bonus, daily revenue, term, expiry, quality and minimum reputation, with accept and decline actions. Active contracts must show remaining days, daily revenue, signing bonus and accumulated revenue. Revenue must come from the finance ledger, and the dashboard must show the current-day revenue mix across all five channels.
@@ -408,6 +410,8 @@ The Market overview must also include commercial contracts for five channels: OS
 The Market overview must include a manufacturing panel with factory level, daily capacity, upgrade cost and the active component production queue. Component product cards must show inventory, produced/sold counters, an out-of-stock state, estimated batch cost and lead time, and an order action. Sales must be limited by real inventory; manufacturing cost is charged when a batch is ordered.
 
 Competitor cards must show active/withdrawn status, balance, reputation, last revenue/cost and net result alongside strategy and next-action data. Withdrawn rivals must be visually muted, and a market-exit event must be readable without a percentage. All values come from the persisted market state.
+
+The Finance tab must include a cash-flow bridge for the latest completed day: opening balance, each non-zero revenue and expense flow with signed amounts, net cash flow, and closing balance. Use an accessible list with text labels in addition to the bars, and fall back to the existing empty state until a daily record exists.
 
 All monetary values must use consistent formatting.
 

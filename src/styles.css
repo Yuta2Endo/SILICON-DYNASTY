@@ -11510,3 +11510,353 @@ textarea {
     top: 12px;
   }
 }
+
+/* Price / performance market map */
+.market-scatter {
+  display: grid;
+  gap: 12px;
+}
+
+.market-scatter__figure {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-muted);
+}
+
+.market-scatter__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 6px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.market-scatter__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.market-scatter__legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.market-scatter__legend-dot--player {
+  background: var(--accent);
+}
+
+.market-scatter__legend-dot--competitor {
+  border: 1.5px dashed var(--text-muted);
+  background: transparent;
+}
+
+.market-scatter__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.market-scatter__grid {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.market-scatter__tick,
+.market-scatter__axis-title {
+  fill: var(--text-muted);
+  font-size: 9px;
+}
+
+.market-scatter__axis-title {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.market-scatter__point {
+  cursor: pointer;
+  outline: none;
+}
+
+.market-scatter__point--budget { --scatter-color: #3b82f6; }
+.market-scatter__point--mainstream { --scatter-color: #10b981; }
+.market-scatter__point--performance { --scatter-color: #8b5cf6; }
+.market-scatter__point--enthusiast { --scatter-color: #f59e0b; }
+.market-scatter__point--workstation { --scatter-color: #ef4444; }
+.market-scatter__point--enterprise { --scatter-color: #0f766e; }
+
+.market-scatter__dot {
+  fill: var(--scatter-color, var(--accent));
+  stroke: var(--surface);
+  stroke-width: 1.5;
+  transition: transform 140ms ease;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.market-scatter__point--competitor .market-scatter__dot {
+  fill-opacity: 0.5;
+  stroke: var(--scatter-color, var(--text-muted));
+  stroke-dasharray: 2 1.5;
+}
+
+.market-scatter__dot-halo {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 2;
+}
+
+.market-scatter__point.is-selected .market-scatter__dot-halo,
+.market-scatter__point:focus-visible .market-scatter__dot-halo {
+  stroke: var(--scatter-color, var(--accent));
+}
+
+.market-scatter__point:focus-visible .market-scatter__dot {
+  stroke: var(--text-primary);
+}
+
+.market-scatter__detail {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.market-scatter__eyebrow {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.market-scatter__detail strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.9rem;
+}
+
+.market-scatter__detail small {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.market-scatter__detail dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.market-scatter__detail dl div {
+  min-width: 0;
+}
+
+.market-scatter__detail dt {
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.market-scatter__detail dd {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.market-scatter__empty {
+  padding: 16px;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.market-scatter__empty strong {
+  display: block;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.market-scatter__empty p {
+  margin: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .market-scatter__point:hover .market-scatter__dot {
+    transform: scale(1.25);
+  }
+}
+
+/* Cash-flow bridge */
+.finance-waterfall-section {
+  width: 100%;
+}
+
+.finance-waterfall {
+  display: grid;
+  gap: 12px;
+}
+
+.finance-waterfall__summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.finance-waterfall__summary div {
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-muted);
+}
+
+.finance-waterfall__summary span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.64rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.finance-waterfall__summary strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.finance-waterfall__summary strong.is-positive {
+  color: var(--green-strong, #047857);
+}
+
+.finance-waterfall__summary strong.is-negative {
+  color: var(--danger);
+}
+
+.finance-waterfall__list {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.finance-waterfall__row {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr) 82px;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.finance-waterfall__label {
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.finance-waterfall__row--total .finance-waterfall__label {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.finance-waterfall__track {
+  position: relative;
+  display: block;
+  height: 14px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--surface-muted);
+}
+
+.finance-waterfall__bar {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 3px;
+  background: var(--text-muted);
+  opacity: 0.9;
+}
+
+.finance-waterfall__row--positive .finance-waterfall__bar {
+  background: var(--green, #10b981);
+}
+
+.finance-waterfall__row--negative .finance-waterfall__bar {
+  background: var(--danger);
+}
+
+.finance-waterfall__row--total .finance-waterfall__bar {
+  background: var(--accent);
+}
+
+.finance-waterfall__amount {
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.finance-waterfall__amount--positive {
+  color: var(--green-strong, #047857);
+}
+
+.finance-waterfall__amount--negative {
+  color: var(--danger);
+}
+
+.finance-waterfall__scale {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+  padding-top: 7px;
+  color: var(--text-muted);
+  font-size: 0.62rem;
+}
+
+.finance-waterfall__scale i {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 6px;
+  background: var(--text-muted);
+}
+
+@media (min-width: 640px) {
+  .market-scatter__detail {
+    grid-template-columns: 220px minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .market-scatter__detail dl {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .finance-waterfall__row {
+    grid-template-columns: 140px minmax(0, 1fr) 104px;
+  }
+
+  .finance-waterfall__label,
+  .finance-waterfall__amount {
+    font-size: 0.74rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .market-scatter__dot {
+    transition: none;
+  }
+}

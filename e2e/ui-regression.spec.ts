@@ -193,6 +193,36 @@ test("keeps market tabs in one row and renders the 14-day market pulse", async (
   await expectNoHorizontalOverflow(page);
 });
 
+test("renders the price-performance map and cash-flow bridge", async ({ page }) => {
+  await openGame(page);
+
+  const nextDay = page.getByRole("button", { name: "Следующий день" });
+  await nextDay.click();
+  await expect(nextDay).toBeEnabled();
+
+  await page
+    .getByRole("navigation", { name: "Основная навигация" })
+    .getByRole("button", { name: "Рынок" })
+    .click();
+  await expect(page.getByRole("heading", { name: "Рынок и продажи", level: 1 })).toBeVisible();
+
+  await expect(
+    page.getByRole("heading", { name: "Карта цена — производительность" }),
+  ).toBeVisible();
+  await expect(page.locator(".market-scatter svg")).toBeVisible();
+  expect(await page.locator(".market-scatter__point").count()).toBeGreaterThan(0);
+
+  await page.getByRole("tab", { name: "Финансы" }).click();
+  await expect(page.getByRole("heading", { name: "Финансы", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Мост денежного потока" })).toBeVisible();
+  await expect(page.locator(".finance-waterfall")).toBeVisible();
+  await expect(page.getByText("На начало дня").first()).toBeVisible();
+  await expect(page.getByText("На конец дня").first()).toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expectNoHorizontalOverflow(page);
+});
+
 test("compares two saved OS versions", async ({ page }) => {
   await openGame(page);
 
@@ -351,7 +381,7 @@ test("accepts an OEM design-win offer for a released processor", async ({ page }
     .click();
   await page.locator("#market-release-name").fill("OEM One");
   await page.getByRole("button", { name: "Выпустить продукт" }).click();
-  await expect(page.getByText("OEM One")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "OEM One", level: 3 })).toBeVisible();
 
   await page
     .getByRole("navigation", { name: "Основная навигация" })

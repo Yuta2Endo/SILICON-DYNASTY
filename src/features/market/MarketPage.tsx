@@ -25,6 +25,7 @@ import {
 import type { GameState } from "../../game/models/game-state";
 import { CPU_DIE_EMBLEM_SRC, MANUFACTURING_EMBLEM_SRC, WAFER_EMBLEM_SRC } from "../../app/art";
 import { getEconomicCycle } from "../../game/formulas/economy";
+import { buildPricePerformancePoints } from "../../game/formulas/market-visuals";
 import { validateComponentName } from "../../game/models/components";
 import {
   COMPETITORS,
@@ -86,6 +87,8 @@ import {
 import { translations, type TranslationMessages } from "../../localization/messages";
 import { MetricCard } from "../../components/MetricCard";
 import { TrendSparkline } from "../../components/TrendSparkline";
+import { CashFlowWaterfall } from "./CashFlowWaterfall";
+import { PricePerformanceScatter } from "./PricePerformanceScatter";
 import { AnalyticsPanel } from "../analytics/AnalyticsPanel";
 
 export type MarketView = "market" | "finance" | "analytics";
@@ -266,6 +269,7 @@ function MarketOverview({
   const latest = state.market.dailySummaries.at(-1);
   const activeProducts = state.market.products.filter((product) => product.status === "active");
   const cycle = getEconomicCycle(state.gameDate);
+  const pricePoints = buildPricePerformancePoints(state);
   const marketHistory = state.market.dailySummaries.slice(-14);
 
   return (
@@ -412,6 +416,21 @@ function MarketOverview({
             ))}
           </div>
         )}
+      </section>
+
+      <section className="market-section market-scatter-section" aria-labelledby="market-scatter-title">
+        <SectionHeading
+          copy={copy.scatter.hint}
+          icon={TrendingUp}
+          id="market-scatter-title"
+          title={copy.scatter.title}
+        />
+        <PricePerformanceScatter
+          copy={copy.scatter}
+          locale={locale}
+          points={pricePoints}
+          segmentNames={copy.segmentNames}
+        />
       </section>
 
       <OemContractsSection
@@ -1941,6 +1960,20 @@ function FinanceOverview({
           />
         </section>
       </div>
+
+      <section className="market-card finance-waterfall-section" aria-labelledby="finance-waterfall-title">
+        <SectionHeading
+          copy={copy.waterfallHint}
+          icon={Activity}
+          id="finance-waterfall-title"
+          title={copy.waterfallTitle}
+        />
+        {latest ? (
+          <CashFlowWaterfall copy={copy} locale={locale} record={latest} />
+        ) : (
+          <p className="market-empty-text">{copy.noRecord}</p>
+        )}
+      </section>
 
       <section className="market-section" aria-labelledby="finance-transactions-title">
         <SectionHeading
