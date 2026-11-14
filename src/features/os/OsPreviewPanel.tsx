@@ -24,6 +24,7 @@ import {
   Sparkles,
   Terminal,
   Wifi,
+  Wrench,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -50,7 +51,7 @@ const APP_ICONS: Record<string, LucideIcon> = {
   "enterprise-console": Building2,
 };
 
-const SYSTEM_APP_IDS = ["settings", "files", "task-manager", "updates"] as const;
+const SYSTEM_APP_IDS = ["settings", "files", "task-manager", "updates", "security-center", "driver-manager"] as const;
 type SystemAppId = (typeof SYSTEM_APP_IDS)[number];
 type PreviewScreen = "boot" | "lock" | "desktop";
 
@@ -59,6 +60,8 @@ const SYSTEM_APP_ICONS: Record<SystemAppId, LucideIcon> = {
   files: FolderOpen,
   "task-manager": Activity,
   updates: RefreshCw,
+  "security-center": ShieldCheck,
+  "driver-manager": Wrench,
 };
 
 const DEVICE_ICONS: Record<OsPreviewDevice, LucideIcon> = {
@@ -670,7 +673,7 @@ function SystemWindowView({
         </div>
       </div>
     );
-  } else {
+  } else if (appId === "updates") {
     const updatesCopy = copy.updates;
     const ready = metrics.updateReadinessScore >= 60;
     content = (
@@ -690,6 +693,71 @@ function SystemWindowView({
         <strong className="os-preview-task__title">{updatesCopy.historyTitle}</strong>
         <ul className="os-preview-updates__history">
           {updatesCopy.history.map((entry) => <li key={entry}>{entry}</li>)}
+        </ul>
+      </div>
+    );
+  } else if (appId === "security-center") {
+    const securityCopy = copy["security-center"];
+    const checks = [
+      [securityCopy.permissions, configuration.permissions !== "none"],
+      [securityCopy.encryption, configuration.encryption !== "none"],
+      [securityCopy.updates, configuration.updateModel !== "manual"],
+      [securityCopy.packages, configuration.packageManager !== "none"],
+      [securityCopy.drivers, configuration.driverFramework === "unified" || configuration.driverFramework === "certified"],
+    ] as const;
+    const protectedCount = checks.filter(([, enabled]) => enabled).length;
+    content = (
+      <div className="os-preview-security">
+        <div className="os-preview-security__score">
+          <span>{securityCopy.score}</span>
+          <strong>{formatDecimal(metrics.securityScore, locale, 0)}</strong>
+          <em>{protectedCount}/{checks.length}</em>
+        </div>
+        <div className="os-preview-security__checks">
+          {checks.map(([label, enabled]) => (
+            <span className={enabled ? "is-ok" : "is-warn"} key={label}>
+              <ShieldCheck aria-hidden="true" size={12} />
+              {label}
+              <em>{enabled ? securityCopy.active : securityCopy.missing}</em>
+            </span>
+          ))}
+        </div>
+        <dl className="os-preview-system__rows">
+          <div><dt>{securityCopy.permissions}</dt><dd>{t.os.options.permissions[configuration.permissions]}</dd></div>
+          <div><dt>{securityCopy.encryption}</dt><dd>{t.os.options.encryption[configuration.encryption]}</dd></div>
+          <div><dt>{securityCopy.updates}</dt><dd>{t.os.options.updateModel[configuration.updateModel]}</dd></div>
+        </dl>
+      </div>
+    );
+  } else {
+    const driverCopy = copy["driver-manager"];
+    const driverLevel = { legacy: 0, acpi: 1, unified: 2, certified: 3 }[configuration.driverFramework];
+    const hardware = [
+      [driverCopy.sata, driverLevel >= 1],
+      [driverCopy.nvme, driverLevel >= 2],
+      [driverCopy.pcie4, driverLevel >= 2],
+      [driverCopy.pcie5, driverLevel >= 3],
+      [driverCopy.aiLink, driverLevel >= 3],
+      [driverCopy.fiber, configuration.networkStack !== "basic"],
+      [driverCopy.infiniband, configuration.networkStack === "advanced" || configuration.networkStack === "cloud"],
+    ] as const;
+    content = (
+      <div className="os-preview-drivers">
+        <dl className="os-preview-system__rows">
+          <div><dt>{driverCopy.framework}</dt><dd>{t.os.options.driverFramework[configuration.driverFramework]}</dd></div>
+          <div><dt>{driverCopy.driverModel}</dt><dd>{t.os.options.driverModel[configuration.driverModel]}</dd></div>
+          <div><dt>{driverCopy.modules}</dt><dd>{t.os.options.moduleSupport[configuration.moduleSupport]}</dd></div>
+          <div><dt>{driverCopy.architecture}</dt><dd>{configuration.supportedArchitectures.join(" · ")}</dd></div>
+        </dl>
+        <strong className="os-preview-task__title">{driverCopy.hardwareTitle}</strong>
+        <ul className="os-preview-drivers__list">
+          {hardware.map(([label, available]) => (
+            <li className={available ? "is-ok" : "is-warn"} key={label}>
+              <Wrench aria-hidden="true" size={11} />
+              <span>{label}</span>
+              <em>{available ? driverCopy.available : driverCopy.required}</em>
+            </li>
+          ))}
         </ul>
       </div>
     );

@@ -8457,7 +8457,11 @@ textarea {
   z-index: 5;
   top: 50%;
   left: 50%;
+  display: flex;
   width: min(78%, 270px);
+  max-height: calc(100% - 14px);
+  flex-direction: column;
+  overflow: hidden;
   border: 1px solid rgb(255 255 255 / 16%);
   border-radius: 9px;
   color: #e2e8f0;
@@ -8508,8 +8512,11 @@ textarea {
 
 .os-preview-window__body {
   display: grid;
+  min-height: 0;
   gap: 5px;
   padding: 9px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .os-preview-window__category {
@@ -8731,6 +8738,92 @@ textarea {
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, var(--os-preview-accent), #86efac);
+}
+
+.os-preview-security,
+.os-preview-drivers {
+  display: grid;
+  gap: 6px;
+}
+
+.os-preview-security__score {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 7px;
+  border: 1px solid rgb(134 239 172 / 22%);
+  border-radius: 6px;
+  background: rgb(134 239 172 / 8%);
+}
+
+.os-preview-security__score span {
+  color: rgb(148 163 184 / 82%);
+  font-size: 0.46rem;
+}
+
+.os-preview-security__score strong {
+  color: #86efac;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.os-preview-security__score em {
+  color: #86efac;
+  font-size: 0.46rem;
+  font-style: normal;
+}
+
+.os-preview-security__checks {
+  display: grid;
+  gap: 3px;
+}
+
+.os-preview-security__checks span {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 0;
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+  color: rgb(226 232 240 / 86%);
+  font-size: 0.46rem;
+}
+
+.os-preview-security__checks em,
+.os-preview-drivers__list em {
+  font-size: 0.42rem;
+  font-style: normal;
+  text-align: right;
+}
+
+.os-preview-security__checks .is-ok em,
+.os-preview-drivers__list .is-ok em {
+  color: #86efac;
+}
+
+.os-preview-security__checks .is-warn,
+.os-preview-drivers__list .is-warn {
+  color: #fcd34d;
+}
+
+.os-preview-drivers__list {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.os-preview-drivers__list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 0;
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+  color: rgb(226 232 240 / 86%);
+  font-size: 0.46rem;
 }
 
 .os-preview-notes,

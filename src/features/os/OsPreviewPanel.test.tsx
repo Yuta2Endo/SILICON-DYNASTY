@@ -98,6 +98,38 @@ describe("OsPreviewPanel", () => {
     expect(screen.getByText(system.updates.packages)).toBeTruthy();
   });
 
+  it("opens the security center and driver manager", async () => {
+    const user = userEvent.setup();
+    render(
+      <OsPreviewPanel
+        configuration={{
+          ...createDefaultOsConfiguration(),
+          gui: "desktop-shell",
+          driverFramework: "certified",
+          encryption: "full-disk",
+          updateModel: "staged",
+          packageManager: "signed",
+          networkStack: "advanced",
+          supportedArchitectures: ["x86", "arm"],
+        }}
+        locale="ru"
+        project={null}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Безопасность" }));
+    expect(screen.getByRole("dialog", { name: "Безопасность" })).toBeTruthy();
+    expect(screen.getByText("Центр безопасности")).toBeTruthy();
+    expect(screen.getAllByText("Включено").length).toBeGreaterThan(0);
+
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", { name: "Драйверы" }));
+    expect(screen.getByRole("dialog", { name: "Драйверы" })).toBeTruthy();
+    expect(screen.getByText("Менеджер драйверов")).toBeTruthy();
+    expect(screen.getByText("PCIe 5.0")).toBeTruthy();
+    expect(screen.getByText("InfiniBand")).toBeTruthy();
+  });
+
   it("walks through the boot and lock screens before the desktop", async () => {
     const user = userEvent.setup();
     render(
