@@ -525,10 +525,17 @@ function MarketOverview({
               return null;
             }
             return (
-              <article className="market-competitor-card" key={definition.id}>
+              <article
+                className={`market-competitor-card${competitorState.status === "retired" ? " market-competitor-card--retired" : ""}`}
+                key={definition.id}
+              >
                 <div className="market-competitor-card__topline">
                   <h3>{definition.name}</h3>
-                  <span className="status-pill">{copy.strategies[definition.strategy]}</span>
+                  <span className={`market-status ${competitorState.status === "retired" ? "market-status--retired" : "market-status--active"}`}>
+                    {competitorState.status === "retired"
+                      ? copy.competitors.statusRetired
+                      : copy.competitors.statusActive}
+                  </span>
                 </div>
                 <p className="market-competitor-card__strategy">{copy.competitors.strategy}: {copy.strategies[definition.strategy]}</p>
                 <dl className="market-data-list">
@@ -548,14 +555,36 @@ function MarketOverview({
                     <dt>{copy.competitors.nextAction}</dt>
                     <dd>{formatShortGameDate(competitorState.nextActionOn, locale)}</dd>
                   </div>
+                  <div>
+                    <dt>{copy.competitors.balance}</dt>
+                    <dd>{formatCurrency(competitorState.balanceUsd, locale)}</dd>
+                  </div>
+                  <div>
+                    <dt>{copy.competitors.reputation}</dt>
+                    <dd>{formatDecimal(competitorState.reputation, locale, 0)}/100</dd>
+                  </div>
+                  <div>
+                    <dt>{copy.competitors.lastResult}</dt>
+                    <dd>
+                      {formatCurrency(competitorState.lastRevenueUsd, locale)}
+                      {" / "}
+                      {formatCurrency(competitorState.lastCostUsd, locale)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>{copy.competitors.netResult}</dt>
+                    <dd>{formatCurrency(competitorState.lastRevenueUsd - competitorState.lastCostUsd, locale)}</dd>
+                  </div>
                 </dl>
                 <p className="market-competitor-card__action">
                   <strong>{copy.competitors.recentAction}:</strong>{" "}
                   {latestAction
-                    ? `${copy.actions[latestAction.type]} · ${copy.actions.value.replace(
-                      "{percent}",
-                      formatDecimal(latestAction.valuePercent, locale, 1),
-                    )} · ${formatShortGameDate(latestAction.date, locale)}`
+                    ? latestAction.type === "market-exit"
+                      ? `${copy.actions[latestAction.type]} · ${formatShortGameDate(latestAction.date, locale)}`
+                      : `${copy.actions[latestAction.type]} · ${copy.actions.value.replace(
+                        "{percent}",
+                        formatDecimal(latestAction.valuePercent, locale, 1),
+                      )} · ${formatShortGameDate(latestAction.date, locale)}`
                     : copy.competitors.noActions}
                 </p>
               </article>

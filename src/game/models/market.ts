@@ -270,13 +270,40 @@ export interface CompetitorMarketState {
   marketingMultiplier: number;
   nextActionOn: string;
   actionCount: number;
+  balanceUsd: number;
+  reputation: number;
+  status: CompetitorStatus;
+  lastRevenueUsd: number;
+  lastCostUsd: number;
+}
+
+export type CompetitorStatus = "active" | "retired";
+
+export interface CompetitorFinanceProfile {
+  initialBalanceUsd: number;
+  dailyOperatingCostUsd: number;
+  initialReputation: number;
+}
+
+export const COMPETITOR_FINANCE_PROFILES: Record<CompetitorStrategy, CompetitorFinanceProfile> = {
+  volume: { initialBalanceUsd: 4_000_000, dailyOperatingCostUsd: 35_000, initialReputation: 52 },
+  aggressive: { initialBalanceUsd: 3_500_000, dailyOperatingCostUsd: 30_000, initialReputation: 48 },
+  premium: { initialBalanceUsd: 6_000_000, dailyOperatingCostUsd: 45_000, initialReputation: 68 },
+  performance: { initialBalanceUsd: 5_000_000, dailyOperatingCostUsd: 42_000, initialReputation: 62 },
+  balanced: { initialBalanceUsd: 5_500_000, dailyOperatingCostUsd: 38_000, initialReputation: 58 },
+  enterprise: { initialBalanceUsd: 7_000_000, dailyOperatingCostUsd: 50_000, initialReputation: 72 },
+};
+
+export function getCompetitorFinanceProfile(strategy: CompetitorStrategy): CompetitorFinanceProfile {
+  return COMPETITOR_FINANCE_PROFILES[strategy];
 }
 
 export type CompetitorActionType =
   | "price-cut"
   | "price-increase"
   | "performance-refresh"
-  | "campaign";
+  | "campaign"
+  | "market-exit";
 
 export interface CompetitorAction {
   id: string;
@@ -328,14 +355,22 @@ export function createInitialMarketState(gameDate: string): MarketState {
     products: [],
     componentProducts: [],
     productionOrders: [],
-    competitors: COMPETITORS.map((competitor) => ({
-      competitorId: competitor.id,
-      priceMultiplier: 1,
-      performanceMultiplier: 1,
-      marketingMultiplier: 1,
-      nextActionOn: addDays(gameDate, competitor.firstActionOffsetDays),
-      actionCount: 0,
-    })),
+    competitors: COMPETITORS.map((competitor) => {
+      const finance = getCompetitorFinanceProfile(competitor.strategy);
+      return {
+        competitorId: competitor.id,
+        priceMultiplier: 1,
+        performanceMultiplier: 1,
+        marketingMultiplier: 1,
+        nextActionOn: addDays(gameDate, competitor.firstActionOffsetDays),
+        actionCount: 0,
+        balanceUsd: finance.initialBalanceUsd,
+        reputation: finance.initialReputation,
+        status: "active" as const,
+        lastRevenueUsd: 0,
+        lastCostUsd: 0,
+      };
+    }),
     actions: [],
     dailySummaries: [],
     marketingBudgetUsdPerDay: 0,
@@ -368,7 +403,7 @@ export function validateProductName(name: string): boolean {
 
 export function parseMarketState(
   value: unknown,
-  options: { allowMissingComponentData?: boolean } = {},
+  options: { allowMissingComponentData?: boolean; allowMissingCompetitorFinance?: boolean } = {},
 ): MarketState {
   if (!isRecord(value)) {
     throw new InvalidMarketDataError("Market data must be an object.");
@@ -425,7 +460,9 @@ export function parseMarketState(
     throw new InvalidMarketDataError("Production order references an unknown product.");
   }
 
-  const competitors = value.competitors.map(parseCompetitorState);
+  const competitors = value.competitors.map((competitor) =>
+    parseCompetitorState(competitor, options.allowMissingCompetitorFinance === true),
+  );
   const competitorIds = new Set(competitors.map((competitor) => competitor.competitorId));
   if (
     competitorIds.size !== COMPETITORS.length
@@ -638,7 +675,10 @@ function parseProductionOrder(value: unknown): ProductionOrder {
   };
 }
 
-function parseCompetitorState(value: unknown): CompetitorMarketState {
+function parseCompetitorState(
+  value: unknown,
+  allowMissingFinance: boolean,
+): CompetitorMarketState {
   if (!isRecord(value)) {
     throw new InvalidMarketDataError("Competitor state is invalid.");
   }
@@ -652,15 +692,42 @@ function parseCompetitorState(value: unknown): CompetitorMarketState {
   ) {
     throw new InvalidMarketDataError("Competitor state is incomplete.");
   }
+  const definition = getCompetitor(value.competitorId);
+  if (!definition) {
+    throw new InvalidMarketDataError("Competitor state references an unknown competitor.");
+  }
+  const profile = getCompetitorFinanceProfile(definition.strategy);
+  const hasFinance = typeof value.balanceUsd === "number"
+    && typeof value.reputation === "number"
+    && (value.status === "active" || value.status === "retired")
+    && typeof value.lastRevenueUsd === "number"
+    && typeof value.lastCostUsd === "number";
+  if (!hasFinance && !allowMissingFinance) {
+    throw new InvalidMarketDataError("Competitor finance is missing.");
+  }
   if (
-    !getCompetitor(value.competitorId)
-    || !isWithin(value.priceMultiplier, 0.25, 4)
+    !isWithin(value.priceMultiplier, 0.25, 4)
     || !isWithin(value.performanceMultiplier, 0.5, 4)
     || !isWithin(value.marketingMultiplier, 0.5, 4)
     || !isValidDateOnly(value.nextActionOn)
     || !isNonNegativeInteger(value.actionCount)
   ) {
     throw new InvalidMarketDataError("Competitor state fields are invalid.");
+  }
+  const balanceUsd = hasFinance ? value.balanceUsd as number : profile.initialBalanceUsd;
+  const reputation = hasFinance ? value.reputation as number : profile.initialReputation;
+  const status = hasFinance ? value.status as CompetitorStatus : "active";
+  const lastRevenueUsd = hasFinance ? value.lastRevenueUsd as number : 0;
+  const lastCostUsd = hasFinance ? value.lastCostUsd as number : 0;
+  if (
+    !Number.isFinite(balanceUsd)
+    || !isWithin(reputation, 0, 100)
+    || !Number.isFinite(lastRevenueUsd)
+    || lastRevenueUsd < 0
+    || !Number.isFinite(lastCostUsd)
+    || lastCostUsd < 0
+  ) {
+    throw new InvalidMarketDataError("Competitor finance fields are invalid.");
   }
 
   return {
@@ -670,6 +737,11 @@ function parseCompetitorState(value: unknown): CompetitorMarketState {
     marketingMultiplier: value.marketingMultiplier,
     nextActionOn: value.nextActionOn,
     actionCount: value.actionCount,
+    balanceUsd: roundUsd(balanceUsd),
+    reputation: roundScore(reputation),
+    status,
+    lastRevenueUsd: roundUsd(lastRevenueUsd),
+    lastCostUsd: roundUsd(lastCostUsd),
   };
 }
 
@@ -677,7 +749,13 @@ function parseCompetitorAction(value: unknown): CompetitorAction {
   if (!isRecord(value)) {
     throw new InvalidMarketDataError("Competitor action is invalid.");
   }
-  const validTypes = ["price-cut", "price-increase", "performance-refresh", "campaign"] as const;
+  const validTypes = [
+    "price-cut",
+    "price-increase",
+    "performance-refresh",
+    "campaign",
+    "market-exit",
+  ] as const;
   if (
     typeof value.id !== "string"
     || typeof value.date !== "string"
@@ -687,8 +765,9 @@ function parseCompetitorAction(value: unknown): CompetitorAction {
     || !validTypes.includes(value.type as CompetitorActionType)
     || !getCompetitor(value.competitorId)
     || !isValidDateOnly(value.date)
-    || !isPositive(value.valuePercent)
-    || value.valuePercent > 100
+    || (value.type === "market-exit"
+      ? value.valuePercent !== 0
+      : !isPositive(value.valuePercent) || value.valuePercent > 100)
   ) {
     throw new InvalidMarketDataError("Competitor action fields are invalid.");
   }

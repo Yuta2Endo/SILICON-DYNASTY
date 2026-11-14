@@ -332,3 +332,11 @@ save management and a derived experience layer; full details are in
 - Component sales are capped by `inventoryUnits`; revenue is posted as `sales`. Out-of-stock products earn nothing until a batch arrives.
 - Delivered batches increment `unitsProduced` and the finance daily `unitsProduced` counter. Inventory invariant: `unitsProduced = unitsSold + inventoryUnits`.
 - Schema v14 adds `manufacturing`; older component products migrate with zero inventory and `unitsProduced = unitsSold`. Full details: `MANUFACTURING.md`.
+
+## Competitor finance and market exit (Stage 3)
+
+- Six rivals have initial balance, daily operating cost and reputation profiles: Apex $6M/$45k/68, Nova $4M/$35k/52, Vector $3.5M/$30k/48, Northbridge $5.5M/$38k/58, Titan $5M/$42k/62, Meridian $7M/$50k/72.
+- Financial health is `clamp(balance / initialBalance, 0.4, 1.2)`. Action aggression is `cycleAggression × (0.7 + 0.3 × health)`; weak rivals cut prices and refresh less aggressively.
+- Leftover segment demand is allocated to active rivals by appeal. Rival revenue is `units × segment reference price × 0.12`; daily operating cost is charged against balance.
+- Competitor reputation moves by `(marketShare - 1/6) × 0.35` per day, clamped 0–100. A balance at or below zero retires the rival permanently and records a `market-exit` action.
+- Schema v15 adds competitor finance/status fields; v1–v14 saves migrate with profile defaults. Full details: `COMPETITORS.md`.

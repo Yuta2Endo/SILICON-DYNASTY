@@ -4,6 +4,7 @@ import { addDays } from "../models/date";
 import {
   COMPETITORS,
   getCompetitor,
+  getCompetitorFinanceProfile,
   getMarketSegment,
   MARKET_LIMITS,
   MARKET_RULES,
@@ -306,19 +307,24 @@ export function runCompetitorDay(state: GameState, date: string): GameState {
   const newActions: CompetitorAction[] = [];
 
   for (const competitorState of state.market.competitors) {
-    if (date < competitorState.nextActionOn) {
+    if (competitorState.status === "retired" || date < competitorState.nextActionOn) {
       continue;
     }
     const definition = getCompetitor(competitorState.competitorId);
     if (!definition) {
       continue;
     }
+    const finance = getCompetitorFinanceProfile(definition.strategy);
+    const financialHealth = Math.max(
+      0.4,
+      Math.min(1.2, competitorState.balanceUsd / Math.max(1, finance.initialBalanceUsd)),
+    );
 
     const action = applyCompetitorStrategy(
       competitorState,
       definition.strategy,
       competitorState.actionCount,
-      getEconomicCycle(date).competitorAggression,
+      getEconomicCycle(date).competitorAggression * (0.7 + financialHealth * 0.3),
     );
     competitors = competitors.map((candidate) =>
       candidate.competitorId === competitorState.competitorId
@@ -373,6 +379,7 @@ export function simulateMarketDay(state: GameState, date: string): GameState {
   const competitorStates = new Map(
     state.market.competitors.map((competitor) => [competitor.competitorId, competitor]),
   );
+  const competitorPerformance = new Map<string, { units: number; revenueUsd: number }>();
   let totalDemandUnits = 0;
   let playerUnits = 0;
   let playerRevenueUsd = 0;
@@ -389,7 +396,7 @@ export function simulateMarketDay(state: GameState, date: string): GameState {
     const competitorProducts = COMPETITOR_PRODUCTS_BY_SEGMENT.get(segment) ?? [];
     const competitorAppeal = competitorProducts.reduce((total, entry) => {
       const competitorState = competitorStates.get(entry.competitorId);
-      return competitorState
+      return competitorState && competitorState.status === "active"
         ? total + calculateCompetitorProductAppeal(segmentDefinition, entry.product, competitorState)
         : total;
     }, 0);
@@ -455,6 +462,25 @@ export function simulateMarketDay(state: GameState, date: string): GameState {
       }
     }
 
+    const segmentCompetitorUnits = Math.max(0, totalDemand - segmentPlayerUnits);
+    if (competitorAppeal > 0 && segmentCompetitorUnits > 0) {
+      for (const entry of competitorProducts) {
+        const competitorState = competitorStates.get(entry.competitorId);
+        if (!competitorState || competitorState.status !== "active") {
+          continue;
+        }
+        const appeal = calculateCompetitorProductAppeal(segmentDefinition, entry.product, competitorState);
+        const units = segmentCompetitorUnits * (appeal / competitorAppeal);
+        const performance = competitorPerformance.get(entry.competitorId) ?? {
+          units: 0,
+          revenueUsd: 0,
+        };
+        performance.units += units;
+        performance.revenueUsd += units * segmentDefinition.referencePriceUsd * 0.12;
+        competitorPerformance.set(entry.competitorId, performance);
+      }
+    }
+
     totalDemandUnits += totalDemand;
     playerUnits += segmentPlayerUnits;
     segmentResults[segment] = {
@@ -478,11 +504,54 @@ export function simulateMarketDay(state: GameState, date: string): GameState {
     componentManufacturingUsd: 0,
   };
 
+  const competitorActions: CompetitorAction[] = [];
+  const competitors = state.market.competitors.map((competitorState) => {
+    if (competitorState.status === "retired") {
+      return competitorState;
+    }
+    const definition = getCompetitor(competitorState.competitorId);
+    if (!definition) {
+      return competitorState;
+    }
+    const performance = competitorPerformance.get(competitorState.competitorId) ?? {
+      units: 0,
+      revenueUsd: 0,
+    };
+    const revenueUsd = roundUsd(performance.revenueUsd);
+    const costUsd = getCompetitorFinanceProfile(definition.strategy).dailyOperatingCostUsd;
+    const balanceUsd = roundUsd(competitorState.balanceUsd + revenueUsd - costUsd);
+    const share = totalDemandUnits > 0 ? performance.units / totalDemandUnits : 0;
+    const reputation = Math.round(
+      Math.min(100, Math.max(0, competitorState.reputation + (share - 1 / 6) * 0.35)) * 100,
+    ) / 100;
+    const status = balanceUsd <= 0 ? "retired" as const : "active" as const;
+    if (status === "retired") {
+      competitorActions.push({
+        id: nextActionId([...state.market.actions, ...competitorActions]),
+        date,
+        competitorId: competitorState.competitorId,
+        type: "market-exit",
+        valuePercent: 0,
+      });
+    }
+    return {
+      ...competitorState,
+      balanceUsd,
+      reputation,
+      status,
+      lastRevenueUsd: revenueUsd,
+      lastCostUsd: costUsd,
+    };
+  });
+
   let nextState: GameState = {
     ...state,
     market: {
       ...state.market,
       products,
+      competitors,
+      actions: [...competitorActions, ...state.market.actions]
+        .slice(0, MARKET_LIMITS.maxActionHistory),
       dailySummaries: [...state.market.dailySummaries, summary]
         .slice(-MARKET_LIMITS.maxDailySummaries),
     },

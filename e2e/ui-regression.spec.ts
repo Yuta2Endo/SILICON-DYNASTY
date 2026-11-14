@@ -223,6 +223,23 @@ test("compares two saved AI versions", async ({ page }) => {
   await expectNoHorizontalOverflow(page);
 });
 
+test("shows competitor finances and market status", async ({ page }) => {
+  await openGame(page);
+
+  await page.getByRole("button", { name: "Следующий день" }).click();
+  await page
+    .getByRole("navigation", { name: "Основная навигация" })
+    .getByRole("button", { name: "Рынок" })
+    .click();
+
+  await expect(page.getByRole("heading", { name: "Конкуренты" })).toBeVisible();
+  const competitors = page.locator(".market-competitor-grid");
+  await expect(competitors.getByText("На рынке").first()).toBeVisible();
+  await expect(competitors.getByText("Баланс").first()).toBeVisible();
+  await expect(competitors.getByText("Чистый результат").first()).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});
+
 test("accepts an OEM design-win offer for a released processor", async ({ page }) => {
   await openGame(page);
 

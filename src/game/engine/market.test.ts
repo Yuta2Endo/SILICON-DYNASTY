@@ -183,6 +183,52 @@ describe("market engine", () => {
     expect(stockedOut.company.reputation).toBeLessThan(state.company.reputation);
   });
 
+  it("scales competitor price cuts with financial health", () => {
+    const healthy = runCompetitorDay(createInitialGameState(), "1995-01-04");
+    const base = createInitialGameState();
+    const weak = {
+      ...base,
+      market: {
+        ...base.market,
+        competitors: base.market.competitors.map((competitor) =>
+          competitor.competitorId === "nova" ? { ...competitor, balanceUsd: 0 } : competitor,
+        ),
+      },
+    };
+    const weakState = runCompetitorDay(weak, "1995-01-04");
+    const healthyAction = healthy.market.actions.find((action) => action.competitorId === "nova");
+    const weakAction = weakState.market.actions.find((action) => action.competitorId === "nova");
+
+    expect(healthyAction?.valuePercent).toBe(1.5);
+    expect(weakAction?.valuePercent).toBeLessThan(healthyAction?.valuePercent ?? 0);
+    expect(weakAction?.valuePercent).toBeGreaterThan(0);
+  });
+
+  it("retires a bankrupt competitor and records its market exit", () => {
+    const base = createInitialGameState();
+    const state = {
+      ...base,
+      market: {
+        ...base.market,
+        competitors: base.market.competitors.map((competitor) =>
+          competitor.competitorId === "apex"
+            ? { ...competitor, balanceUsd: -1_000_000 }
+            : competitor,
+        ),
+      },
+    };
+
+    const next = simulateMarketDay(state, "1995-01-02");
+    const apex = next.market.competitors.find((competitor) => competitor.competitorId === "apex");
+    const exit = next.market.actions.find(
+      (action) => action.competitorId === "apex" && action.type === "market-exit",
+    );
+
+    expect(apex?.status).toBe("retired");
+    expect(apex?.balanceUsd).toBeLessThan(0);
+    expect(exit?.valuePercent).toBe(0);
+  });
+
   it("rejects a CPU product release at the market product cap", () => {
     const base = stateWithProduct().market.products[0]!;
     const filled = {

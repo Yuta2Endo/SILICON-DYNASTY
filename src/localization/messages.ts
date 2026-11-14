@@ -1131,6 +1131,12 @@ const ru = {
       recentAction: "Последнее действие",
       noActions: "Действий пока не было",
       products: "Модели",
+      statusActive: "На рынке",
+      statusRetired: "Ушёл с рынка",
+      balance: "Баланс",
+      reputation: "Репутация",
+      lastResult: "Выручка / издержки",
+      netResult: "Чистый результат",
     },
     strategies: {
       volume: "Объёмные продажи",
@@ -1145,6 +1151,7 @@ const ru = {
       "price-increase": "Повышение цен",
       "performance-refresh": "Обновление производительности",
       campaign: "Маркетинговая кампания",
+      "market-exit": "Уход с рынка",
       value: "на {percent}%",
     },
     history: {
@@ -3284,6 +3291,12 @@ const en: Translation = {
       recentAction: "Latest action",
       noActions: "No actions yet",
       products: "Models",
+      statusActive: "On the market",
+      statusRetired: "Withdrawn",
+      balance: "Balance",
+      reputation: "Reputation",
+      lastResult: "Revenue / costs",
+      netResult: "Net result",
     },
     strategies: {
       volume: "Volume sales",
@@ -3298,6 +3311,7 @@ const en: Translation = {
       "price-increase": "Price increase",
       "performance-refresh": "Performance refresh",
       campaign: "Marketing campaign",
+      "market-exit": "Market exit",
       value: "by {percent}%",
     },
     history: {

@@ -10,6 +10,7 @@ import {
   createSchema12Fixture,
   createSchema13Fixture,
   createSchema14Fixture,
+  createSchema15Fixture,
 } from "./fixtures/legacy-saves";
 
 describe("save migrations with fixture saves", () => {
@@ -85,14 +86,27 @@ describe("save migrations with fixture saves", () => {
     expect(state.manufacturing).toEqual({ factoryLevel: 1, componentOrders: [] });
   });
 
+  it("migrates a schema-14 save by initializing competitor finance", () => {
+    const state = parseGameState(createSchema14Fixture());
+    expect(state.company.name).toBe("Pre-Competitor-Finance Co");
+    expect(state.market.competitors).toHaveLength(6);
+    expect(state.market.competitors.find((competitor) => competitor.competitorId === "nova")).toMatchObject({
+      balanceUsd: 4_000_000,
+      reputation: 52,
+      status: "active",
+      lastRevenueUsd: 0,
+      lastCostUsd: 0,
+    });
+  });
+
   it("round-trips a current schema save and rejects a future schema", () => {
-    const current = parseGameState(createSchema14Fixture());
+    const current = parseGameState(createSchema15Fixture());
     expect(current.company.name).toBe("Current Save Co");
     expect(parseGameState(JSON.parse(JSON.stringify(current)))).toEqual(current);
 
     expect(() => parseGameState({
-      ...createSchema14Fixture() as Record<string, unknown>,
-      schemaVersion: 15,
+      ...createSchema15Fixture() as Record<string, unknown>,
+      schemaVersion: 16,
     })).toThrow("unsupported schema version");
   });
 

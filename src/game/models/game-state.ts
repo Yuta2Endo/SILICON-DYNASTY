@@ -38,9 +38,9 @@ import {
   type ManufacturingState,
 } from "./manufacturing";
 
-export const SAVE_SCHEMA_VERSION = 14 as const;
+export const SAVE_SCHEMA_VERSION = 15 as const;
 
-const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, SAVE_SCHEMA_VERSION] as const;
+const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, SAVE_SCHEMA_VERSION] as const;
 
 export type Locale = "ru" | "en";
 export type Theme = "light" | "dark";
@@ -344,6 +344,7 @@ export function parseGameState(value: unknown): GameState {
     try {
       market = parseMarketState(value.market, {
         allowMissingComponentData: sourceSchemaVersion < 5,
+        allowMissingCompetitorFinance: sourceSchemaVersion < 15,
       });
     } catch {
       throw new InvalidGameStateError("Save data contains invalid market data.");

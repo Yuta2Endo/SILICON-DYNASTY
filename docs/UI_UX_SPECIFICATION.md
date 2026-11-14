@@ -393,6 +393,8 @@ The Market overview must also include commercial contracts for five channels: OS
 
 The Market overview must include a manufacturing panel with factory level, daily capacity, upgrade cost and the active component production queue. Component product cards must show inventory, produced/sold counters, an out-of-stock state, estimated batch cost and lead time, and an order action. Sales must be limited by real inventory; manufacturing cost is charged when a batch is ordered.
 
+Competitor cards must show active/withdrawn status, balance, reputation, last revenue/cost and net result alongside strategy and next-action data. Withdrawn rivals must be visually muted, and a market-exit event must be readable without a percentage. All values come from the persisted market state.
+
 All monetary values must use consistent formatting.
 
 ### Analytics

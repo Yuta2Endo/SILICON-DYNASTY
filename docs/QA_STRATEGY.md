@@ -1,10 +1,10 @@
 # QA Strategy
 
 ## Unit tests
-CPU/GPU formulas, benchmark, power/thermal, economy, research dependencies, market, press reviews, commercial contracts, manufacturing capacity/inventory, OS quality, AI training simulation, compatibility and save migrations.
+CPU/GPU formulas, benchmark, power/thermal, economy, research dependencies, market, press reviews, commercial contracts, manufacturing capacity/inventory, competitor finance and market exit, OS quality, AI training simulation, compatibility and save migrations.
 
 ## Integration tests
-Hardware + benchmark; hardware + manufacturing; research + unlocks; OS + devices; AI + GPU; cloud + AI; ecosystem + market; finance + manufacturing; component production + inventory + sales; OEM contracts + market demand and finance; commercial contracts + finance ledger and expiry.
+Hardware + benchmark; hardware + manufacturing; research + unlocks; OS + devices; AI + GPU; cloud + AI; ecosystem + market; finance + manufacturing; component production + inventory + sales; OEM contracts + market demand and finance; commercial contracts + finance ledger and expiry; competitor finance + aggression scaling + market exit.
 
 ## End-to-end scenario
 New game → create company → research technology → design CPU → benchmark → manufacture → release → sales → create OS → create AI project → assemble device → save → restart → load → continue.

@@ -221,6 +221,32 @@ describe("Market screen", () => {
     expect(screen.getAllByText(ru.market.pulse.window).length).toBe(3);
   });
 
+  it("shows competitor finances and withdrawal status", () => {
+    const competitorState = {
+      ...stateWithProject,
+      market: {
+        ...stateWithProject.market,
+        competitors: stateWithProject.market.competitors.map((competitor, index) =>
+          index === 0
+            ? {
+                ...competitor,
+                balanceUsd: 123_456,
+                status: "retired" as const,
+                lastRevenueUsd: 1_000,
+                lastCostUsd: 400,
+              }
+            : competitor,
+        ),
+      },
+    };
+    renderMarket({ state: competitorState });
+
+    expect(screen.getByRole("heading", { name: ru.market.competitors.title })).toBeTruthy();
+    expect(screen.getByText(ru.market.competitors.statusRetired)).toBeTruthy();
+    expect(screen.getAllByText(ru.market.competitors.balance).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(ru.market.competitors.netResult).length).toBeGreaterThan(0);
+  });
+
   it("shows an OEM offer and forwards the accept action", async () => {
     const user = userEvent.setup();
     const onAcceptOemContract = vi.fn(async () => true);

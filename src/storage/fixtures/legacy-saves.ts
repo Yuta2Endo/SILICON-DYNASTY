@@ -154,6 +154,27 @@ export function createSchema14Fixture(): unknown {
   return {
     ...current,
     schemaVersion: 14,
+    company: { ...current.company, name: "Pre-Competitor-Finance Co" },
+    market: {
+      ...current.market,
+      competitors: current.market.competitors.map((competitor) => {
+        const legacy = { ...competitor } as Record<string, unknown>;
+        delete legacy.balanceUsd;
+        delete legacy.reputation;
+        delete legacy.status;
+        delete legacy.lastRevenueUsd;
+        delete legacy.lastCostUsd;
+        return legacy;
+      }),
+    },
+  };
+}
+
+export function createSchema15Fixture(): unknown {
+  const current = createInitialGameState();
+  return {
+    ...current,
+    schemaVersion: 15,
     company: { ...current.company, name: "Current Save Co" },
   };
 }
