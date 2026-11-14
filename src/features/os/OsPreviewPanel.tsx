@@ -102,6 +102,12 @@ const INITIAL_PREVIEW_APPEARANCE: PreviewAppearance = {
   density: "comfortable",
   accent: "blue",
 };
+type PreviewWidgetId = "clock" | "company" | "production" | "market";
+const PREVIEW_WIDGETS: readonly PreviewWidgetId[] = ["clock", "company", "production", "market"];
+const INITIAL_DESKTOP_WIDGETS: ReadonlyArray<readonly PreviewWidgetId[]> = Array.from(
+  { length: PREVIEW_DESKTOP_COUNT },
+  () => [...PREVIEW_WIDGETS],
+);
 const PREVIEW_ACCENT_COLORS: Record<PreviewAccent, string> = {
   blue: "#3b82f6",
   violet: "#8b5cf6",
@@ -172,8 +178,12 @@ export function OsPreviewPanel({ configuration, project, locale, state }: OsPrev
   const [appearance, setAppearance] = useState<PreviewAppearance>(
     () => ({ ...INITIAL_PREVIEW_APPEARANCE }),
   );
+  const [desktopWidgets, setDesktopWidgets] = useState<PreviewWidgetId[][]>(
+    () => INITIAL_DESKTOP_WIDGETS.map((widgets) => [...widgets]),
+  );
   const activeWindow = desktopWindows[activeDesktop] ?? null;
   const activeWallpaper = desktopWallpapers[activeDesktop] ?? "classic";
+  const activeWidgets = desktopWidgets[activeDesktop] ?? PREVIEW_WIDGETS;
   const activeAppId = activeWindow?.kind === "catalog" ? activeWindow.id : null;
   const activeSystemAppId = activeWindow?.kind === "system" ? activeWindow.id : null;
   const [isStartOpen, setIsStartOpen] = useState(false);
@@ -226,6 +236,19 @@ export function OsPreviewPanel({ configuration, project, locale, state }: OsPrev
     setAppearance((current) => ({ ...current, ...patch }));
   }
 
+  function toggleDesktopWidget(widget: PreviewWidgetId) {
+    setDesktopWidgets((current) =>
+      current.map((widgets, desktop) => {
+        if (desktop !== activeDesktop) {
+          return widgets;
+        }
+        return widgets.includes(widget)
+          ? widgets.filter((candidate) => candidate !== widget)
+          : [...widgets, widget];
+      }),
+    );
+  }
+
   const openWindows = desktopWindows.flatMap((window, desktop) =>
     window ? [{ desktop, window }] : [],
   );
@@ -257,6 +280,7 @@ export function OsPreviewPanel({ configuration, project, locale, state }: OsPrev
     setDesktopWindows([...INITIAL_DESKTOP_WINDOWS]);
     setDesktopWallpapers([...INITIAL_DESKTOP_WALLPAPERS]);
     setAppearance({ ...INITIAL_PREVIEW_APPEARANCE });
+    setDesktopWidgets(INITIAL_DESKTOP_WIDGETS.map((widgets) => [...widgets]));
     setActiveDesktop(0);
     setIsStartOpen(false);
     setIsNotificationsOpen(false);
@@ -269,6 +293,7 @@ export function OsPreviewPanel({ configuration, project, locale, state }: OsPrev
     setDesktopWindows([...INITIAL_DESKTOP_WINDOWS]);
     setDesktopWallpapers([...INITIAL_DESKTOP_WALLPAPERS]);
     setAppearance({ ...INITIAL_PREVIEW_APPEARANCE });
+    setDesktopWidgets(INITIAL_DESKTOP_WIDGETS.map((widgets) => [...widgets]));
     setActiveDesktop(0);
     setIsStartOpen(false);
     setIsNotificationsOpen(false);
@@ -738,62 +763,70 @@ export function OsPreviewPanel({ configuration, project, locale, state }: OsPrev
                 <div className={`os-preview-desktop-area os-preview-desktop-area--wallpaper-${activeWallpaper}`}>
                   {model.hasWidgets && (
                     <div className="os-preview-widgets">
-                      <div className="os-preview-widget os-preview-widget--clock">
-                        <span className="os-preview-widget__label">
-                          <Clock3 aria-hidden="true" size={10} />
-                          {copy.widgets.clock}
-                        </span>
-                        <strong>09:41</strong>
-                        <small>
-                          {state ? formatShortGameDate(state.gameDate, locale) : copy.widgets.noData}
-                        </small>
-                      </div>
-                      <div className="os-preview-widget">
-                        <span className="os-preview-widget__label">
-                          <BriefcaseBusiness aria-hidden="true" size={10} />
-                          {copy.widgets.company}
-                        </span>
-                        <strong>
-                          {state ? formatCurrency(state.company.balance, locale) : copy.widgets.noData}
-                        </strong>
-                        <small>
-                          {state
-                            ? `${copy.widgets.reputation}: ${formatNumber(state.company.reputation, locale)}`
-                            : ""}
-                        </small>
-                      </div>
-                      <div className="os-preview-widget">
-                        <span className="os-preview-widget__label">
-                          <Factory aria-hidden="true" size={10} />
-                          {copy.widgets.production}
-                        </span>
-                        <strong>
-                          {latestFinance
-                            ? `${formatNumber(latestFinance.unitsProduced, locale)} ${copy.widgets.perDay}`
-                            : copy.widgets.noData}
-                        </strong>
-                        <small>
-                          {state
-                            ? `${copy.widgets.factory}: ${state.manufacturing.factoryLevel}`
-                            : ""}
-                        </small>
-                      </div>
-                      <div className="os-preview-widget">
-                        <span className="os-preview-widget__label">
-                          <TrendingUp aria-hidden="true" size={10} />
-                          {copy.widgets.market}
-                        </span>
-                        <strong>
-                          {latestMarket
-                            ? `${formatDecimal(latestMarket.marketShare * 100, locale, 1)}%`
-                            : copy.widgets.noData}
-                        </strong>
-                        <small>
-                          {state
-                            ? `${copy.widgets.activeProducts}: ${activeProductCount}`
-                            : ""}
-                        </small>
-                      </div>
+                      {activeWidgets.includes("clock") && (
+                        <div className="os-preview-widget os-preview-widget--clock">
+                          <span className="os-preview-widget__label">
+                            <Clock3 aria-hidden="true" size={10} />
+                            {copy.widgets.clock}
+                          </span>
+                          <strong>09:41</strong>
+                          <small>
+                            {state ? formatShortGameDate(state.gameDate, locale) : copy.widgets.noData}
+                          </small>
+                        </div>
+                      )}
+                      {activeWidgets.includes("company") && (
+                        <div className="os-preview-widget">
+                          <span className="os-preview-widget__label">
+                            <BriefcaseBusiness aria-hidden="true" size={10} />
+                            {copy.widgets.company}
+                          </span>
+                          <strong>
+                            {state ? formatCurrency(state.company.balance, locale) : copy.widgets.noData}
+                          </strong>
+                          <small>
+                            {state
+                              ? `${copy.widgets.reputation}: ${formatNumber(state.company.reputation, locale)}`
+                              : ""}
+                          </small>
+                        </div>
+                      )}
+                      {activeWidgets.includes("production") && (
+                        <div className="os-preview-widget">
+                          <span className="os-preview-widget__label">
+                            <Factory aria-hidden="true" size={10} />
+                            {copy.widgets.production}
+                          </span>
+                          <strong>
+                            {latestFinance
+                              ? `${formatNumber(latestFinance.unitsProduced, locale)} ${copy.widgets.perDay}`
+                              : copy.widgets.noData}
+                          </strong>
+                          <small>
+                            {state
+                              ? `${copy.widgets.factory}: ${state.manufacturing.factoryLevel}`
+                              : ""}
+                          </small>
+                        </div>
+                      )}
+                      {activeWidgets.includes("market") && (
+                        <div className="os-preview-widget">
+                          <span className="os-preview-widget__label">
+                            <TrendingUp aria-hidden="true" size={10} />
+                            {copy.widgets.market}
+                          </span>
+                          <strong>
+                            {latestMarket
+                              ? `${formatDecimal(latestMarket.marketShare * 100, locale, 1)}%`
+                              : copy.widgets.noData}
+                          </strong>
+                          <small>
+                            {state
+                              ? `${copy.widgets.activeProducts}: ${activeProductCount}`
+                              : ""}
+                          </small>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -835,12 +868,14 @@ export function OsPreviewPanel({ configuration, project, locale, state }: OsPrev
                   {activeSystemAppId && (
                     <SystemWindowView
                       appId={activeSystemAppId}
+                      activeWidgets={activeWidgets}
                       appearance={appearance}
                       configuration={previewConfiguration}
                       key={`${activeDesktop}-system-${activeSystemAppId}`}
                       locale={locale}
                       model={model}
                       onAppearanceChange={updateAppearance}
+                      onToggleWidget={toggleDesktopWidget}
                       onClose={() => setActiveSystemAppId(null)}
                       onCrash={() => {
                         setActiveAppId(null);
@@ -1247,6 +1282,7 @@ function CrashScreen({
 }
 
 function SystemWindowView({
+  activeWidgets,
   appId,
   appearance,
   configuration,
@@ -1255,7 +1291,9 @@ function SystemWindowView({
   onAppearanceChange,
   onClose,
   onCrash,
+  onToggleWidget,
 }: {
+  activeWidgets: readonly PreviewWidgetId[];
   appId: SystemAppId;
   appearance: PreviewAppearance;
   configuration: OsConfiguration;
@@ -1264,6 +1302,7 @@ function SystemWindowView({
   onAppearanceChange: (patch: Partial<PreviewAppearance>) => void;
   onClose: () => void;
   onCrash: () => void;
+  onToggleWidget: (widget: PreviewWidgetId) => void;
 }) {
   const t = translations[locale];
   const copy = t.os.preview.systemApps;
@@ -1339,6 +1378,27 @@ function SystemWindowView({
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+        <div className="os-preview-widget-picker">
+          <strong className="os-preview-widget-picker__title">{settingsCopy.widgetsTitle}</strong>
+          <span className="os-preview-widget-picker__hint">{settingsCopy.widgetsHint}</span>
+          <div
+            aria-label={settingsCopy.widgetsTitle}
+            className="os-preview-widget-picker__options"
+            role="group"
+          >
+            {PREVIEW_WIDGETS.map((widget) => (
+              <button
+                aria-pressed={activeWidgets.includes(widget)}
+                className={`os-preview-widget-picker__option${activeWidgets.includes(widget) ? " is-active" : ""}`}
+                key={widget}
+                onClick={() => onToggleWidget(widget)}
+                type="button"
+              >
+                {t.os.preview.widgets[widget]}
+              </button>
+            ))}
           </div>
         </div>
         <dl className="os-preview-system__rows">

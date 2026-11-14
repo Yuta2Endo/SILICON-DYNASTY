@@ -426,6 +426,39 @@ describe("OsPreviewPanel", () => {
     expect(screen.getAllByText(ru.widgets.noData).length).toBeGreaterThanOrEqual(2);
   });
 
+  it("toggles desktop widgets independently per workspace", async () => {
+    const user = userEvent.setup();
+    render(
+      <OsPreviewPanel
+        configuration={{ ...createDefaultOsConfiguration(), gui: "modern-desktop" }}
+        locale="ru"
+        project={null}
+        state={createInitialGameState()}
+      />,
+    );
+    const system = translations.ru.os.preview.systemApps;
+
+    expect(document.querySelectorAll(".os-preview-widget")).toHaveLength(4);
+
+    await user.click(screen.getByRole("button", { name: system.settings.name }));
+    const settings = screen.getByRole("dialog", { name: system.settings.name });
+    const picker = within(settings).getByRole("group", { name: system.settings.widgetsTitle });
+    await user.click(within(picker).getByRole("button", { name: ru.widgets.market }));
+    await user.click(within(settings).getByRole("button", { name: ru.close }));
+
+    expect(document.querySelectorAll(".os-preview-widget")).toHaveLength(3);
+    expect(screen.queryByText(ru.widgets.market)).toBeNull();
+
+    await user.click(
+      screen.getByRole("button", {
+        name: ru.missionControl.desktop.replace("{number}", "2"),
+      }),
+    );
+
+    expect(document.querySelectorAll(".os-preview-widget")).toHaveLength(4);
+    expect(screen.getByText(ru.widgets.market)).toBeTruthy();
+  });
+
   it("shows a lock reason for an incompatible application", async () => {
     const user = userEvent.setup();
     render(
