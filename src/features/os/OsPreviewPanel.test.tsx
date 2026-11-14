@@ -158,6 +158,12 @@ describe("OsPreviewPanel", () => {
     expect(screen.getByRole("dialog", { name: "Восстановление" })).toBeTruthy();
     expect(screen.getByText("Режим восстановления")).toBeTruthy();
     expect(screen.getByText("Целостность данных")).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: "Симулировать сбой" }));
+    expect(screen.getByText("Система остановлена")).toBeTruthy();
+    expect(screen.getByText("KERNEL_PANIC_MONOLITHIC")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: ru.screens.crashRestart }));
+    expect(screen.getByText(ru.screens.bootTitle)).toBeTruthy();
   });
 
   it("shows configuration-driven notifications", async () => {

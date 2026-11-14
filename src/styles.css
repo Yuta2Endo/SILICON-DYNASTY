@@ -8150,6 +8150,103 @@ textarea {
   font-size: 0.44rem;
 }
 
+.os-preview-crash {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 7px;
+  padding: 20px;
+  color: #e2e8f0;
+  background:
+    radial-gradient(circle at 78% 20%, rgb(239 68 68 / 22%), transparent 34%),
+    linear-gradient(155deg, #0b1220, #1e1b4b 56%, #0f172a);
+}
+
+.os-preview-crash__face {
+  color: #f8fafc;
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.os-preview-crash__badge {
+  padding: 3px 7px;
+  border: 1px solid rgb(248 113 113 / 26%);
+  border-radius: 999px;
+  color: #fca5a5;
+  background: rgb(248 113 113 / 8%);
+  font-size: 0.42rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.os-preview-crash > strong {
+  font-size: 0.9rem;
+}
+
+.os-preview-crash > p {
+  max-width: 250px;
+  margin: 0;
+  color: rgb(203 213 225 / 78%);
+  font-size: 0.5rem;
+  line-height: 1.45;
+}
+
+.os-preview-crash__rows {
+  display: grid;
+  width: min(250px, 100%);
+  gap: 3px;
+  margin: 2px 0;
+}
+
+.os-preview-crash__rows > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+}
+
+.os-preview-crash__rows dt {
+  color: rgb(148 163 184 / 82%);
+  font-size: 0.44rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.os-preview-crash__rows dd {
+  margin: 0;
+  color: #fecaca;
+  font-size: 0.46rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.os-preview-crash__dump {
+  color: #86efac;
+  font-size: 0.46rem;
+}
+
+.os-preview-crash__hint {
+  color: rgb(148 163 184 / 82%);
+  font-size: 0.44rem;
+}
+
+.os-preview-crash__restart {
+  min-height: 27px;
+  padding: 0 13px;
+  border: 1px solid rgb(248 113 113 / 30%);
+  border-radius: 7px;
+  color: #fef2f2;
+  background: rgb(185 28 28 / 72%);
+  font: inherit;
+  font-size: 0.5rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
 @keyframes os-preview-boot-pulse {
   from { width: 38%; opacity: .7; }
   to { width: 86%; opacity: 1; }
@@ -9146,6 +9243,23 @@ textarea {
   color: #93c5fd;
   font-size: 0.62rem;
   font-variant-numeric: tabular-nums;
+}
+
+.os-preview-recovery__crash {
+  min-height: 23px;
+  padding: 0 8px;
+  border: 1px solid rgb(248 113 113 / 26%);
+  border-radius: 5px;
+  color: #fecaca;
+  background: rgb(127 29 29 / 32%);
+  font: inherit;
+  font-size: 0.46rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.os-preview-recovery__crash:hover {
+  background: rgb(153 27 27 / 48%);
 }
 
 .os-preview-notes,

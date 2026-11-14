@@ -67,8 +67,8 @@ const SYSTEM_APP_IDS = [
   "recovery",
 ] as const;
 type SystemAppId = (typeof SYSTEM_APP_IDS)[number];
+type PreviewScreen = "boot" | "lock" | "desktop" | "crash";
 const SYSTEM_APP_GRID_IDS: readonly SystemAppId[] = SYSTEM_APP_IDS.slice(0, 6);
-type PreviewScreen = "boot" | "lock" | "desktop";
 
 const SYSTEM_APP_ICONS: Record<SystemAppId, LucideIcon> = {
   settings: Settings,
@@ -258,6 +258,13 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                 locale={locale}
                 onUnlock={() => setPreviewScreen("desktop")}
               />
+            ) : previewScreen === "crash" ? (
+              <CrashScreen
+                configuration={previewConfiguration}
+                copy={copy.screens}
+                locale={locale}
+                onRestart={() => setPreviewScreen("boot")}
+              />
             ) : (
               <>
                 <div className="os-preview-topbar">
@@ -427,6 +434,12 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                       locale={locale}
                       model={model}
                       onClose={() => setActiveSystemAppId(null)}
+                      onCrash={() => {
+                        setActiveAppId(null);
+                        setActiveSystemAppId(null);
+                        setIsStartOpen(false);
+                        setPreviewScreen("crash");
+                      }}
                     />
                   )}
 
@@ -790,18 +803,54 @@ function LockScreen({
   );
 }
 
+function CrashScreen({
+  configuration,
+  copy,
+  locale,
+  onRestart,
+}: {
+  configuration: OsConfiguration;
+  copy: PreviewScreensCopy;
+  locale: GameState["settings"]["locale"];
+  onRestart: () => void;
+}) {
+  const t = translations[locale];
+  const stopCode = `KERNEL_PANIC_${configuration.kernelType.toUpperCase()}`;
+
+  return (
+    <div className="os-preview-crash">
+      <span className="os-preview-crash__face" aria-hidden="true">:(</span>
+      <span className="os-preview-crash__badge">{copy.crashBadge}</span>
+      <strong>{copy.crashTitle}</strong>
+      <p>{copy.crashSubtitle}</p>
+      <dl className="os-preview-crash__rows">
+        <div><dt>{copy.crashStopCode}</dt><dd>{stopCode}</dd></div>
+        <div><dt>{copy.kernel}</dt><dd>{t.os.options.kernelType[configuration.kernelType]}</dd></div>
+        <div><dt>{copy.crashFilesystem}</dt><dd>{t.os.options.filesystem[configuration.filesystem]}</dd></div>
+      </dl>
+      <span className="os-preview-crash__dump">{copy.crashDump}</span>
+      <span className="os-preview-crash__hint">{copy.crashHint}</span>
+      <button className="os-preview-crash__restart" onClick={onRestart} type="button">
+        {copy.crashRestart}
+      </button>
+    </div>
+  );
+}
+
 function SystemWindowView({
   appId,
   configuration,
   locale,
   model,
   onClose,
+  onCrash,
 }: {
   appId: SystemAppId;
   configuration: OsConfiguration;
   locale: GameState["settings"]["locale"];
   model: OsPreviewModel;
   onClose: () => void;
+  onCrash: () => void;
 }) {
   const t = translations[locale];
   const copy = t.os.preview.systemApps;
@@ -1022,6 +1071,9 @@ function SystemWindowView({
           <span>{recoveryCopy.integrity}</span>
           <strong>{formatDecimal(metrics.dataIntegrityScore, locale, 0)}</strong>
         </div>
+        <button className="os-preview-recovery__crash" onClick={onCrash} type="button">
+          {recoveryCopy.simulateCrash}
+        </button>
       </div>
     );
   }
