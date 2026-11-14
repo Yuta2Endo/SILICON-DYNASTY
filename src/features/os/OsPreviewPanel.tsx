@@ -2,6 +2,7 @@ import {
   Activity,
   AppWindow,
   BatteryFull,
+  Bell,
   Boxes,
   BriefcaseBusiness,
   Building2,
@@ -118,6 +119,16 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
   const [activeSystemAppId, setActiveSystemAppId] = useState<SystemAppId | null>(null);
   const [isStartOpen, setIsStartOpen] = useState(false);
   const [previewScreen, setPreviewScreen] = useState<PreviewScreen>("desktop");
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const previewMetrics = calculateOsKernelMetrics(previewConfiguration);
+  const notifications = buildPreviewNotifications({
+    compatibleApps: model.compatibleApps,
+    configuration: previewConfiguration,
+    copy: copy.notifications,
+    securityScore: previewMetrics.securityScore,
+    totalApps: model.totalApps,
+    updateReadinessScore: previewMetrics.updateReadinessScore,
+  });
   const activeApp = model.apps.find((app) => app.id === activeAppId) ?? null;
   const DeviceIcon = DEVICE_ICONS[model.device];
   const ShellIcon = SHELL_ICONS[model.shell];
@@ -132,6 +143,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
     setActiveAppId(null);
     setActiveSystemAppId(null);
     setIsStartOpen(false);
+    setIsNotificationsOpen(false);
     setPreviewScreen("boot");
   }
 
@@ -139,6 +151,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
     setActiveAppId(null);
     setActiveSystemAppId(null);
     setIsStartOpen(false);
+    setIsNotificationsOpen(false);
     setPreviewScreen("desktop");
   }, [selectedReleaseId]);
 
@@ -148,6 +161,7 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
         return;
       }
       setIsStartOpen(false);
+      setIsNotificationsOpen(false);
       setActiveAppId(null);
       setActiveSystemAppId(null);
     }
@@ -244,11 +258,57 @@ export function OsPreviewPanel({ configuration, project, locale }: OsPreviewPane
                   <span className="os-preview-brand"><MonitorCog aria-hidden="true" size={13} />SILICON OS</span>
                   <span className="os-preview-search"><Search aria-hidden="true" size={12} />{copy.search}</span>
                   <span className="os-preview-status">
+                    <button
+                      aria-expanded={isNotificationsOpen}
+                      aria-label={copy.notifications.open}
+                      className="os-preview-bell"
+                      onClick={() => setIsNotificationsOpen((open) => !open)}
+                      type="button"
+                    >
+                      <Bell aria-hidden="true" size={12} />
+                      {notifications.length > 0 && (
+                        <span className="os-preview-bell__count">{notifications.length}</span>
+                      )}
+                    </button>
                     <Wifi aria-hidden="true" size={13} />
                     <BatteryFull aria-hidden="true" size={14} />
                     <time dateTime="09:41">09:41</time>
                   </span>
                 </div>
+
+                {isNotificationsOpen && (
+                  <div
+                    aria-label={copy.notifications.title}
+                    className="os-preview-notifications"
+                    role="dialog"
+                  >
+                    <div className="os-preview-notifications__header">
+                      <span>{copy.notifications.title}</span>
+                      <button
+                        aria-label={copy.notifications.close}
+                        className="os-preview-icon-button"
+                        onClick={() => setIsNotificationsOpen(false)}
+                        type="button"
+                      >
+                        <X aria-hidden="true" size={13} />
+                      </button>
+                    </div>
+                    <ul className="os-preview-notifications__list">
+                      {notifications.map((notification) => (
+                        <li
+                          className={`os-preview-notification os-preview-notification--${notification.severity}`}
+                          key={notification.id}
+                        >
+                          <span className="os-preview-notification__dot" aria-hidden="true" />
+                          <div>
+                            <strong>{notification.title}</strong>
+                            <p>{notification.body}</p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 <div className="os-preview-desktop-area">
                   {model.hasWidgets && (
@@ -516,6 +576,86 @@ function AppWindowContent({
 }
 
 type PreviewScreensCopy = TranslationMessages["os"]["preview"]["screens"];
+
+type PreviewNotificationsCopy = TranslationMessages["os"]["preview"]["notifications"];
+
+interface PreviewNotification {
+  id: string;
+  severity: "info" | "warning";
+  title: string;
+  body: string;
+}
+
+function buildPreviewNotifications({
+  compatibleApps,
+  configuration,
+  copy,
+  securityScore,
+  totalApps,
+  updateReadinessScore,
+}: {
+  compatibleApps: number;
+  configuration: OsConfiguration;
+  copy: PreviewNotificationsCopy;
+  securityScore: number;
+  totalApps: number;
+  updateReadinessScore: number;
+}): PreviewNotification[] {
+  const notifications: PreviewNotification[] = [];
+
+  if (configuration.permissions === "none" || securityScore < 45) {
+    notifications.push({
+      id: "security",
+      severity: "warning",
+      title: copy.securityTitle,
+      body: copy.securityBody,
+    });
+  }
+  if (updateReadinessScore < 60) {
+    notifications.push({
+      id: "updates",
+      severity: "warning",
+      title: copy.updatesTitle,
+      body: copy.updatesBody,
+    });
+  }
+  if (compatibleApps < totalApps) {
+    notifications.push({
+      id: "apps",
+      severity: "info",
+      title: copy.appsTitle,
+      body: copy.appsBody
+        .replace("{compatible}", String(compatibleApps))
+        .replace("{total}", String(totalApps)),
+    });
+  }
+  if (configuration.driverFramework === "legacy" || configuration.driverFramework === "acpi") {
+    notifications.push({
+      id: "drivers",
+      severity: "info",
+      title: copy.driversTitle,
+      body: copy.driversBody,
+    });
+  }
+  if (configuration.appStore === "none") {
+    notifications.push({
+      id: "store",
+      severity: "info",
+      title: copy.storeTitle,
+      body: copy.storeBody,
+    });
+  }
+  if (notifications.length === 0) {
+    notifications.push({
+      id: "healthy",
+      severity: "info",
+      title: copy.allGoodTitle,
+      body: copy.allGoodBody,
+    });
+  }
+
+  return notifications.slice(0, 4);
+}
 
 function BootScreen({
   configuration,

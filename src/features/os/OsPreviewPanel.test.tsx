@@ -160,6 +160,23 @@ describe("OsPreviewPanel", () => {
     expect(screen.getByText("Целостность данных")).toBeTruthy();
   });
 
+  it("shows configuration-driven notifications", async () => {
+    const user = userEvent.setup();
+    render(
+      <OsPreviewPanel
+        configuration={{ ...createDefaultOsConfiguration(), gui: "desktop-shell" }}
+        locale="ru"
+        project={null}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: ru.notifications.open }));
+
+    expect(screen.getByRole("dialog", { name: ru.notifications.title })).toBeTruthy();
+    expect(screen.getByText(ru.notifications.appsTitle)).toBeTruthy();
+    expect(screen.getByText(/\d+ из 6/)).toBeTruthy();
+  });
+
   it("walks through the boot and lock screens before the desktop", async () => {
     const user = userEvent.setup();
     render(
